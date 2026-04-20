@@ -4,7 +4,7 @@
 
 #ifndef CENGINEPROJECT_ENGINE_HPP
 #define CENGINEPROJECT_ENGINE_HPP
-
+#include "Graphics/Graphics.hpp"
 
 
 class Engine {
@@ -13,6 +13,9 @@ public:
     void Run();
 private:
     void setupLogger();
+    void Terminate();
+
+    Graphics *graphics;
 };
 
 

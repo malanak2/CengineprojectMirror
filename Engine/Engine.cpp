@@ -10,13 +10,26 @@
 
 void Engine::Init() {
     setupLogger();
-    spdlog::get("console")->info("setting up rest...");
+    graphics = new Graphics();
+    graphics->Init();
 }
 
 void Engine::Run() {
+    // Handle
+    while (true) {
+        if (graphics->Tick() != 0) {
+            Terminate();
+            break;
+        }
+    }
+    spdlog::get("console")->info("Engine stopping.");
 }
 
 void Engine::setupLogger() {
     auto console = spdlog::stdout_color_mt("console");
     spdlog::get("console")->info("Set up logger!");
+}
+
+void Engine::Terminate() {
+    graphics->Terminate();
 }
