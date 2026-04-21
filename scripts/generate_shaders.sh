@@ -11,11 +11,15 @@ prof=""
 if [ ! -z "$2" ]; then
   prof="-profile $2"
 fi
+ext=$1
+if [ ! -z "$3" ]; then
+  ext=$3
+fi
 
 slangc resources/shader/basic.slang \
   -entry main -stage vertex \
-  -o generated/shaders/$1/basic.vert.$1 # -target $1 -o generated/shaders/$1/basicFrag.$1
+  -o generated/shaders/$1/basic.vert.$ext # -target $1 -o generated/shaders/$1/basicFrag.$1
 
 slangc resources/shader/basic.slang \
   -entry mainFrag -stage fragment \
-  -o generated/shaders/$1/basic.frag.$1
+  -o generated/shaders/$1/basic.frag.$ext
