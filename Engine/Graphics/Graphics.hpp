@@ -1,25 +1,29 @@
 //
 // Created by malan on 20.04.2026.
 //
-
-#ifndef CENGINEPROJECT_GRAPHICS_HPP
-#define CENGINEPROJECT_GRAPHICS_HPP
+#pragma once
+#include "../Config/Config.hpp"
 #include "../glad/include/glad/glad.h"
+#include "Program.hpp"
+#include "Shader.hpp"
 #include <GLFW/glfw3.h>
-
-class Graphics {
+#include <string>
+#include <unordered_map>
+namespace Graphics {
+class Main {
 public:
-  int Init();
+  int Init(Config *config);
   int Tick();
   void Terminate();
 
+  Shader GetShader(Shader::ShaderType type, std::string source);
+  Program NewProgram(int count, ...);
+  static std::unordered_map<std::string, Shader *> vertexShaders;
+  static std::unordered_map<std::string, Shader *> fragmentShaders;
+
 private:
-  GLFWwindow *window;
+  GLFWwindow *window = nullptr;
+  Program *program = nullptr;
+  unsigned int vao = 0;
 };
-
-enum ShaderType {
-  Vertex,
-  Fragment,
-};
-
-#endif // CENGINEPROJECT_GRAPHICS_HPP
+}; // namespace Graphics

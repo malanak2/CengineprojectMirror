@@ -1,10 +1,10 @@
 //
 // Created by malan on 21.04.2026.
 //
+
 #pragma once
 #include <string>
-class Config {
+class FileUtil {
 public:
-  Config(std::string file_path);
-  std::string Window_Title;
+  static int ReadFile(std::string path, std::string *result);
 };

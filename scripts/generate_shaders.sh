@@ -7,7 +7,15 @@ fi
 echo "$1"
 rm -rf generated/shaders/$1
 mkdir -p generated/shaders/$1
+prof=""
 if [ ! -z "$2" ]; then
   prof="-profile $2"
 fi
-slangc resources/shader/basic.slang $prof -target $1 -entry main -o generated/shaders/$1/basic.$1
+
+slangc resources/shader/basic.slang \
+  -entry main -stage vertex \
+  -o generated/shaders/$1/basic.vert.$1 # -target $1 -o generated/shaders/$1/basicFrag.$1
+
+slangc resources/shader/basic.slang \
+  -entry mainFrag -stage fragment \
+  -o generated/shaders/$1/basic.frag.$1

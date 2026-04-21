@@ -6,14 +6,18 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
-void Engine::Init() {
+int Engine::Init() {
   setupLogger();
   auto logger = spdlog::get("console");
   logger->info("Loading config...");
   config = new Config("Engine.ini");
   logger->info("Loading graphics...");
-  graphics = new Graphics();
-  graphics->Init();
+  graphics = new Graphics::Main();
+  if (graphics->Init(config) != 0) {
+    logger->error("Failed to initialize graphics!");
+    return -1;
+  }
+  return 0;
 }
 
 void Engine::Run() {
