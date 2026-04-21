@@ -4,20 +4,20 @@
 
 #ifndef CENGINEPROJECT_ENGINE_HPP
 #define CENGINEPROJECT_ENGINE_HPP
+#include "Config/Config.hpp"
 #include "Graphics/Graphics.hpp"
-
 
 class Engine {
 public:
-    void Init();
-    void Run();
-private:
-    void setupLogger();
-    void Terminate();
+  void Init();
+  void Run();
 
-    Graphics *graphics;
+private:
+  void setupLogger();
+  void Terminate();
+
+  Graphics *graphics;
+  Config *config;
 };
 
-
-
-#endif //CENGINEPROJECT_ENGINE_HPP
+#endif // CENGINEPROJECT_ENGINE_HPP

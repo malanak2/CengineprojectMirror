@@ -4,22 +4,22 @@
 
 #ifndef CENGINEPROJECT_GRAPHICS_HPP
 #define CENGINEPROJECT_GRAPHICS_HPP
-#include <glad/glad.h>
+#include "../glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
 
 class Graphics {
 public:
-    int Init();
-    int Tick();
-    void Terminate();
+  int Init();
+  int Tick();
+  void Terminate();
+
 private:
-    GLFWwindow* window;
+  GLFWwindow *window;
 };
 
 enum ShaderType {
-    Vertex,
-    Fragment,
+  Vertex,
+  Fragment,
 };
 
-
-#endif //CENGINEPROJECT_GRAPHICS_HPP
+#endif // CENGINEPROJECT_GRAPHICS_HPP
