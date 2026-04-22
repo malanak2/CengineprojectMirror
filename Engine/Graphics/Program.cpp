@@ -1,20 +1,15 @@
 #include "Program.hpp"
 #include "Graphics.hpp"
-#include "Shader.hpp"
 #include "glad/glad.h"
 #include "spdlog/spdlog.h"
-#include <cstdarg>
+#include <cpptrace/basic.hpp>
 using namespace Graphics;
-Program::Program(int count, ...) {
+Program::Program(std::vector<std::shared_ptr<Shader>> shaders) {
   auto logger = spdlog::get("console");
-  logger->info("Creating new program with {} shaders", count);
   unsigned int program;
   program = glCreateProgram();
-  va_list args;
-  va_start(args, count);
-  Shader *shaders[count];
-  for (int i = 0; i < count; i++) {
-    Shader *shad = va_arg(args, Shader *);
+  for (int i = 0; i < shaders.size(); i++) {
+    std::shared_ptr<Shader> shad = shaders[i];
     shaders[i] = shad;
     if (!shad->isValid) {
       logger->warn("Tried to add an invalid shader to a program, ignoring...");
@@ -29,13 +24,14 @@ Program::Program(int count, ...) {
   if (!success) {
     glGetProgramInfoLog(program, 512, NULL, infoLog);
     logger->error("ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
+    cpptrace::generate_trace().print();
     isValid = false;
     return;
   }
   isValid = true;
   id = program;
-  for (int i = 0; i < count; i++) {
-    Shader *shad = shaders[i];
+  for (int i = 0; i < shaders.size(); i++) {
+    std::shared_ptr<Shader> shad = shaders[i];
     if (!shad->_reusable) {
       shad->Delete();
       continue;

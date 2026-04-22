@@ -1,0 +1,14 @@
+{
+  "object_type": "material",
+  "name": "Basic Material",
+  "shaders": [
+    {
+      "type": "vertex",
+      "path": "generated/shaders/glsl/basic.vert.glsl"
+    },
+    {
+      "type": "fragment",
+      "path": "generated/shaders/glsl/basic.frag.glsl"
+    }
+  ]
+}

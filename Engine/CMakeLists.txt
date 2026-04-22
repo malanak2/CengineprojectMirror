@@ -7,10 +7,16 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 FetchContent_Declare(inipp GIT_REPOSITORY https://github.com/Rookfighter/inifile-cpp.git)
 FetchContent_MakeAvailable(inipp)
-
+FetchContent_Declare(
+  cpptrace
+  GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
+  GIT_TAG        v1.0.4 # <HASH or TAG>
+)
+FetchContent_MakeAvailable(cpptrace)
 add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Graphics.hpp
         Graphics/Graphics.cpp
@@ -32,4 +38,4 @@ target_include_directories(cengineengine PUBLIC glad/include)
 
 set_target_properties(cengineengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengineengine PUBLIC spdlog::spdlog)
-target_link_libraries(cengineengine PRIVATE glfw inicpp::inicpp cengineutil OpenGL::GL)
+target_link_libraries(cengineengine PRIVATE cpptrace::cpptrace glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json)

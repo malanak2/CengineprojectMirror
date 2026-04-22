@@ -14,6 +14,7 @@ void sigsegvHandler(int sig) {
 
 int main() {
   signal(SIGSEGV, sigsegvHandler);
+  signal(SIGABRT, sigsegvHandler);
   CPPTRACE_TRY {
     auto engine = new Engine();
     if (engine->Init() != 0) {

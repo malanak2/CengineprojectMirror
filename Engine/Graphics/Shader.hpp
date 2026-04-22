@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <memory>
 #include <string>
 namespace Graphics {
 /// Class in which shader info is stored
@@ -14,6 +15,7 @@ namespace Graphics {
 class Shader {
 public:
   enum ShaderType {
+    Invalid,
     Vertex,
     Fragment,
   };
@@ -21,8 +23,11 @@ public:
   unsigned int id = 0;
   std::string source = "";
   bool isValid = false;
-  Shader(ShaderType type, std::string source, bool reusable = false);
+  static std::shared_ptr<Shader> Create(ShaderType type, std::string source,
+                                        bool reusable = false);
+  ~Shader();
   bool _reusable = false;
   void Delete();
+  Shader(ShaderType type, std::string source, bool reusable = false);
 };
 } // namespace Graphics

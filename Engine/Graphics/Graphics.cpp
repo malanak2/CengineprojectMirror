@@ -4,6 +4,8 @@
 
 #include "Graphics.hpp"
 #include "../../Util/FileUtil.hpp"
+#include "Material.hpp"
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <unordered_map>
 
@@ -39,32 +41,38 @@ int Main::Init(Config *config) {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   // Setup vectors
   // TODO: Remove
-  std::string src = "../../../generated/shaders/glsl/basic.vert.glsl";
+  /*
+  std::string src = "generated/shaders/glsl/basic.vert.glsl";
   std::string out;
   if (FileUtil::ReadFile(src, &out) != 0) {
     logger->error("Failed to read shader file");
     return -1;
   }
-  Shader *vert = new Shader(Shader::ShaderType::Vertex, out);
+  std::shared_ptr<Shader> vert =
+      std::shared_ptr<Shader>(new Shader(Shader::ShaderType::Vertex, out));
   logger->info("New vert shader with id of {}, is reusable? {} valid? {}",
                vert->id, vert->_reusable, vert->isValid);
-  src = "../../../generated/shaders/glsl/basic.frag.glsl";
+  src = "../generated/shaders/glsl/basic.frag.glsl";
   out = "";
   if (FileUtil::ReadFile(src, &out) != 0) {
     logger->error("Failed to read shader file");
     return -1;
   }
-  Shader *frag = new Shader(Shader::ShaderType::Fragment, out);
+  std::shared_ptr<Shader> frag =
+      std::shared_ptr<Shader>(new Shader(Shader::ShaderType::Fragment, out));
   logger->info("New frag shader with id of {}, is reusable? {} valid? {}",
                frag->id, frag->_reusable, frag->isValid);
-  Program *prog = new Program(2, vert, frag);
+  Program *prog = new Program({vert, frag});
   logger->info("New frag shader with id of {}, is valid? {}", prog->id,
                prog->isValid);
   if (!prog->isValid) {
     logger->error("Failed to link program");
     return -1;
   }
-  glUseProgram(prog->id);
+  */
+  std::unique_ptr<Material> m =
+      std::unique_ptr<Material>(new Material("materials/basic.json"));
+  glUseProgram(m->program->id);
   float vertices[] = {
       -0.5f, -0.5f, 0.0f, // left
       0.5f,  -0.5f, 0.0f, // right
@@ -95,7 +103,7 @@ int Main::Init(Config *config) {
   // VBOs) when it's not directly necessary.
   glBindVertexArray(0);
   vao = VAO;
-  program = prog;
+  program = m->program;
 
   return 0;
 }

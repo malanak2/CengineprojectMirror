@@ -1,8 +1,14 @@
 #include "FileUtil.hpp"
 #include "fstream"
+#include <regex>
+#include <spdlog/spdlog.h>
 
 int FileUtil::ReadFile(std::string path, std::string *result) {
   std::ifstream file;
+  path = "resources/" + path;
+  // Everything should be in the resources directory. if it is not, the move it
+  // there!
+  path = std::regex_replace(path, std::regex("\\.\\."), ".");
   file.open(path, std::ios::in | std::ios::ate);
   if (!file.is_open()) {
     return -1;

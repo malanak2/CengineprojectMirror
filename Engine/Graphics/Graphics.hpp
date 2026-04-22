@@ -3,9 +3,9 @@
 //
 #pragma once
 #include "../Config/Config.hpp"
-#include "../glad/include/glad/glad.h"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <string>
@@ -26,7 +26,7 @@ public:
 private:
   GLFWwindow *window = nullptr;
   // TODO: Remove
-  Program *program = nullptr;
+  std::shared_ptr<Program> program = nullptr;
   unsigned int vao = 0;
 };
 }; // namespace Graphics

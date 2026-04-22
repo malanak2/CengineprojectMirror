@@ -1,4 +1,7 @@
 #pragma once
+#include "Shader.hpp"
+#include <memory>
+#include <vector>
 namespace Graphics {
 
 /// Class in which program info is stored
@@ -10,6 +13,6 @@ public:
   unsigned int id = 0;
   bool isValid = false;
   /// Takes in a variadic argument of Shader pointers.
-  Program(int count, ...);
+  Program(std::vector<std::shared_ptr<Shader>> shaders);
 };
 } // namespace Graphics
