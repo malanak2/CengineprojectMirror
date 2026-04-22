@@ -1,4 +1,5 @@
 #include "Program.hpp"
+#include "Graphics.hpp"
 #include "Shader.hpp"
 #include "glad/glad.h"
 #include "spdlog/spdlog.h"
@@ -36,7 +37,7 @@ Program::Program(int count, ...) {
   for (int i = 0; i < count; i++) {
     Shader *shad = shaders[i];
     if (!shad->_reusable) {
-      glDeleteShader(shad->id);
+      shad->Delete();
       continue;
     }
   }

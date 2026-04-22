@@ -13,8 +13,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 using namespace Graphics;
 // Initialize vecotrs
-std::unordered_map<std::string, Shader *> Main::vertexShaders = {};
-std::unordered_map<std::string, Shader *> Main::fragmentShaders = {};
+std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
+    {};
+std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
+    {};
 
 int Main::Init(Config *config) {
   auto logger = spdlog::get("console");

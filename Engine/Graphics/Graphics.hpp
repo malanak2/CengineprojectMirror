@@ -7,6 +7,7 @@
 #include "Program.hpp"
 #include "Shader.hpp"
 #include <GLFW/glfw3.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 namespace Graphics {
@@ -18,11 +19,13 @@ public:
 
   Shader GetShader(Shader::ShaderType type, std::string source);
   Program NewProgram(int count, ...);
-  static std::unordered_map<std::string, Shader *> vertexShaders;
-  static std::unordered_map<std::string, Shader *> fragmentShaders;
+  static std::unordered_map<std::string, std::shared_ptr<Shader>> vertexShaders;
+  static std::unordered_map<std::string, std::shared_ptr<Shader>>
+      fragmentShaders;
 
 private:
   GLFWwindow *window = nullptr;
+  // TODO: Remove
   Program *program = nullptr;
   unsigned int vao = 0;
 };

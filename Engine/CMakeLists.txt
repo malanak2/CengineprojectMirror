@@ -18,6 +18,9 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Program.cpp
         Graphics/Shader.cpp
         Graphics/Shader.cpp
+        Graphics/IRenderable.hpp
+        Graphics/Material.cpp
+        Graphics/Material.hpp
         Config/Config.cpp
         Config/Config.hpp
         glad/src/glad.c

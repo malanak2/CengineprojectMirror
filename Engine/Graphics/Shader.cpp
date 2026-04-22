@@ -1,6 +1,7 @@
 #include "Shader.hpp"
 #include "Graphics.hpp"
 #include "spdlog/spdlog.h"
+#include <memory>
 using namespace Graphics;
 Shader::Shader(ShaderType type, std::string source, bool reusable) {
   auto logger = spdlog::get("console");
@@ -31,7 +32,8 @@ Shader::Shader(ShaderType type, std::string source, bool reusable) {
     id = vertexShader;
     isValid = true;
     _reusable = reusable;
-    Main::vertexShaders[source] = this;
+    this->source = source;
+    Main::vertexShaders[source] = std::shared_ptr<Shader>(this);
     break;
   }
   case Fragment: {
@@ -60,7 +62,8 @@ Shader::Shader(ShaderType type, std::string source, bool reusable) {
     id = fragShader;
     isValid = true;
     _reusable = reusable;
-    Main::fragmentShaders[source] = this;
+    this->source = source;
+    Main::fragmentShaders[source] = std::shared_ptr<Shader>(this);
     break;
   }
   default: {
@@ -70,4 +73,9 @@ Shader::Shader(ShaderType type, std::string source, bool reusable) {
     break;
   }
   }
+}
+
+void Shader::Delete() {
+  glDeleteShader(id);
+  Main::fragmentShaders.erase(source);
 }

@@ -19,8 +19,10 @@ public:
   };
   ShaderType type;
   unsigned int id = 0;
+  std::string source = "";
   bool isValid = false;
   Shader(ShaderType type, std::string source, bool reusable = false);
   bool _reusable = false;
+  void Delete();
 };
 } // namespace Graphics
