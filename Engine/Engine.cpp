@@ -3,6 +3,7 @@
 //
 
 #include "Engine.hpp"
+#include "Engine/Graphics/Graphics.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
@@ -17,6 +18,7 @@ int Engine::Init() {
     logger->error("Failed to initialize graphics!");
     return -1;
   }
+  CHECK_GL_ERROR();
   return 0;
 }
 
@@ -29,6 +31,7 @@ void Engine::Run() {
       Terminate();
       break;
     }
+    CHECK_GL_ERROR();
   }
   logger->info("Engine stopping.");
 }

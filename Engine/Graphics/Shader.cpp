@@ -1,57 +1,77 @@
 #include "Shader.hpp"
 #include "Graphics.hpp"
+#include "Util/FileUtil.hpp"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <memory>
 using namespace Graphics;
-Shader::Shader(ShaderType type, std::string source, bool reusable) {
+Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
+               bool reusable) {
   auto logger = spdlog::get("console");
+  if (!GLAD_GL_VERSION_4_6) {
+    logger->error("SPIR-V shaders require OpenGL 4.6, but it is not available.");
+    isValid = false;
+    return;
+  }
+  std::vector<unsigned char> spirv;
+  if (FileUtil::LoadSpirv(path, &spirv) != 0) {
+    logger->warn("Failed to load spirv at {}", path);
+    isValid = false;
+    return;
+  }
   switch (type) {
   case Vertex: {
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    const char *out_c = source.c_str();
-    glShaderSource(vertexShader, 1, &out_c, NULL);
-    glCompileShader(vertexShader);
+    glShaderBinary(1, &vertexShader, GL_SHADER_BINARY_FORMAT_SPIR_V,
+                   spirv.data(), spirv.size());
+    glSpecializeShader(vertexShader, (const GLchar *)entrypoint.c_str(), 0,
+                       nullptr, nullptr);
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (success == GL_FALSE) {
       glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
       logger->error("ERROR::SHADER::VERTEX::COMPILATION_FAILED {}", infoLog);
-      logger->error("Shader: {}", source);
+      logger->error("Shader: {}", path);
+      glDeleteShader(vertexShader);
       cpptrace::generate_trace().print();
       isValid = false;
+      CHECK_GL_ERROR();
       break;
     }
     id = vertexShader;
     isValid = true;
     _reusable = reusable;
     this->type = type;
-    this->source = source;
+    this->path = path;
     break;
   }
   case Fragment: {
     unsigned int fragShader;
     fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const char *frag_out_c = source.c_str();
-    glShaderSource(fragShader, 1, &frag_out_c, NULL);
-    glCompileShader(fragShader);
+    glShaderBinary(1, &fragShader, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(),
+                   spirv.size());
+    glSpecializeShader(fragShader, (const GLchar *)entrypoint.c_str(), 0,
+                       nullptr, nullptr);
+
     int success;
     char infoLog[512];
     glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (success == GL_FALSE) {
       glGetShaderInfoLog(fragShader, 512, NULL, infoLog);
       logger->error("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED {}", infoLog);
+      glDeleteShader(fragShader);
       cpptrace::generate_trace().print();
       isValid = false;
+      CHECK_GL_ERROR();
       return;
     }
     id = fragShader;
     isValid = true;
     _reusable = reusable;
     this->type = type;
-    this->source = source;
+    this->path = path;
     break;
   }
   default: {
@@ -63,25 +83,26 @@ Shader::Shader(ShaderType type, std::string source, bool reusable) {
   }
 }
 
-std::shared_ptr<Shader> Shader::Create(ShaderType type, std::string source,
-                                       bool reusable) {
+std::shared_ptr<Shader> Shader::Create(ShaderType type, std::string path,
+                                       std::string entrypoint, bool reusable) {
   auto &cache = type == Shader::ShaderType::Vertex ? Main::vertexShaders
                                                    : Main::fragmentShaders;
-  if (cache.contains(source)) {
-    return cache[source];
+  if (cache.contains(path)) {
+    return cache[path];
   }
-  auto shader = std::make_shared<Shader>(type, source, reusable);
+  auto shader = std::make_shared<Shader>(type, path, entrypoint, reusable);
   if (shader->isValid) {
-    cache[source] = shader;
+    cache[path] = shader;
   }
   return shader;
 }
 void Shader::Delete() {
   glDeleteShader(id);
+  id = 0;
   if (type == ShaderType::Vertex) {
-    Main::vertexShaders.erase(source);
+    Main::vertexShaders.erase(path);
   } else if (type == ShaderType::Fragment) {
-    Main::fragmentShaders.erase(source);
+    Main::fragmentShaders.erase(path);
   } else {
     spdlog::get("console")->warn("Shader could not be deleted from cache as it "
                                  "is of a type not defined: {}",

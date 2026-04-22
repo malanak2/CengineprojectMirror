@@ -3,7 +3,6 @@
 //
 
 #include "Graphics.hpp"
-#include "../../Util/FileUtil.hpp"
 #include "Material.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
@@ -24,8 +23,8 @@ std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 int Main::Init(Config *config) {
   auto logger = spdlog::get("console");
   glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   window = glfwCreateWindow(800, 600, config->Window_Title.c_str(), NULL, NULL);
   if (window == NULL) {
@@ -35,51 +34,24 @@ int Main::Init(Config *config) {
   }
   glfwMakeContextCurrent(window);
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    spdlog::get("console")->error("Failed to initialize glfw.");
+    spdlog::get("console")->error("Failed to initialize GLAD.");
     return -1;
   }
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  // Setup vectors
+  CHECK_GL_ERROR();
   // TODO: Remove
-  /*
-  std::string src = "generated/shaders/glsl/basic.vert.glsl";
-  std::string out;
-  if (FileUtil::ReadFile(src, &out) != 0) {
-    logger->error("Failed to read shader file");
-    return -1;
-  }
-  std::shared_ptr<Shader> vert =
-      std::shared_ptr<Shader>(new Shader(Shader::ShaderType::Vertex, out));
-  logger->info("New vert shader with id of {}, is reusable? {} valid? {}",
-               vert->id, vert->_reusable, vert->isValid);
-  src = "../generated/shaders/glsl/basic.frag.glsl";
-  out = "";
-  if (FileUtil::ReadFile(src, &out) != 0) {
-    logger->error("Failed to read shader file");
-    return -1;
-  }
-  std::shared_ptr<Shader> frag =
-      std::shared_ptr<Shader>(new Shader(Shader::ShaderType::Fragment, out));
-  logger->info("New frag shader with id of {}, is reusable? {} valid? {}",
-               frag->id, frag->_reusable, frag->isValid);
-  Program *prog = new Program({vert, frag});
-  logger->info("New frag shader with id of {}, is valid? {}", prog->id,
-               prog->isValid);
-  if (!prog->isValid) {
-    logger->error("Failed to link program");
-    return -1;
-  }
-  */
+
   std::shared_ptr<Material> m =
       std::make_shared<Material>("materials/basic.json");
+  CHECK_GL_ERROR();
   glUseProgram(m->program->id);
+  CHECK_GL_ERROR();
   float vertices[] = {
       -0.5f, -0.5f, 0.0f, // left
       0.5f,  -0.5f, 0.0f, // right
       0.0f,  0.5f,  0.0f  // top
   };
-
   unsigned int VBO, VAO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -105,7 +77,7 @@ int Main::Init(Config *config) {
   glBindVertexArray(0);
   vao = VAO;
   this->material = m;
-
+  CHECK_GL_ERROR();
   return 0;
 }
 
@@ -116,10 +88,12 @@ int Main::Tick() {
   }
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
+  CHECK_GL_ERROR();
   material->SetupMaterial();
-  material->program->SetUniform("color", 1, 0, 0, 1);
+  material->program->SetUniform("u_color", 1, 0, 0, 1);
   glBindVertexArray(vao);
   glDrawArrays(GL_TRIANGLES, 0, 3);
+  CHECK_GL_ERROR();
   glfwSwapBuffers(window);
   glfwPollEvents();
   return 0;

@@ -18,7 +18,8 @@ namespace Graphics {
   {                                                                            \
     GLenum err;                                                                \
     while ((err = glGetError()) != GL_NO_ERROR) {                              \
-      printf("OpenGL Error: %04x\n", err);                                     \
+      spdlog::get("console")->error("OpenGL Error: {} at {}:{}\n", err,        \
+                                    __FILE__, __LINE__);                       \
     }                                                                          \
   }
 #else

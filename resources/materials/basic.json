@@ -4,11 +4,20 @@
   "shaders": [
     {
       "type": "vertex",
-      "path": "generated/shaders/glsl/basic.vert.glsl"
+      "path": "generated/shaders/spirv/basic.spv",
+      "entrypoint": "mainVertex"
     },
     {
       "type": "fragment",
-      "path": "generated/shaders/glsl/basic.frag.glsl"
+      "path": "generated/shaders/spirv/basic.spv",
+      "entrypoint": "mainPixel"
+    }
+  ],
+  "uniforms": [
+    {
+      "name": "color",
+      "bind_point": 0,
+      "size": 16
     }
   ]
 }

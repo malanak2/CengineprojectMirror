@@ -35,6 +35,7 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
       )
 
 target_include_directories(cengineengine PUBLIC glad/include)
+target_include_directories(cengineengine PUBLIC ..)
 
 set_target_properties(cengineengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengineengine PUBLIC spdlog::spdlog)

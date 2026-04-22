@@ -32,6 +32,7 @@ Material::Material(std::string path) {
     return;
   }
   this->path = path;
+  CHECK_GL_ERROR();
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
     auto data_shaders = data["shaders"];
@@ -44,13 +45,9 @@ Material::Material(std::string path) {
           } else if ((std::string)data_shader["type"] == "fragment") {
             type = Shader::ShaderType::Fragment;
           }
-          std::string source;
-          if (FileUtil::ReadFile((std::string)data_shader["path"], &source) !=
-              0) {
-            throw std::invalid_argument("Failed to open shader file at " +
-                                        (std::string)data_shader["path"]);
-          }
-          std::shared_ptr<Shader> shader = Shader::Create(type, source, false);
+          std::shared_ptr<Shader> shader =
+              Shader::Create(type, (std::string)data_shader["path"],
+                             (std::string)data_shader["entrypoint"], false);
           if (shader->isValid) {
             shaders.insert(shaders.end(), shader);
           } else {
@@ -59,18 +56,21 @@ Material::Material(std::string path) {
                 ", shader path is " + (std::string)data_shader["path"]);
           }
         });
-    std::shared_ptr<Program> program = std::make_shared<Program>(shaders);
+    std::shared_ptr<Program> program =
+        std::make_shared<Program>(data["uniforms"], shaders);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");
     }
     this->program = program;
     this->usable = true;
+    CHECK_GL_ERROR();
   } catch (const std::exception &e) {
     logger->error("Failed to parse material at {}. ({})", path, e.what());
     cpptrace::generate_trace().print();
     return;
   }
+  CHECK_GL_ERROR();
 }
 
 void Material::SetupMaterial() { glUseProgram(program->id); }

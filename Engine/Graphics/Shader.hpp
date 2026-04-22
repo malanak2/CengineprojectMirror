@@ -21,14 +21,16 @@ public:
   };
   ShaderType type;
   unsigned int id = 0;
-  std::string source = "";
+  std::string path = "";
   bool isValid = false;
-  static std::shared_ptr<Shader> Create(ShaderType type, std::string source,
+  static std::shared_ptr<Shader> Create(ShaderType type, std::string path,
+                                        std::string entrypoint,
                                         bool reusable = false);
   ~Shader();
   bool _reusable = false;
   void Delete();
 
-  Shader(ShaderType type, std::string source, bool reusable = false);
+  Shader(ShaderType type, std::string path, std::string entrypoint,
+         bool reusable = false);
 };
 } // namespace Graphics

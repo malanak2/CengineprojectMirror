@@ -18,10 +18,5 @@ fi
 
 slangc resources/shader/basic.slang \
   -no-mangle \
-  -entry main -stage vertex \
-  -o resources/generated/shaders/$1/basic.vert.$ext # -target $1 -o generated/shaders/$1/basicFrag.$1
-
-slangc resources/shader/basic.slang \
-  -no-mangle \
-  -entry mainFrag -stage pixel \
-  -o resources/generated/shaders/$1/basic.frag.$ext
+  -fvk-use-gl-layout \
+  -o resources/generated/shaders/$1/basic.$ext # -target $1 -o generated/shaders/$1/basicFrag.$1
