@@ -44,6 +44,8 @@ int Main::Init(Config *config) {
 
   std::shared_ptr<Material> m =
       std::make_shared<Material>("materials/basic.json");
+  if (!m->usable)
+    return -1;
   CHECK_GL_ERROR();
   glUseProgram(m->program->id);
   CHECK_GL_ERROR();

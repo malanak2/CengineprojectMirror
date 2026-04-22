@@ -27,6 +27,7 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/IRenderable.hpp
         Graphics/Material.cpp
         Graphics/Material.hpp
+        Graphics/MaterialJson.hpp
         Config/Config.cpp
         Config/Config.hpp
         glad/src/glad.c

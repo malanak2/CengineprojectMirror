@@ -1,11 +1,13 @@
 #include "Program.hpp"
+#include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
 #include "glad/glad.h"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
+#include <vector>
 using namespace Graphics;
 using json = nlohmann::json;
-Program::Program(json::array_t uniforms_json,
+Program::Program(std::vector<UniformJson> uniforms_json,
                  std::vector<std::shared_ptr<Shader>> shaders) {
   auto logger = spdlog::get("console");
   unsigned int program;
@@ -44,17 +46,15 @@ Program::Program(json::array_t uniforms_json,
     unsigned int ubo;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, (int)uniform["size"], NULL,
-                 GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, (int)uniform["bind_point"], ubo);
+    glBufferData(GL_UNIFORM_BUFFER, (int)uniform.size, NULL, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, (int)uniform.bind_point, ubo);
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    uniforms[uniform["name"]] = ubo;
+    uniforms[uniform.name] = ubo;
     CHECK_GL_ERROR();
     spdlog::get("console")->info("Created buffer {} with pos {} and size {}",
-                                 (std::string)uniform["name"],
-                                 (int)uniform["bind_point"],
-                                 (int)uniform["size"]);
+                                 uniform.name, uniform.bind_point,
+                                 uniform.size);
   }
   CHECK_GL_ERROR();
 

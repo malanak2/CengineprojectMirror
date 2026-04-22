@@ -1,4 +1,5 @@
 #pragma once
+#include "MaterialJson.hpp"
 #include "Shader.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -20,7 +21,8 @@ public:
   unsigned int id = 0;
   bool isValid = false;
   /// Takes in a variadic argument of Shader pointers.
-  Program(json::array_t uniforms, std::vector<std::shared_ptr<Shader>> shaders);
+  Program(std::vector<UniformJson> uniforms,
+          std::vector<std::shared_ptr<Shader>> shaders);
   ~Program();
   void SetUniform(std::string uniform, float value);
   void SetUniform(std::string uniform, float v1, float v2, float v3, float v4);
