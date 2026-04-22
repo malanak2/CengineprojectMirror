@@ -5,8 +5,8 @@ if [ -z "$1" ]; then
   exit
 fi
 echo "$1"
-rm -rf generated/shaders/$1
-mkdir -p generated/shaders/$1
+rm -rf resources/generated/shaders/$1
+mkdir -p resources/generated/shaders/$1
 prof=""
 if [ ! -z "$2" ]; then
   prof="-profile $2"
@@ -17,9 +17,11 @@ if [ ! -z "$3" ]; then
 fi
 
 slangc resources/shader/basic.slang \
+  -no-mangle \
   -entry main -stage vertex \
   -o resources/generated/shaders/$1/basic.vert.$ext # -target $1 -o generated/shaders/$1/basicFrag.$1
 
 slangc resources/shader/basic.slang \
-  -entry mainFrag -stage fragment \
+  -no-mangle \
+  -entry mainFrag -stage pixel \
   -o resources/generated/shaders/$1/basic.frag.$ext

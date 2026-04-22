@@ -12,9 +12,11 @@ void sigsegvHandler(int sig) {
   exit(sig);
 }
 
+void sigabrtHandler(int sig) { sigsegvHandler(sig); }
+
 int main() {
   signal(SIGSEGV, sigsegvHandler);
-  signal(SIGABRT, sigsegvHandler);
+  signal(SIGABRT, sigabrtHandler);
   CPPTRACE_TRY {
     auto engine = new Engine();
     if (engine->Init() != 0) {

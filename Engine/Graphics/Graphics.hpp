@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "../Config/Config.hpp"
+#include "Material.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "glad/glad.h"
@@ -11,6 +12,18 @@
 #include <string>
 #include <unordered_map>
 namespace Graphics {
+
+#ifdef DEBUG
+#define CHECK_GL_ERROR()                                                       \
+  {                                                                            \
+    GLenum err;                                                                \
+    while ((err = glGetError()) != GL_NO_ERROR) {                              \
+      printf("OpenGL Error: %04x\n", err);                                     \
+    }                                                                          \
+  }
+#else
+#define CHECK_GL_ERROR
+#endif
 class Main {
 public:
   int Init(Config *config);
@@ -22,11 +35,12 @@ public:
   static std::unordered_map<std::string, std::shared_ptr<Shader>> vertexShaders;
   static std::unordered_map<std::string, std::shared_ptr<Shader>>
       fragmentShaders;
+  static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
 
 private:
   GLFWwindow *window = nullptr;
   // TODO: Remove
-  std::shared_ptr<Program> program = nullptr;
+  std::shared_ptr<Material> material = nullptr;
   unsigned int vao = 0;
 };
 }; // namespace Graphics

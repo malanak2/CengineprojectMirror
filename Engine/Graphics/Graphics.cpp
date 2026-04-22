@@ -19,6 +19,7 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
     {};
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
     {};
+std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 
 int Main::Init(Config *config) {
   auto logger = spdlog::get("console");
@@ -70,8 +71,8 @@ int Main::Init(Config *config) {
     return -1;
   }
   */
-  std::unique_ptr<Material> m =
-      std::unique_ptr<Material>(new Material("materials/basic.json"));
+  std::shared_ptr<Material> m =
+      std::make_shared<Material>("materials/basic.json");
   glUseProgram(m->program->id);
   float vertices[] = {
       -0.5f, -0.5f, 0.0f, // left
@@ -103,7 +104,7 @@ int Main::Init(Config *config) {
   // VBOs) when it's not directly necessary.
   glBindVertexArray(0);
   vao = VAO;
-  program = m->program;
+  this->material = m;
 
   return 0;
 }
@@ -115,7 +116,8 @@ int Main::Tick() {
   }
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
-  glUseProgram(program->id);
+  material->SetupMaterial();
+  material->program->SetUniform("color", 1, 0, 0, 1);
   glBindVertexArray(vao);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glfwSwapBuffers(window);

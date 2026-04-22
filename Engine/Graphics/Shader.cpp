@@ -90,3 +90,5 @@ void Shader::Delete() {
 }
 
 Shader::~Shader() { Delete(); }
+
+// void Shader::SetUniform(std::string uniform, float value) {};

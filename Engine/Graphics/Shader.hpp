@@ -28,6 +28,7 @@ public:
   ~Shader();
   bool _reusable = false;
   void Delete();
+
   Shader(ShaderType type, std::string source, bool reusable = false);
 };
 } // namespace Graphics

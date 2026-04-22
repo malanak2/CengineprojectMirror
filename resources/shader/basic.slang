@@ -12,8 +12,11 @@ VSOutput main(float3 aPos : POSITION)
   return output;
 }
 
-[shader("fragment")]
+cbuffer ShaderData {
+    float4 color;
+  }
+[shader("pixel")]
 float4 mainFrag(VSOutput out) : SV_Target
 {
-  return float4(out.color, 1.0);
+  return float4(color);
 }

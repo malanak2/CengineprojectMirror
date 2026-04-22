@@ -16,6 +16,8 @@ public:
   void SetupMaterial();
   void RenderObjects();
   Material(std::string path);
+  static std::shared_ptr<Material> Create(std::string path);
   Material();
+  ~Material();
 };
 } // namespace Graphics

@@ -15,7 +15,7 @@ FetchContent_MakeAvailable(cpptrace)
 find_package(spdlog CONFIG REQUIRED)
 
 add_executable(cengineproject main.cpp )
-
+add_compile_definitions(DEBUG=1 )
 add_subdirectory(Engine)
 add_subdirectory(Util)
 

@@ -21,6 +21,8 @@ int Engine::Init() {
 }
 
 void Engine::Run() {
+  auto logger = spdlog::get("console");
+  logger->info("Running...");
   // Handle
   while (true) {
     if (graphics->Tick() != 0) {
@@ -28,7 +30,7 @@ void Engine::Run() {
       break;
     }
   }
-  spdlog::get("console")->info("Engine stopping.");
+  logger->info("Engine stopping.");
 }
 
 void Engine::setupLogger() {

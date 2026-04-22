@@ -1,9 +1,12 @@
 #include "Material.hpp"
 #include "../../Util/FileUtil.hpp"
+#include "Graphics.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "glad/glad.h"
 #include "nlohmann/json.hpp"
 #include <algorithm>
+#include <cpptrace/basic.hpp>
 #include <memory>
 #include <spdlog/spdlog-inl.h>
 #include <stdexcept>
@@ -28,6 +31,7 @@ Material::Material(std::string path) {
                  (std::string)data["object_type"], path);
     return;
   }
+  this->path = path;
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
     auto data_shaders = data["shaders"];
@@ -55,8 +59,7 @@ Material::Material(std::string path) {
                 ", shader path is " + (std::string)data_shader["path"]);
           }
         });
-    std::shared_ptr<Program> program =
-        std::shared_ptr<Program>(new Program(shaders));
+    std::shared_ptr<Program> program = std::make_shared<Program>(shaders);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");
@@ -65,14 +68,26 @@ Material::Material(std::string path) {
     this->usable = true;
   } catch (const std::exception &e) {
     logger->error("Failed to parse material at {}. ({})", path, e.what());
+    cpptrace::generate_trace().print();
     return;
   }
 }
 
-void Material::SetupMaterial() {
-  throw std::logic_error("Function not implemented");
-}
+void Material::SetupMaterial() { glUseProgram(program->id); }
 
 void Material::RenderObjects() {
   throw std::logic_error("Function not implemented");
 }
+
+std::shared_ptr<Material> Material::Create(std::string path) {
+  if (Main::materials.contains(path)) {
+    return Main::materials[path];
+  }
+  auto material = std::make_shared<Material>(path);
+  if (material->usable) {
+    Main::materials[path] = material;
+  }
+  return material;
+}
+
+Material::~Material() { Main::materials.erase(path); }
