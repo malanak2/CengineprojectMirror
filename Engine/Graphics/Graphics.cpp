@@ -90,7 +90,7 @@ int Main::Tick() {
   glClear(GL_COLOR_BUFFER_BIT);
   CHECK_GL_ERROR();
   material->SetupMaterial();
-  material->program->SetUniform("u_color", 1, 0, 0, 1);
+  material->program->SetUniform("color", 1, 0, 0, 1);
   glBindVertexArray(vao);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   CHECK_GL_ERROR();

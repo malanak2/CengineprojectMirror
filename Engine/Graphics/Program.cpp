@@ -124,10 +124,13 @@ Program::~Program() {
 void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
                          float v4) {
   if (!uniforms.contains(uniform)) {
-    //    spdlog::get("console")->info("Uniform not found: {}", uniform);
+    spdlog::get("console")->info("Uniform not found: {}", uniform);
     return;
   }
   glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
   float data[4] = {v1, v2, v3, v4};
+  /* spdlog::get("console")->info(
+       "Binding ubo {} id {}, setting the data to {} {} {} {}", uniform,
+       uniforms[uniform], v1, v2, v3, v4);*/
   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(data), data);
 }
