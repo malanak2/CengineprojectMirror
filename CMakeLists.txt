@@ -16,8 +16,8 @@ find_package(spdlog CONFIG REQUIRED)
 
 add_executable(cengineproject main.cpp )
 add_compile_definitions(DEBUG=1 )
-add_subdirectory(Engine)
 add_subdirectory(Util)
+add_subdirectory(Engine)
 
 target_link_libraries(cengineproject PRIVATE cengineengine cengineutil cpptrace::cpptrace spdlog::spdlog)
 
@@ -26,6 +26,6 @@ if(WIN32)
     TARGET cengineproject POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     $<TARGET_FILE:cpptrace::cpptrace>
-    $<TARGET_FILE_DIR:your_target>
+    $<TARGET_FILE_DIR:cengineproject>
   )
 endif()

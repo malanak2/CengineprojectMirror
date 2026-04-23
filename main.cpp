@@ -20,12 +20,13 @@ int main() {
   CPPTRACE_TRY {
     auto engine = new Engine();
     if (engine->Init() != 0) {
-      return -1;
+      throw std::runtime_error("Failed to initialize engine");
     }
     engine->Run();
-    return 0;
   }
   CPPTRACE_CATCH(const std::exception &e) {
     cpptrace::from_current_exception().print();
+    return -1;
   }
+  return 0;
 }

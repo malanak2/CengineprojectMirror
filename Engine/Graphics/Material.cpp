@@ -10,7 +10,7 @@
 #include <cpptrace/basic.hpp>
 #include <exception>
 #include <memory>
-#include <spdlog/spdlog-inl.h>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <vector>
 

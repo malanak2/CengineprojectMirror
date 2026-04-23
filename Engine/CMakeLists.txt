@@ -18,12 +18,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 add_library(cengineengine SHARED Engine.hpp Engine.cpp
-        Graphics/Graphics.hpp
         Graphics/Graphics.cpp
+        Graphics/Graphics.hpp
         Graphics/Program.cpp
-        Graphics/Program.cpp
+        Graphics/Program.hpp
         Graphics/Shader.cpp
-        Graphics/Shader.cpp
+        Graphics/Shader.hpp
         Graphics/IRenderable.hpp
         Graphics/Material.cpp
         Graphics/Material.hpp
@@ -41,3 +41,11 @@ target_include_directories(cengineengine PUBLIC ..)
 set_target_properties(cengineengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengineengine PUBLIC spdlog::spdlog)
 target_link_libraries(cengineengine PRIVATE cpptrace::cpptrace glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json)
+if(WIN32)
+      add_custom_command(
+              TARGET cengineengine POST_BUILD
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              $<TARGET_FILE:cpptrace::cpptrace>
+              $<TARGET_FILE_DIR:cengineengine>
+      )
+endif()

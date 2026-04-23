@@ -2,7 +2,6 @@
 #include "fstream"
 #include <iterator>
 #include <regex>
-#include <spdlog/spdlog.h>
 
 int FileUtil::ReadFile(std::string path, std::string *result) {
   std::ifstream file;
