@@ -8,5 +8,6 @@
 class FileUtil {
 public:
   static int ReadFile(std::string path, std::string *result);
-  static int LoadSpirv(std::string path, std::vector<unsigned char> *res);
+  static int SaveFile(std::string path, std::string *content);
+  static int LoadBinary(std::string path, std::vector<unsigned char> *res);
 };

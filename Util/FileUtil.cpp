@@ -3,10 +3,11 @@
 #include <iterator>
 #include <regex>
 
+/// Loads a text file from the resources directory
 int FileUtil::ReadFile(std::string path, std::string *result) {
   std::ifstream file;
   path = "resources/" + path;
-  // Everything should be in the resources directory. if it is not, the move it
+  // Everything should be in the resources directory. if it is not, then move it
   // there!
   path = std::regex_replace(path, std::regex("\\.\\."), ".");
   file.open(path, std::ios::in | std::ios::ate);
@@ -22,11 +23,17 @@ int FileUtil::ReadFile(std::string path, std::string *result) {
   return 0;
 }
 
-int FileUtil::LoadSpirv(std::string path, std::vector<unsigned char> *res) {
+int FileUtil::SaveFile(std::string path, std::string *content) {
+  // TODO
+  return -1;
+}
+
+/// Loads a binary file from the resources directory
+int FileUtil::LoadBinary(std::string path, std::vector<unsigned char> *res) {
   res->clear();
   std::ifstream file;
   path = "resources/" + path;
-  // Everything should be in the resources directory. if it is not, the move it
+  // Everything should be in the resources directory. if it is not, then move it
   // there!
   path = std::regex_replace(path, std::regex("\\.\\."), ".");
   file.open(path, std::ios::binary);

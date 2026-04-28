@@ -1,9 +1,7 @@
 #pragma once
 
-#include "IRenderable.hpp"
 #include "Program.hpp"
 #include <memory>
-#include <vector>
 namespace Graphics {
 class Material {
 public:
@@ -12,7 +10,6 @@ public:
   std::string path = "";
   std::string name = "";
   bool usable = false;
-  std::vector<std::shared_ptr<IRenderable>> objects;
   void SetupMaterial();
   void RenderObjects();
   Material(std::string path);

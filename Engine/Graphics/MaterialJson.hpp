@@ -1,5 +1,5 @@
 #pragma once
-#include "nlohmann/json.hpp"
+#include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <string>
 namespace Graphics {
 struct ShaderJson {

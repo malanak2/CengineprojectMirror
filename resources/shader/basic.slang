@@ -12,6 +12,7 @@ VSOutput mainVertex(float3 aPos : POSITION)
   return output;
 }
 
+[vk::binding(0,0)]
 uniform float4 u_color;
 [shader("pixel")]
 float4 mainPixel(VSOutput out) : SV_Target

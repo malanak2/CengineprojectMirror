@@ -9,12 +9,13 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
   auto logger = spdlog::get("console");
   if (!GLAD_GL_VERSION_4_6) {
-    logger->error("SPIR-V shaders require OpenGL 4.6, but it is not available.");
+    logger->error(
+        "SPIR-V shaders require OpenGL 4.6, but it is not available.");
     isValid = false;
     return;
   }
   std::vector<unsigned char> spirv;
-  if (FileUtil::LoadSpirv(path, &spirv) != 0) {
+  if (FileUtil::LoadBinary(path, &spirv) != 0) {
     logger->warn("Failed to load spirv at {}", path);
     isValid = false;
     return;

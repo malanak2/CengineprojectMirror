@@ -38,7 +38,9 @@ void Engine::Run() {
 
 void Engine::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");
+  spdlog::get("console")->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
   spdlog::get("console")->info("Set up logger!");
+  SPDLOG_LOGGER_INFO(spdlog::get("console"), "Set up logger!");
 }
 
 void Engine::Terminate() { graphics->Terminate(); }
