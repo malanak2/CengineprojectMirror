@@ -45,24 +45,17 @@ Material::Material(std::string path) {
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
     auto data_shaders = m.shaders;
-    std::for_each(data_shaders.begin(), data_shaders.end(),
-                  [&shaders, path](auto &data_shader) {
-                    Shader::ShaderType type = Shader::ShaderType::Invalid;
-                    if (data_shader.type == "vertex") {
-                      type = Shader::ShaderType::Vertex;
-                    } else if (data_shader.type == "fragment") {
-                      type = Shader::ShaderType::Fragment;
-                    }
-                    std::shared_ptr<Shader> shader = Shader::Create(
-                        type, data_shader.path, data_shader.entrypoint, false);
-                    if (shader->isValid) {
-                      shaders.insert(shaders.end(), shader);
-                    } else {
-                      throw std::invalid_argument(
-                          "Invalid shader specified in material at " + path +
-                          ", shader path is " + data_shader.path);
-                    }
-                  });
+    for (auto &data_shader : data_shaders) {
+      std::shared_ptr<Shader> shader = Shader::Create(
+          data_shader.type, data_shader.path, data_shader.entrypoint, false);
+      if (shader->isValid) {
+        shaders.insert(shaders.end(), shader);
+      } else {
+        throw std::invalid_argument("Invalid shader specified in material at " +
+                                    path + ", shader path is " +
+                                    data_shader.path);
+      }
+    }
     std::shared_ptr<Program> program =
         std::make_shared<Program>(m.uniforms, shaders);
     if (!program->isValid) {

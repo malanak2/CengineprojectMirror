@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/Graphics/Material.hpp"
-#include "IComponent.hpp"
+#include "Engine/IComponent.hpp"
 #include "nlohmann/json.hpp"
 #include <string>
 #include <unordered_map>
@@ -33,7 +33,8 @@ public:
   void Load() override;
 
   void FromJson(RenderableJson json_i);
-  RenderableJson ToJson();
+
+  json ToJson() override;
 
 private:
   std::string path;

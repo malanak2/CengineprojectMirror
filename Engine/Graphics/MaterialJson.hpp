@@ -1,10 +1,11 @@
 #pragma once
+#include "Shader.hpp"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <string>
 namespace Graphics {
 struct ShaderJson {
 public:
-  std::string type;
+  ShaderType type;
   std::string path;
   std::string entrypoint;
 };

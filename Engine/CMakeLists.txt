@@ -18,6 +18,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 add_library(cengineengine SHARED Engine.hpp Engine.cpp
+        Object.cpp
+        Object.hpp
         Graphics/Graphics.cpp
         Graphics/Graphics.hpp
         Graphics/Program.cpp

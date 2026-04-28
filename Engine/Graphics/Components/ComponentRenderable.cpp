@@ -50,14 +50,15 @@ void ComponentRenderable::Save() {
   json a = js;
   std::string astr = a;
   if (FileUtil::SaveFile(path, &astr) != 0) {
-    SPDLOG_LOGGER_ERROR(spdlog::get("console"), "Failed to save component");
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"),
+                        "Failed to save component renderable");
   }
 };
 void ComponentRenderable::Load() {
   std::string js;
   if (FileUtil::ReadFile(path, &js) != 0) {
     SPDLOG_LOGGER_ERROR(spdlog::get("console"),
-                        "Failed to load comprenderable file.");
+                        "Failed to load compononent renderable file.");
     return;
   }
   auto js_p = json::parse(js);
@@ -84,7 +85,7 @@ void ComponentRenderable::FromJson(RenderableJson json_inst) {
   this->_uniforms = json_inst.uniforms;
 };
 
-RenderableJson ComponentRenderable::ToJson() {
+RenderableJson ComponentRenderable::toJson() {
   RenderableJson j;
   j.object_type = "component:renderable";
   j.material_path = _material_path;
@@ -92,3 +93,5 @@ RenderableJson ComponentRenderable::ToJson() {
   j.uses_camera = uses_camera;
   return j;
 };
+
+json ComponentRenderable::ToJson() { return toJson(); }

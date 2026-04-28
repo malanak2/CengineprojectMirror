@@ -32,7 +32,7 @@ public:
   int Tick();
   void Terminate();
 
-  Shader GetShader(Shader::ShaderType type, std::string source);
+  Shader GetShader(ShaderType type, std::string source);
   Program NewProgram(int count, ...);
   static std::unordered_map<std::string, std::shared_ptr<Shader>> vertexShaders;
   static std::unordered_map<std::string, std::shared_ptr<Shader>>

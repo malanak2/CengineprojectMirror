@@ -89,8 +89,8 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
 
 std::shared_ptr<Shader> Shader::Create(ShaderType type, std::string path,
                                        std::string entrypoint, bool reusable) {
-  auto &cache = type == Shader::ShaderType::Vertex ? Main::vertexShaders
-                                                   : Main::fragmentShaders;
+  auto &cache =
+      type == ShaderType::Vertex ? Main::vertexShaders : Main::fragmentShaders;
   if (cache.contains(path)) {
     return cache[path];
   }
