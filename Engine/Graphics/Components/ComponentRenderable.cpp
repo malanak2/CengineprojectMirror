@@ -1,6 +1,5 @@
 #include "ComponentRenderable.hpp"
 #include "Util/FileUtil.hpp"
-#include <spdlog/spdlog-inl.h>
 #include <spdlog/spdlog.h>
 
 using namespace Graphics;

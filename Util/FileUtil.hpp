@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "spdlog/spdlog.h"
 class FileUtil {
 public:
   static int ReadFile(std::string path, std::string *result);

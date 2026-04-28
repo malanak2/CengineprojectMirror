@@ -29,7 +29,7 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Material.cpp
         Graphics/Material.hpp
         Graphics/MaterialJson.hpp
-        Graphics/Components/IComponent.hpp
+        IComponent.hpp
         Graphics/Components/ComponentRenderable.hpp
         Graphics/Components/ComponentRenderable.cpp
         Config/Config.cpp

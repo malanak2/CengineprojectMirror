@@ -4,7 +4,7 @@
 
 #pragma once
 #include <memory>
-#include <nlohmann/detail/macro_scope.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 namespace Graphics {
 /// Class in which shader info is stored
