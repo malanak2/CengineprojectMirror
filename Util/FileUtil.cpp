@@ -1,5 +1,6 @@
 #include "FileUtil.hpp"
 #include "fstream"
+#include <fstream>
 #include <iterator>
 #include <regex>
 
@@ -24,8 +25,16 @@ int FileUtil::ReadFile(std::string path, std::string *result) {
 }
 
 int FileUtil::SaveFile(std::string path, std::string *content) {
-  // TODO
-  return -1;
+  std::ofstream file;
+  path = "resources/" + path;
+  file.open(path, std::ios::out);
+  if (!file.is_open()) {
+    return -1;
+  }
+  file << content;
+  file.close();
+
+  return 0;
 }
 
 /// Loads a binary file from the resources directory

@@ -28,13 +28,14 @@ int Main::Init(Config *config) {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   window = glfwCreateWindow(800, 600, config->Window_Title.c_str(), NULL, NULL);
   if (window == NULL) {
-    spdlog::get("console")->error("Failed to create GLFW window.");
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"),
+                        "Failed to create GLFW window.");
     glfwTerminate();
     return -1;
   }
   glfwMakeContextCurrent(window);
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    spdlog::get("console")->error("Failed to initialize GLAD.");
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"), "Failed to initialize GLAD.");
     return -1;
   }
   glViewport(0, 0, 800, 600);
@@ -85,7 +86,7 @@ int Main::Init(Config *config) {
 
 int Main::Tick() {
   if (glfwWindowShouldClose(window)) {
-    spdlog::get("console")->info("GLFW Window should close.");
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "GLFW Window should close.");
     return -1;
   }
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

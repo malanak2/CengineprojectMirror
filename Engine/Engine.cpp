@@ -10,12 +10,12 @@
 int Engine::Init() {
   setupLogger();
   auto logger = spdlog::get("console");
-  logger->info("Loading config...");
+  SPDLOG_LOGGER_INFO(logger, "Loading config...");
   config = new Config("Engine.ini");
-  logger->info("Loading graphics...");
+  SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
   graphics = new Graphics::Main();
   if (graphics->Init(config) != 0) {
-    logger->error("Failed to initialize graphics!");
+    SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");
     return -1;
   }
   CHECK_GL_ERROR();
@@ -24,7 +24,7 @@ int Engine::Init() {
 
 void Engine::Run() {
   auto logger = spdlog::get("console");
-  logger->info("Running...");
+  SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
   while (true) {
     if (graphics->Tick() != 0) {
@@ -33,13 +33,12 @@ void Engine::Run() {
     }
     CHECK_GL_ERROR();
   }
-  logger->info("Engine stopping.");
+  SPDLOG_LOGGER_INFO(logger, "Engine stopping.");
 }
 
 void Engine::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");
   spdlog::get("console")->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
-  spdlog::get("console")->info("Set up logger!");
   SPDLOG_LOGGER_INFO(spdlog::get("console"), "Set up logger!");
 }
 

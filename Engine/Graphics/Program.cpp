@@ -16,7 +16,8 @@ Program::Program(std::vector<UniformJson> uniforms_json,
     std::shared_ptr<Shader> shad = shaders[i];
     shaders[i] = shad;
     if (!shad->isValid) {
-      logger->warn("Tried to add an invalid shader to a program, ignoring...");
+      SPDLOG_LOGGER_WARN(
+          logger, "Tried to add an invalid shader to a program, ignoring...");
       continue;
     }
     glAttachShader(program, shad->id);
@@ -27,7 +28,7 @@ Program::Program(std::vector<UniformJson> uniforms_json,
   glGetProgramiv(program, GL_LINK_STATUS, &success);
   if (!success) {
     glGetProgramInfoLog(program, 512, NULL, infoLog);
-    logger->error("ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
+    SPDLOG_LOGGER_ERROR(logger, "ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
     cpptrace::generate_trace().print();
     isValid = false;
     return;
@@ -52,9 +53,9 @@ Program::Program(std::vector<UniformJson> uniforms_json,
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     uniforms[uniform.name] = ubo;
     CHECK_GL_ERROR();
-    spdlog::get("console")->info("Created buffer {} with pos {} and size {}",
-                                 uniform.name, uniform.bind_point,
-                                 uniform.size);
+    SPDLOG_LOGGER_INFO(spdlog::get("console"),
+                       "Created buffer {} with pos {} and size {}",
+                       uniform.name, uniform.bind_point, uniform.size);
   }
   CHECK_GL_ERROR();
 
@@ -124,7 +125,8 @@ Program::~Program() {
 void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
                          float v4) {
   if (!uniforms.contains(uniform)) {
-    spdlog::get("console")->info("Uniform not found: {}", uniform);
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
+                       uniform);
     return;
   }
   glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);

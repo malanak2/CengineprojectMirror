@@ -1,51 +1,84 @@
 #include "ComponentRenderable.hpp"
 #include "Util/FileUtil.hpp"
 #include <spdlog/spdlog-inl.h>
+#include <spdlog/spdlog.h>
 
 using namespace Graphics;
 
-ComponentRenderable::ComponentRenderable(std::string path) { Load(path); }
+ComponentRenderable::ComponentRenderable(std::string path) {
+  this->path = path;
+  Load();
+}
 
 ComponentRenderable::ComponentRenderable(
     std::string material_path,
-    std::unordered_map<std::string, std::vector<float>> uniforms) {
+    std::unordered_map<std::string, std::vector<float>> uniforms,
+    bool uses_camera) {
   this->_material_path = material_path;
   this->_material = Material::Create(material_path);
+  for (auto &[key, val] : _material->program->uniforms) {
+    if (!uniforms.contains(key)) {
+      SPDLOG_LOGGER_WARN(
+          spdlog::get("console"),
+          "Component at {} doesnt contain uniform {} specified in material",
+          path, key);
+    }
+  }
+  for (auto &[key, val] : uniforms) {
+    if (!_material->program->uniforms.contains(key)) {
+      SPDLOG_LOGGER_WARN(spdlog::get("console"),
+                         "Component at {} specifies uniform {} that is not "
+                         "specified in material",
+                         path, key);
+    }
+  }
+  this->uses_camera = uses_camera;
   auto logger = spdlog::get("console");
   if (!this->_material->usable) {
-    logger->error("Failed to load material at {}", material_path);
+    SPDLOG_LOGGER_ERROR(logger, "Failed to load material at {}", material_path);
     return;
   }
   this->_uniforms = uniforms;
 };
 
-void ComponentRenderable::Setup(){};
-void ComponentRenderable::Update(){};
-void ComponentRenderable::FixedUpdate(){};
+void ComponentRenderable::Setup() {};
+void ComponentRenderable::Update() {};
+void ComponentRenderable::FixedUpdate() {};
 
-void ComponentRenderable::Save(std::string path) {
+void ComponentRenderable::Save() {
   RenderableJson js = ToJson();
   json a = js;
   std::string astr = a;
   if (FileUtil::SaveFile(path, &astr) != 0) {
-    spdlog::get("console")->error("Failed to save component");
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"), "Failed to save component");
   }
 };
-void ComponentRenderable::Load(std::string path) {
+void ComponentRenderable::Load() {
   std::string js;
   if (FileUtil::ReadFile(path, &js) != 0) {
-    spdlog::get("console")->error("Failed to load comprenderable file.");
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"),
+                        "Failed to load comprenderable file.");
     return;
   }
-  FromJson(json::parse(js));
+  auto js_p = json::parse(js);
+  js_p["path"] = path;
+  FromJson(js_p);
 };
 
 void ComponentRenderable::FromJson(RenderableJson json_inst) {
+  if (json_inst.object_type != "component::renderable") {
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"),
+                        "Tried to load a component::renderable from a json "
+                        "file of different object_type. Path: {}",
+                        json_inst.path);
+    return;
+  }
   this->_material_path = json_inst.material_path;
   this->_material = Material::Create(_material_path);
   auto logger = spdlog::get("console");
   if (!this->_material->usable) {
-    logger->error("Failed to load material at {}", _material_path);
+    SPDLOG_LOGGER_ERROR(logger, "Failed to load material at {}",
+                        _material_path);
     return;
   }
   this->_uniforms = json_inst.uniforms;
@@ -53,7 +86,9 @@ void ComponentRenderable::FromJson(RenderableJson json_inst) {
 
 RenderableJson ComponentRenderable::ToJson() {
   RenderableJson j;
+  j.object_type = "component:renderable";
   j.material_path = _material_path;
   j.uniforms = _uniforms;
+  j.uses_camera = uses_camera;
   return j;
 };

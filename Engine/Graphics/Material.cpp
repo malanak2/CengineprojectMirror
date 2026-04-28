@@ -24,20 +24,20 @@ Material::Material(std::string path) {
   auto logger = spdlog::get("console");
   std::string file;
   if (FileUtil::ReadFile(path, &file) != 0) {
-    logger->warn("Could not open material {}", path);
+    SPDLOG_LOGGER_WARN(logger, "Could not open material {}", path);
     return;
   }
   json data = json::parse(file);
   if (data["object_type"] != "material") {
-    logger->warn("Tried to open {} as material (path: {})",
-                 (std::string)data["object_type"], path);
+    SPDLOG_LOGGER_WARN(logger, "Tried to open {} as material (path: {})",
+                       (std::string)data["object_type"], path);
     return;
   }
   MaterialJson m;
   try {
     m = data;
   } catch (const std::exception &e) {
-    logger->error("Failed to parse material json at {}", path);
+    SPDLOG_LOGGER_ERROR(logger, "Failed to parse material json at {}", path);
     return;
   }
   this->path = path;
@@ -73,7 +73,8 @@ Material::Material(std::string path) {
     this->usable = true;
     CHECK_GL_ERROR();
   } catch (const std::exception &e) {
-    logger->error("Failed to parse material at {}. ({})", path, e.what());
+    SPDLOG_LOGGER_ERROR(logger, "Failed to parse material at {}. ({})", path,
+                        e.what());
     cpptrace::generate_trace().print();
     return;
   }
