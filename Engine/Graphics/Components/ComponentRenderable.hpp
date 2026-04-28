@@ -36,6 +36,8 @@ public:
 
   json ToJson() override;
 
+  RenderableJson toJson();
+
 private:
   std::string path;
   std::string _material_path;
