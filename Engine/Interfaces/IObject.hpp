@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Engine/IComponent.hpp"
+#include "Interfaces/IComponent.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 using json = nlohmann::json;
-namespace Graphics {
 struct ObjectJson {
 public:
   std::string object_type;
@@ -16,21 +15,17 @@ public:
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, components);
 
-class Object {
+class IObject {
 public:
   std::vector<std::shared_ptr<IComponent>> _components;
   std::vector<float> _position;
-  Object(std::string name, std::vector<std::shared_ptr<IComponent>> comps = {},
-         std::vector<float> position = {0, 0, 0});
-  Object(std::string paht);
-  ~Object();
+  std::vector<float> _rotation;
   std::string _name;
-  void Setup();
-  void Update();
-  void FixedUpdate();
-  void Save();
-  void Load();
+  virtual void Setup() = 0;
+  virtual void Update() = 0;
+  virtual void FixedUpdate() = 0;
+  virtual void Save() = 0;
+  virtual void Load() = 0;
 
 private:
 };
-} // namespace Graphics

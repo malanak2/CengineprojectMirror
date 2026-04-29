@@ -6,6 +6,7 @@
 #include "Material.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <memory>
@@ -18,13 +19,11 @@ namespace Graphics {
   {                                                                            \
     GLenum err;                                                                \
     while ((err = glGetError()) != GL_NO_ERROR) {                              \
-      SPDLOG_LOGGER_ERROR(spdlog::get("console"),                              \
-                          "OpenGL Error: {} at {}:{}\n", err, __FILE__,        \
-                          __LINE__);                                           \
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "OpenGL Error: {}", err);        \
     }                                                                          \
   }
 #else
-#define CHECK_GL_ERROR
+#define CHECK_GL_ERROR()
 #endif
 class Main {
 public:

@@ -5,8 +5,7 @@
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "glad/glad.h"
-#include "nlohmann/json.hpp"
-#include <algorithm>
+#include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <cpptrace/basic.hpp>
 #include <exception>
 #include <memory>

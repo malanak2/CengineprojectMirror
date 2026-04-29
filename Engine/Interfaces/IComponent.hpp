@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nlohmann/json_fwd.hpp>
-namespace Graphics {
 class IComponent {
 public:
   virtual ~IComponent() = default;
@@ -12,4 +11,3 @@ public:
   virtual void Load() = 0;
   virtual nlohmann::json ToJson() = 0;
 };
-} // namespace Graphics

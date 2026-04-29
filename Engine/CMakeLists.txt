@@ -18,8 +18,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 add_library(cengineengine SHARED Engine.hpp Engine.cpp
-        Object.cpp
-        Object.hpp
+  Interfaces/IObject.hpp
+  Interfaces/IJson.hpp
+        Objects/CameraObject.cpp
+        Objects/CameraObject.hpp
         Graphics/Graphics.cpp
         Graphics/Graphics.hpp
         Graphics/Program.cpp
@@ -29,7 +31,7 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Material.cpp
         Graphics/Material.hpp
         Graphics/MaterialJson.hpp
-        IComponent.hpp
+        Interfaces/IComponent.hpp
         Graphics/Components/ComponentRenderable.hpp
         Graphics/Components/ComponentRenderable.cpp
         Config/Config.cpp
@@ -41,6 +43,7 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
 
 target_include_directories(cengineengine PUBLIC glad/include)
 target_include_directories(cengineengine PUBLIC ..)
+target_include_directories(cengineengine PUBLIC .)
 
 set_target_properties(cengineengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengineengine PUBLIC spdlog::spdlog)
