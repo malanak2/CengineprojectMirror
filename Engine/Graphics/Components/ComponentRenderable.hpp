@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/Graphics/Material.hpp"
-#include "Engine/IComponent.hpp"
+#include "Interfaces/IComponent.hpp"
 #include "nlohmann/json.hpp"
 #include <string>
 #include <unordered_map>

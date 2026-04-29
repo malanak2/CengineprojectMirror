@@ -6,14 +6,6 @@
 #include <string>
 #include <vector>
 using json = nlohmann::json;
-struct ObjectJson {
-public:
-  std::string object_type;
-  std::vector<float> position;
-  std::vector<json> components;
-};
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, components);
 
 class IObject {
 public:

@@ -12,6 +12,9 @@ using json = nlohmann::json;
 struct CameraObjectJson {
 public:
   std::string object_type;
+  std::vector<float> position;
+  std::vector<float> rotation;
+  std::vector<IComponent> components;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraObjectJson, object_type);
 
@@ -34,4 +37,6 @@ public:
 
   // IJson
   json ToJson() override;
+
+private:
 };

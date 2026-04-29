@@ -4,6 +4,8 @@
 
 #include "Graphics.hpp"
 #include "Material.hpp"
+#include "Objects/CameraObject.hpp"
+#include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <unordered_map>
@@ -21,12 +23,13 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
 std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 
 int Main::Init(Config *config) {
-  auto logger = spdlog::get("console");
+  auto logger = ENGINE_UTIL_LOGGER;
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  window = glfwCreateWindow(800, 600, config->Window_Title.c_str(), NULL, NULL);
+  window =
+      glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
   if (window == NULL) {
     SPDLOG_LOGGER_ERROR(spdlog::get("console"),
                         "Failed to create GLFW window.");
@@ -81,6 +84,11 @@ int Main::Init(Config *config) {
   vao = VAO;
   this->material = m;
   CHECK_GL_ERROR();
+  auto a = config->graphics->CameraRot;
+  a.insert(a.begin(), 0);
+  camera = std::make_unique<CameraObject>(
+      "Default camera", std::vector<std::shared_ptr<IComponent>>{},
+      config->graphics->CameraPos, a);
   return 0;
 }
 
