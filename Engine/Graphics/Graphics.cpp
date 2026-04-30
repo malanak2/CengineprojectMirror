@@ -24,7 +24,6 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
     {};
 std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
-
 int Main::Init(Config *config) {
   auto logger = ENGINE_UTIL_LOGGER;
   glfwInit();
@@ -50,7 +49,7 @@ int Main::Init(Config *config) {
   // TODO: Remove
 
   std::shared_ptr<Material> m =
-      std::make_shared<Material>("materials/basic.json");
+      Material::Create("materials/basic.json");
   if (!m->usable)
     return -1;
   CHECK_GL_ERROR();
@@ -89,15 +88,19 @@ int Main::Init(Config *config) {
   CHECK_GL_ERROR();
   auto a = config->graphics->CameraRot;
   a.insert(a.begin(), 0);
+
   camera = std::make_unique<CameraObject>(
       "Default camera", std::vector<std::shared_ptr<IComponent>>{},
       config->graphics->CameraPos, a);
+
   camera->_components[ENGINE_COMPONENT_TYPE::renderable] =
       std::make_shared<ComponentRenderable>(
           "materials/basic.json",
-          std::unordered_map<std::string, std::vector<float>>{});
+          std::unordered_map<std::string, std::vector<float>>{{"color", {1, 0, 0, 1}}});
+    /*
   std::string camerajs = camera->ToJson().dump();
   FileUtil::SaveFile("generated/camera.json", &(camerajs));
+  */
   return 0;
 }
 

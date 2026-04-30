@@ -13,9 +13,11 @@ public:
   bool uses_camera;
   void SetupMaterial();
   void RenderObjects();
-  Material(std::string path);
   static std::shared_ptr<Material> Create(std::string path);
+  Material(std::string path);
   Material();
   ~Material();
+private:
+  static bool ran_from_create;
 };
 } // namespace Graphics

@@ -19,8 +19,11 @@ namespace Graphics {
 using json = nlohmann::json;
 
 Material::Material() { throw std::logic_error("Function not implemented"); }
-
+bool Material::ran_from_create = false;
 Material::Material(std::string path) {
+  if (!ran_from_create) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "DO NOT CALL THIS CONSTRUCTOR FROM OUTSIDE OF Material::Create!!!!!!!!!!!!");
+  }
   auto logger = spdlog::get("console");
   std::string file;
   if (FileUtil::ReadFile(path, &file) != 0) {
@@ -86,9 +89,13 @@ std::shared_ptr<Material> Material::Create(std::string path) {
     SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for material {}", path);
     return Main::materials[path];
   }
+  ran_from_create = true;
   auto material = std::make_shared<Material>(path);
+  ran_from_create = false;
   if (material->usable) {
     Main::materials[path] = material;
+  } else {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Created an unusable material at {}", path);
   }
   return material;
 }
