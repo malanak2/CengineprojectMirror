@@ -1,7 +1,7 @@
 {
   "object_type": "material",
   "name": "Basic Material",
-  "uses_camera": true,
+  "uses_camera": false,
   "shaders": [
     {
       "type": "vertex",
@@ -19,11 +19,6 @@
       "name": "color",
       "bind_point": 0,
       "size": 16
-    },
-    {
-      "name": "camera",
-      "bind_point": 1,
-      "size": 64
     }
   ]
 }

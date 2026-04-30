@@ -4,6 +4,7 @@
 #include "Graphics.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <cpptrace/basic.hpp>
@@ -12,7 +13,6 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <vector>
-
 
 namespace Graphics {
 
@@ -83,6 +83,7 @@ void Material::RenderObjects() {
 
 std::shared_ptr<Material> Material::Create(std::string path) {
   if (Main::materials.contains(path)) {
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for material {}", path);
     return Main::materials[path];
   }
   auto material = std::make_shared<Material>(path);
