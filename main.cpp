@@ -18,10 +18,7 @@ int main() {
   signal(SIGSEGV, sigsegvHandler);
   signal(SIGABRT, sigabrtHandler);
   CPPTRACE_TRY {
-    auto engine = new Engine();
-    if (engine->Init() != 0) {
-      throw std::runtime_error("Failed to initialize engine");
-    }
+    auto engine = Engine::Engine::Create();
     engine->Run();
   }
   CPPTRACE_CATCH(const std::exception &e) {

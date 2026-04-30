@@ -6,23 +6,23 @@
 #include "Engine/Graphics/Graphics.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
-
-int Engine::Init() {
-  setupLogger();
+std::shared_ptr<Engine::Engine> Engine::Engine::Create() {
+  std::shared_ptr<Engine> e = std::make_shared<Engine>();
+  e->setupLogger();
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Loading config...");
-  config = new Config("Engine.ini");
+  e->config = new Config("Engine.ini");
   SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
-  graphics = new Graphics::Main();
-  if (graphics->Init(config) != 0) {
+  e->graphics = new Graphics::Main();
+  if (e->graphics->Init(e->config) != 0) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");
-    return -1;
+    throw std::logic_error("Failed to initialize graphics!");
   }
   CHECK_GL_ERROR();
-  return 0;
+  return e;
 }
 
-void Engine::Run() {
+void Engine::Engine::Run() {
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
@@ -36,10 +36,10 @@ void Engine::Run() {
   SPDLOG_LOGGER_INFO(logger, "Engine stopping.");
 }
 
-void Engine::setupLogger() {
+void Engine::Engine::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");
   spdlog::get("console")->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
   SPDLOG_LOGGER_INFO(spdlog::get("console"), "Set up logger!");
 }
 
-void Engine::Terminate() { graphics->Terminate(); }
+void Engine::Engine::Terminate() { graphics->Terminate(); }

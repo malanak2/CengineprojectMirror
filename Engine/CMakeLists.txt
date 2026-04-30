@@ -39,7 +39,9 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         glad/src/glad.c
         glad/include/KHR/khrplatform.h
         glad/include/glad/glad.h
-      )
+        Scene.cpp
+        Scene.hpp
+)
 
 target_include_directories(cengineengine PUBLIC glad/include)
 target_include_directories(cengineengine PUBLIC ..)
