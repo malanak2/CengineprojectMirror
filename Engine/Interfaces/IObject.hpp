@@ -1,15 +1,18 @@
 #pragma once
 
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using json = nlohmann::json;
 
 class IObject {
 public:
-  std::vector<std::shared_ptr<IComponent>> _components;
+  std::unordered_map<ENGINE_COMPONENT_TYPE, std::shared_ptr<IComponent>>
+      _components = {};
   std::vector<float> _position;
   std::vector<float> _rotation;
   std::string _name;

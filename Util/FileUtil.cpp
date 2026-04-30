@@ -31,7 +31,7 @@ int FileUtil::SaveFile(std::string path, std::string *content) {
   if (!file.is_open()) {
     return -1;
   }
-  file << content;
+  file << *content;
   file.close();
 
   return 0;

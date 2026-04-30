@@ -7,15 +7,14 @@
 #include <unordered_map>
 using json = nlohmann::json;
 namespace Graphics {
-struct RenderableJson {
+struct RenderableDataJson {
 public:
-  std::string object_type;
   std::string path;
   std::string material_path;
   bool uses_camera;
   std::unordered_map<std::string, std::vector<float>> uniforms;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableJson, object_type, material_path,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path,
                                    uses_camera, uniforms);
 
 class ComponentRenderable : public IComponent {
@@ -31,12 +30,12 @@ public:
 
   void Save() override;
   void Load() override;
-
-  void FromJson(RenderableJson json_i);
+  void FromJson(json &js);
 
   json ToJson() override;
 
-  RenderableJson toJson();
+  ComponentRenderable(json &js);
+  ENGINE_COMPONENT_TYPE GetType() override;
 
 private:
   std::string path;

@@ -4,7 +4,8 @@
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <memory>
-using namespace Graphics;
+
+namespace Graphics {
 Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
   auto logger = spdlog::get("console");
@@ -118,3 +119,4 @@ void Shader::Delete() {
 Shader::~Shader() { Delete(); }
 
 // void Shader::SetUniform(std::string uniform, float value) {};
+} // namespace Graphics

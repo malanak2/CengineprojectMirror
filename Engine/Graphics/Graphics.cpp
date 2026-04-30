@@ -3,8 +3,11 @@
 //
 
 #include "Graphics.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
+#include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
 #include "Objects/CameraObject.hpp"
+#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
@@ -14,7 +17,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-using namespace Graphics;
+namespace Graphics {
 // Initialize vecotrs
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
     {};
@@ -89,6 +92,12 @@ int Main::Init(Config *config) {
   camera = std::make_unique<CameraObject>(
       "Default camera", std::vector<std::shared_ptr<IComponent>>{},
       config->graphics->CameraPos, a);
+  camera->_components[ENGINE_COMPONENT_TYPE::renderable] =
+      std::make_shared<ComponentRenderable>(
+          "materials/basic.json",
+          std::unordered_map<std::string, std::vector<float>>{}, true);
+  std::string camerajs = camera->ToJson().dump();
+  FileUtil::SaveFile("generated/camera.json", &(camerajs));
   return 0;
 }
 
@@ -111,3 +120,4 @@ int Main::Tick() {
 }
 
 void Main::Terminate() { glfwTerminate(); }
+} // namespace Graphics

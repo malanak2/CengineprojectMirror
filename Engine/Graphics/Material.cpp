@@ -13,11 +13,12 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace Graphics;
+
+namespace Graphics {
 
 using json = nlohmann::json;
 
-Material::Material() { throw new std::logic_error("Function not implemented"); }
+Material::Material() { throw std::logic_error("Function not implemented"); }
 
 Material::Material(std::string path) {
   auto logger = spdlog::get("console");
@@ -91,3 +92,4 @@ std::shared_ptr<Material> Material::Create(std::string path) {
 }
 
 Material::~Material() { Main::materials.erase(path); }
+} // namespace Graphics
