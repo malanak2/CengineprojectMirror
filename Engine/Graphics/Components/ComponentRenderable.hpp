@@ -11,19 +11,18 @@ struct RenderableDataJson {
 public:
   std::string path;
   std::string material_path;
-  bool uses_camera;
   std::unordered_map<std::string, std::vector<float>> uniforms;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path,
-                                   uses_camera, uniforms);
+                                    uniforms);
 
 class ComponentRenderable : public IComponent {
 public:
   ComponentRenderable(std::string path);
   ComponentRenderable(
       std::string material_path,
-      std::unordered_map<std::string, std::vector<float>> uniforms,
-      bool uses_camera);
+      std::unordered_map<std::string, std::vector<float>> uniforms
+      );
   void Setup() override;
   void Update() override;
   void FixedUpdate() override;
@@ -42,6 +41,5 @@ private:
   std::string _material_path;
   std::shared_ptr<Material> _material;
   std::unordered_map<std::string, std::vector<float>> _uniforms;
-  bool uses_camera;
 };
 } // namespace Graphics

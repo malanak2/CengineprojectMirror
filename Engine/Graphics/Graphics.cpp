@@ -95,7 +95,7 @@ int Main::Init(Config *config) {
   camera->_components[ENGINE_COMPONENT_TYPE::renderable] =
       std::make_shared<ComponentRenderable>(
           "materials/basic.json",
-          std::unordered_map<std::string, std::vector<float>>{}, true);
+          std::unordered_map<std::string, std::vector<float>>{});
   std::string camerajs = camera->ToJson().dump();
   FileUtil::SaveFile("generated/camera.json", &(camerajs));
   return 0;
@@ -106,7 +106,7 @@ int Main::Tick() {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "GLFW Window should close.");
     return -1;
   }
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   CHECK_GL_ERROR();
   material->SetupMaterial();

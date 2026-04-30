@@ -30,7 +30,7 @@ Material::Material(std::string path) {
   json data = json::parse(file);
   if (data["object_type"] != "material") {
     SPDLOG_LOGGER_WARN(logger, "Tried to open {} as material (path: {})",
-                       (std::string)data["object_type"], path);
+                       static_cast<std::string>(data["object_type"]), path);
     return;
   }
   MaterialJson m;
@@ -42,6 +42,7 @@ Material::Material(std::string path) {
   }
   this->path = path;
   CHECK_GL_ERROR();
+  uses_camera = m.uses_camera;
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
     auto data_shaders = m.shaders;

@@ -13,8 +13,8 @@ ComponentRenderable::ComponentRenderable(std::string path) {
 
 ComponentRenderable::ComponentRenderable(
     std::string material_path,
-    std::unordered_map<std::string, std::vector<float>> uniforms,
-    bool uses_camera) {
+    std::unordered_map<std::string, std::vector<float>> uniforms
+    ) {
   this->_material_path = material_path;
   this->_material = Material::Create(material_path);
   for (auto &[key, val] : _material->program->uniforms) {
@@ -22,7 +22,7 @@ ComponentRenderable::ComponentRenderable(
       SPDLOG_LOGGER_WARN(
           spdlog::get("console"),
           "Component at {} doesnt contain uniform {} specified in material",
-          path, key);
+          "%instantiated%", key);
     }
   }
   for (auto &[key, val] : uniforms) {
@@ -30,10 +30,9 @@ ComponentRenderable::ComponentRenderable(
       SPDLOG_LOGGER_WARN(spdlog::get("console"),
                          "Component at {} specifies uniform {} that is not "
                          "specified in material",
-                         path, key);
+                         "%instantiated%", key);
     }
   }
-  this->uses_camera = uses_camera;
   auto logger = spdlog::get("console");
   if (!this->_material->usable) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to load material at {}", material_path);
@@ -99,7 +98,6 @@ json ComponentRenderable::ToJson() {
   RenderableDataJson j;
   j.material_path = _material_path;
   j.uniforms = _uniforms;
-  j.uses_camera = uses_camera;
   return j;
 }
 

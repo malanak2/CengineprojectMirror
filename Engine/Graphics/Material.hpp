@@ -10,6 +10,7 @@ public:
   std::string path = "";
   std::string name = "";
   bool usable = false;
+  bool uses_camera;
   void SetupMaterial();
   void RenderObjects();
   Material(std::string path);

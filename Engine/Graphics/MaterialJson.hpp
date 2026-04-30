@@ -22,8 +22,9 @@ public:
   std::string name;
   std::vector<ShaderJson> shaders;
   std::vector<UniformJson> uniforms;
+  bool uses_camera;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms, uses_camera)
 
 } // namespace Graphics

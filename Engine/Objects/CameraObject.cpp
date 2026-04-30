@@ -93,10 +93,14 @@ json CameraObject::ToJson() {
   JsonFileBase ret;
   ret.object_type = ObjectType::Object;
   CameraObjectJson js;
-  json cmps = json::parse("[]");
+  std::vector<ComponentJson> cmps = {};
   int i = 0;
-  for (auto [key, val] : this->_components) {
-    cmps[i++] = val->ToJson();
+  for (const auto& [key, val] : this->_components) {
+    ComponentJson j;
+    j.object_type = ObjectType::Component;
+    j.data = val->ToJson();
+    j.type = val->GetType();
+    cmps.insert(cmps.end(), static_cast<ComponentJson>(j));
   }
   js.components = cmps;
   js.position = _position;
