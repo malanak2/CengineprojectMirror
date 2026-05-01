@@ -13,7 +13,7 @@ ComponentRenderable::ComponentRenderable(std::string path) {
 
 ComponentRenderable::ComponentRenderable(
     std::string material_path,
-    std::unordered_map<std::string, std::vector<float>> uniforms
+    std::map<std::string, std::vector<float>> uniforms
     ) {
   this->_material_path = material_path;
   this->_material = Material::Create(material_path);

@@ -20,8 +20,8 @@ FetchContent_MakeAvailable(cpptrace)
 add_library(cengineengine SHARED Engine.hpp Engine.cpp
   Interfaces/IObject.hpp
   Interfaces/IJson.hpp
-        Objects/CameraObject.cpp
-        Objects/CameraObject.hpp
+        Graphics/Components/CameraComponent.cpp
+        Graphics/Components/CameraComponent.hpp
         Graphics/Graphics.cpp
         Graphics/Graphics.hpp
         Graphics/Program.cpp

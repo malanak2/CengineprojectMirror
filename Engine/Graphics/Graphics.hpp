@@ -4,7 +4,7 @@
 #pragma once
 #include "../Config/Config.hpp"
 #include "Material.hpp"
-#include "Objects/CameraObject.hpp"
+#include "Components/CameraComponent.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -41,7 +41,7 @@ public:
 
 private:
   GLFWwindow *window = nullptr;
-  std::unique_ptr<CameraObject> camera = nullptr;
+  std::unique_ptr<CameraComponent> camera = nullptr;
   // TODO: Remove
   std::shared_ptr<Material> material = nullptr;
   unsigned int vao = 0;

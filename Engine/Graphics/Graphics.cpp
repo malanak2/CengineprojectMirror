@@ -6,7 +6,7 @@
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
-#include "Objects/CameraObject.hpp"
+#include "Components/CameraComponent.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <memory>
@@ -88,8 +88,8 @@ int Main::Init(Config *config) {
   CHECK_GL_ERROR();
   auto a = config->graphics->CameraRot;
   a.insert(a.begin(), 0);
-
-  camera = std::make_unique<CameraObject>(
+/*
+  camera = std::make_unique<CameraComponent>(
       "Default camera", std::vector<std::shared_ptr<IComponent>>{},
       config->graphics->CameraPos, a);
 

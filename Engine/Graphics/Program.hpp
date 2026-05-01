@@ -29,7 +29,7 @@ public:
 
   /// Map of name specified in material json, and the index also specified in
   /// there
-  std::unordered_map<std::string, unsigned int> uniforms = {};
+  std::map<std::string, unsigned int> uniforms = {};
   //  std::vector<uint8_t> cpuBuffer = {};
   //  void SetUniform(std::string uniform, float value);
   //  void SetUniform(std::string uniform, float value);

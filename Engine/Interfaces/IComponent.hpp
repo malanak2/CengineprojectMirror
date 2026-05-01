@@ -12,7 +12,7 @@
 
 using json = nlohmann::json;
 
-enum ENGINE_COMPONENT_TYPE { renderable ENGINE_CUSTOM_COMPONENT_TYPES_expand };
+enum ENGINE_COMPONENT_TYPE { renderable, camera, ENGINE_CUSTOM_COMPONENT_TYPES_expand };
 struct ComponentJson {
 public:
   ObjectType object_type;
@@ -28,6 +28,5 @@ public:
   virtual void FixedUpdate() = 0;
   virtual void Save() = 0;
   virtual void Load() = 0;
-  virtual nlohmann::json ToJson() = 0;
   virtual ENGINE_COMPONENT_TYPE GetType() = 0;
 };

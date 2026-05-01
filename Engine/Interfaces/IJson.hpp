@@ -5,4 +5,5 @@ using json = nlohmann::json;
 
 class IJson {
   virtual json ToJson() = 0;
+  virtual void FromJson(json &js) = 0;
 };
