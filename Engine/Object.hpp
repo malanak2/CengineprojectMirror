@@ -16,8 +16,8 @@ struct ObjectJson {
   std::vector<ComponentJson> components;
   std::string name;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, position, rotation, components)
-class Object : public IJson {
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, position, rotation, components, name)
+class Object : public IJson, public std::enable_shared_from_this<Object> {
 public:
   std::map<ENGINE_COMPONENT_TYPE, std::shared_ptr<IComponent>> _components = {};
   std::vector<float> _position;

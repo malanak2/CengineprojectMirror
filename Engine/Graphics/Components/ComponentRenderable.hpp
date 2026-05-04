@@ -15,7 +15,7 @@ public:
   std::map<std::string, std::vector<float>> uniforms;
   // TODO: Move to model file
   std::vector<float> vertices;
-  std::vector<float> indices;
+  std::vector<int> indices;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
                                    vertices, indices);
@@ -43,21 +43,22 @@ public:
 
   ComponentRenderable(json &js);
   ENGINE_COMPONENT_TYPE GetType() override;
-
+  unsigned int vao = 0;
+  unsigned int vbo = 0;
+  unsigned int ebo = 0;
+  // TODO: Remove
+  std::vector<float> vertices;
+  std::vector<int> indices;
 private:
   std::string path;
   std::string _material_path;
   std::map<std::string, std::vector<float>> _uniforms;
-  unsigned int vao = 0;
-  unsigned int vbo = 0;
-  unsigned int ebo = 0;
+
   /// Material, but...
   std::shared_ptr<void>
   FromData(std::string material_path,
            std::map<std::string, std::vector<float>> uniforms);
-  // TODO: Remove
-  std::vector<float> vertices;
-  std::vector<float> indices;
+
 };
 } // namespace Graphics
 } // namespace Engine

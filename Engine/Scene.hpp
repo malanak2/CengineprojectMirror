@@ -14,15 +14,16 @@ namespace Engine {
 class SceneObjectJson {
 public:
   std::vector<SceneObjectJson> children;
-  ObjectJson data;
+  JsonFileBase data;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneObjectJson, children, data)
-class SceneObject {
+class SceneObject : public std::enable_shared_from_this<SceneObject> {
 public:
   std::shared_ptr<Engine::Object> instance;
   std::shared_ptr<SceneObject> Parent;
   std::vector<std::shared_ptr<SceneObject>> Children;
   std::shared_ptr<SceneObjectJson> ToJson();
+  void SetParent(std::shared_ptr<SceneObject> parent);
   void FromJson(SceneObjectJson js,
                 std::shared_ptr<SceneObject> parent = nullptr);
 };

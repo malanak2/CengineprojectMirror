@@ -110,6 +110,8 @@ json ComponentRenderable::ToJson() {
   RenderableDataJson j;
   j.material_path = _material_path;
   j.uniforms = _uniforms;
+  j.indices = indices;
+  j.vertices = vertices;
   return j;
 }
 
@@ -143,7 +145,7 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(json &js) {
        0.0f,  0.5f,  0.0f  // top
    };*/
 
-  std::vector<float> indices = json_inst.indices;
+  std::vector<int> indices = json_inst.indices;
   unsigned int VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -173,6 +175,8 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(json &js) {
   // call to glBindVertexArray anyways so we generally don't unbind VAOs (nor
   // VBOs) when it's not directly necessary.
   glBindVertexArray(0);
+  cr->vertices = vertices;
+  cr->indices = indices;
   cr->vao = VAO;
   cr->vbo = VBO;
   cr->ebo = EBO;
@@ -180,4 +184,25 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(json &js) {
   return cr;
 };
 
+void ComponentRenderable::FromJson(json &js) {
+  SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Do not call FromJson, call Create instead");
+  JsonFileBase file_base;
+  file_base = js;
+  if (file_base.object_type != ObjectType::Component) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to load a component::renderable from a json file of different object_type.");
+    return;
+  }
+  RenderableDataJson json_inst;
+  json_inst = js["data"];
+  this->_material_path = json_inst.material_path;
+  this->_uniforms = json_inst.uniforms;
+  this->vertices = json_inst.vertices;
+  this->indices = json_inst.indices;
+  FromData(json_inst.material_path, json_inst.uniforms);
+}
+
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
+
+ComponentRenderable::ComponentRenderable() {
+
+}

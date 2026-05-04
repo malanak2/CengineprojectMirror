@@ -8,6 +8,10 @@
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/LoggerUtil.hpp"
+#include "Scene.hpp"
+#ifdef IMGUI
+#include <imgui.h>
+#endif
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <memory>
@@ -29,7 +33,7 @@ namespace Engine::Graphics {
 class Main {
 public:
   int Init(Config *config);
-  int Tick();
+  int Tick(std::shared_ptr<Scene> scene);
   void Terminate();
 
   Shader GetShader(ShaderType type, std::string source);
@@ -42,8 +46,14 @@ public:
 private:
   GLFWwindow *window = nullptr;
   std::unique_ptr<Engine::Object> camera = nullptr;
-  // TODO: Remove
-  std::shared_ptr<Material> material = nullptr;
-  unsigned int vao = 0;
+#ifdef IMGUI
+  std::shared_ptr<SceneObject> sceneObject = nullptr;
+  void ShowSceneObjectMenu(std::vector<std::shared_ptr<SceneObject>> *sceneObjects);
+  std::shared_ptr<SceneObject> newObjectParent = nullptr;
+  char namebuf[64] = "";
+  char matbuf[64] = "";
+  float coords[3] = {0,0,0};
+  float rotation[4] = {0,0,0,0};
+#endif
 };
 }; // namespace Engine::Graphics

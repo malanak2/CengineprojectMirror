@@ -12,6 +12,9 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 #include <memory>
+
+#include "Util/FileUtil.hpp"
+
 namespace Engine {
 std::shared_ptr<Engine::Main> Engine::Main::Create() {
   std::shared_ptr<Main> e = std::make_shared<Main>();
@@ -36,7 +39,6 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
     Graphics::RenderableDataJson rdj;
-    jsbase.data = rdj;
     rdj.indices = {0, 1, 2};
     rdj.vertices = {
         -0.5f, -0.5f, 0.0f, // left
@@ -45,10 +47,13 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     };
     rdj.material_path = "materials/basic.json";
     rdj.uniforms = {{"color", {1, 0, 0, 1}}};
+    jsbase.data = rdj;
     json jsbase_js = jsbase;
     auto com_render = Graphics::ComponentRenderable::Create(jsbase_js);
     object_default->fromParams("Test object", {com_render});
     e->current_scene->Instantiate(object_default);
+    std::string scene_json = e->current_scene->ToJson().dump();
+    // FileUtil::SaveFile("scenes/default.json", &scene_json);
   }
   CHECK_GL_ERROR();
   return e;
@@ -59,7 +64,7 @@ void Engine::Main::Run() {
   SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
   while (true) {
-    if (graphics->Tick() != 0) {
+    if (graphics->Tick(this->current_scene) != 0) {
       Terminate();
       break;
     }
@@ -74,5 +79,7 @@ void Engine::Main::setupLogger() {
   SPDLOG_LOGGER_INFO(spdlog::get("console"), "Set up logger!");
 }
 
-void Engine::Main::Terminate() { graphics->Terminate(); }
+void Engine::Main::Terminate() {
+  graphics->Terminate();
+}
 } // namespace Engine

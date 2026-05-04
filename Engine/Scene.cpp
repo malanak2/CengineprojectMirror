@@ -27,14 +27,13 @@ Scene::Scene(std::string path) {
   }
 }
 
-// TODO:
 json Scene::ToJson() {
   SceneJson sj;
   sj.objects = {};
   for (auto var : objects) {
     sj.objects.insert(sj.objects.end(), *(var->ToJson()));
   }
-  return {};
+  return sj;
 }
 
 void SceneObject::FromJson(SceneObjectJson js,
@@ -51,10 +50,25 @@ void SceneObject::FromJson(SceneObjectJson js,
   }
 }
 
+void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
+  std::erase(this->Parent->Children, this->shared_from_this());
+  this->Parent = parent;
+  parent->Children.insert(parent->Children.end(), this->shared_from_this());
+}
+
 std::shared_ptr<SceneObjectJson> SceneObject::ToJson() {
   auto ret = std::make_shared<SceneObjectJson>();
+  try {
   ret->data = instance->ToJson();
-  // TODO: Finish
+  } catch (const std::exception &e) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Could not convert object to json: {}", e.what());
+  }
+  std::vector<SceneObjectJson> child = {};
+  for (auto scene_object_json: this->Children) {
+    child.insert(child.end(), (*scene_object_json->ToJson()));
+  }
+  ret->children = child;
+  return ret;
 }
 
 void Scene::FromJson(json &js) {
@@ -87,8 +101,12 @@ void Scene::Instantiate(std::shared_ptr<Object> object,
                         std::shared_ptr<SceneObject> Parent) {
   auto so = std::make_shared<SceneObject>();
   so->Parent = Parent;
+  if (Parent != nullptr) {
+    Parent->Children.insert(Parent->Children.end(), so);
+  } else {
+  objects.insert(objects.end(), so);
+  }
   so->instance = object;
   so->Children = {};
-  objects.insert(objects.end(), so);
 }
 } // namespace Engine

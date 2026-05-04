@@ -29,7 +29,7 @@ Material::Material(std::string path) {
   auto logger = spdlog::get("console");
   std::string file;
   if (FileUtil::ReadFile(path, &file) != 0) {
-    SPDLOG_LOGGER_WARN(logger, "Could not open material {}", path);
+    SPDLOG_LOGGER_WARN(logger, "Could not open material at {}", path);
     return;
   }
   json data = json::parse(file);
@@ -83,7 +83,10 @@ Material::Material(std::string path) {
 void Material::SetupMaterial() { glUseProgram(program->id); }
 
 void Material::RenderObjects() {
-  throw std::logic_error("Function not implemented");
+  for (auto element: this->renderableObjects) {
+    glBindVertexArray(element->vao);
+    glDrawArrays(GL_TRIANGLES, 0, sizeof(element->indices));
+  }
 }
 
 std::shared_ptr<Material> Material::Create(std::string path) {
@@ -103,5 +106,6 @@ std::shared_ptr<Material> Material::Create(std::string path) {
   return material;
 }
 
-Material::~Material() { Main::materials.erase(path); }
+Material::~Material() {
+}
 } // namespace Engine::Graphics
