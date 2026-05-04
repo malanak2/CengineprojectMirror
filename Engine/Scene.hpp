@@ -10,21 +10,23 @@
 
 namespace Engine {
 // nullptr Parent means its in root - multiple objects can be that
+//
+class SceneObjectJson {
+public:
+  std::vector<SceneObjectJson> children;
+  ObjectJson data;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneObjectJson, children, data)
 class SceneObject {
 public:
   std::shared_ptr<Engine::Object> instance;
   std::shared_ptr<SceneObject> Parent;
   std::vector<std::shared_ptr<SceneObject>> Children;
+  std::shared_ptr<SceneObjectJson> ToJson();
+  void FromJson(SceneObjectJson js,
+                std::shared_ptr<SceneObject> parent = nullptr);
 };
-class SceneObjectJson {
-public:
-  std::vector<SceneObjectJson> children;
-  std::string name;
-  ObjectJson data;
-  std::shared_ptr<SceneObject>
-  Parse(std::shared_ptr<SceneObject> parent = nullptr);
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneObjectJson, children, name, data)
+
 class SceneJson {
 public:
   std::vector<SceneObjectJson> objects;
@@ -35,7 +37,10 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneJson, objects)
 class Scene : public IJson {
 public:
   Scene(std::string path);
+  Scene();
   std::vector<std::shared_ptr<SceneObject>> objects;
+  void Instantiate(std::shared_ptr<Object> object,
+                   std::shared_ptr<SceneObject> Parent = {});
 
   json ToJson() override;
 

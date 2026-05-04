@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Program.hpp"
 #include <memory>
 namespace Engine {
@@ -14,6 +15,7 @@ public:
   bool uses_camera;
   void SetupMaterial();
   void RenderObjects();
+  std::vector<std::shared_ptr<ComponentRenderable>> renderableObjects;
   static std::shared_ptr<Material> Create(std::string path);
   Material(std::string path);
   Material();

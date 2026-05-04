@@ -28,20 +28,33 @@ Scene::Scene(std::string path) {
 }
 
 // TODO:
-json Scene::ToJson() { return {}; }
-
-std::shared_ptr<SceneObject>
-SceneObjectJson::Parse(std::shared_ptr<SceneObject> parent) {
-  std::shared_ptr<SceneObject> ret = std::make_shared<SceneObject>();
-  ret->Parent = parent;
-  auto o = std::make_shared<Object>();
-  auto ojsref = ((json)this->data);
-  o->FromJson(ojsref);
-  ret->instance = o;
-  for (auto var : this->children) {
-    ret->Children.insert(ret->Children.end(), var.Parse());
+json Scene::ToJson() {
+  SceneJson sj;
+  sj.objects = {};
+  for (auto var : objects) {
+    sj.objects.insert(sj.objects.end(), *(var->ToJson()));
   }
-  return ret;
+  return {};
+}
+
+void SceneObject::FromJson(SceneObjectJson js,
+                           std::shared_ptr<SceneObject> parent) {
+  this->Parent = parent;
+  auto o = std::make_shared<Object>();
+  auto ojsref = ((json)js.data);
+  o->FromJson(ojsref);
+  this->instance = o;
+  for (auto var : js.children) {
+    auto j = std::make_shared<SceneObject>();
+    j->FromJson(var);
+    this->Children.insert(this->Children.end(), j);
+  }
+}
+
+std::shared_ptr<SceneObjectJson> SceneObject::ToJson() {
+  auto ret = std::make_shared<SceneObjectJson>();
+  ret->data = instance->ToJson();
+  // TODO: Finish
 }
 
 void Scene::FromJson(json &js) {
@@ -57,7 +70,9 @@ void Scene::FromJson(json &js) {
   this->objects = {};
   for (auto var : ojs.objects) {
     try {
-      this->objects.insert(this->objects.end(), var.Parse());
+      auto j = std::make_shared<SceneObject>();
+      j->FromJson(var);
+      this->objects.insert(this->objects.end(), j);
     } catch (const std::exception &e) {
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                           "Failed to parse scene object: {}, skipping",
@@ -65,5 +80,15 @@ void Scene::FromJson(json &js) {
       continue;
     }
   }
+}
+
+Scene::Scene() { this->objects = {}; }
+void Scene::Instantiate(std::shared_ptr<Object> object,
+                        std::shared_ptr<SceneObject> Parent) {
+  auto so = std::make_shared<SceneObject>();
+  so->Parent = Parent;
+  so->instance = object;
+  so->Children = {};
+  objects.insert(objects.end(), so);
 }
 } // namespace Engine

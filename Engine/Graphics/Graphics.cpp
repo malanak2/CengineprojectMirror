@@ -110,13 +110,20 @@ int Main::Tick() {
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   CHECK_GL_ERROR();
+  /*
   material->SetupMaterial();
   material->program->SetUniform("color", 1, 0, 0, 1);
   glBindVertexArray(vao);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   CHECK_GL_ERROR();
+  */
+  for (auto &[key, val] : materials) {
+    val->SetupMaterial();
+    val->RenderObjects();
+  }
   glfwSwapBuffers(window);
   glfwPollEvents();
+
   return 0;
 }
 

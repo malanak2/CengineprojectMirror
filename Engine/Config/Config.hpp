@@ -13,12 +13,17 @@ public:
     std::vector<float> CameraPos;
     std::vector<float> CameraRot;
   };
+  class Defaults {
+  public:
+    std::string StartupScenePath;
+  };
   class Window {
   public:
     std::string title;
   };
   std::unique_ptr<Graphics> graphics;
   std::unique_ptr<Window> window;
+  std::unique_ptr<Defaults> defaults;
 
   Config(std::string file_path);
 };

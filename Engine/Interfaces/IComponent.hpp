@@ -34,6 +34,6 @@ public:
   virtual void Save() = 0;
   virtual void Load() = 0;
   virtual ENGINE_COMPONENT_TYPE GetType() = 0;
-  static std::map<ENGINE_COMPONENT_TYPE, void(json &js)> constructors;
+  //  static std::map<ENGINE_COMPONENT_TYPE, void(json &js)> constructors;
 };
 } // namespace Engine

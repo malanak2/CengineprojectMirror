@@ -4,8 +4,14 @@
 
 #include "Engine.hpp"
 #include "Engine/Graphics/Graphics.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
+#include "JsonFileBase.hpp"
+#include "Object.hpp"
+#include "Scene.hpp"
+#include "Util/LoggerUtil.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+#include <memory>
 namespace Engine {
 std::shared_ptr<Engine::Main> Engine::Main::Create() {
   std::shared_ptr<Main> e = std::make_shared<Main>();
@@ -19,6 +25,30 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
   if (e->graphics->Init(e->config) != 0) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");
     throw std::logic_error("Failed to initialize graphics!");
+  }
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading scene");
+  try {
+    e->current_scene =
+        std::make_shared<Scene>(e->config->defaults->StartupScenePath);
+  } catch (const std::exception &ex) {
+    e->current_scene = std::make_shared<Scene>();
+    auto object_default = std::make_shared<Object>();
+    JsonFileBase jsbase = {};
+    jsbase.object_type = ObjectType::Component;
+    Graphics::RenderableDataJson rdj;
+    jsbase.data = rdj;
+    rdj.indices = {0, 1, 2};
+    rdj.vertices = {
+        -0.5f, -0.5f, 0.0f, // left
+        0.5f,  -0.5f, 0.0f, // right
+        0.0f,  0.5f,  0.0f  // top
+    };
+    rdj.material_path = "materials/basic.json";
+    rdj.uniforms = {{"color", {1, 0, 0, 1}}};
+    json jsbase_js = jsbase;
+    auto com_render = Graphics::ComponentRenderable::Create(jsbase_js);
+    object_default->fromParams("Test object", {com_render});
+    e->current_scene->Instantiate(object_default);
   }
   CHECK_GL_ERROR();
   return e;

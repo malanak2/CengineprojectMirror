@@ -35,7 +35,6 @@ public:
   void FromJson(json &js) override;
   void FromJson(json &js, std::string path);
 
-private:
   void fromParams(std::string name,
                   std::vector<std::shared_ptr<IComponent>> comps = {},
                   std::vector<float> position = {0, 0, 0},

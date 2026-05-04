@@ -62,6 +62,7 @@ ENGINE_COMPONENT_TYPE CameraComponent::GetType() {
   return ENGINE_COMPONENT_TYPE::camera;
 }
 
+// TODO:
 void CameraComponent::FromJson(json &js) {}
 
 json CameraComponent::ToJson() { return {}; }
