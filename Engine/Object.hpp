@@ -23,6 +23,7 @@ public:
   std::vector<float> _position;
   std::vector<float> _rotation;
   Object(std::string path);
+  Object();
   std::string _name;
   void Setup();
   void Update();

@@ -44,6 +44,7 @@ int Main::Init(Config *config) {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   CHECK_GL_ERROR();
   // TODO: Remove
+  return 0;
 
   std::shared_ptr<Material> m = Material::Create("materials/basic.json");
   if (!m->usable)

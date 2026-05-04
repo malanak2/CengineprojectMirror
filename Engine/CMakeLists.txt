@@ -21,6 +21,8 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Object.cpp
         Object.hpp
         Interfaces/IJson.hpp
+        Interfaces/IComponent.cpp
+        Interfaces/IComponent.hpp
         Graphics/Components/CameraComponent.cpp
         Graphics/Components/CameraComponent.hpp
         Graphics/Graphics.cpp
@@ -32,7 +34,6 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Material.cpp
         Graphics/Material.hpp
         Graphics/MaterialJson.hpp
-        Interfaces/IComponent.hpp
         Graphics/Components/ComponentRenderable.hpp
         Graphics/Components/ComponentRenderable.cpp
         Config/Config.cpp

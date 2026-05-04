@@ -18,7 +18,7 @@ int main() {
   signal(SIGSEGV, sigsegvHandler);
   signal(SIGABRT, sigabrtHandler);
   CPPTRACE_TRY {
-    auto engine = Engine::Engine::Create();
+    auto engine = Engine::Main::Create();
     engine->Run();
   }
   CPPTRACE_CATCH(const std::exception &e) {

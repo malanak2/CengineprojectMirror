@@ -4,7 +4,6 @@
 #include "Interfaces/IComponent.hpp"
 #include <string>
 
-#include "Interfaces/IJson.hpp"
 using json = nlohmann::json;
 namespace Engine {
 namespace Graphics {
@@ -16,7 +15,7 @@ public:
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms);
 
-class ComponentRenderable : public IComponent, public IJson {
+class ComponentRenderable : public IComponent {
 public:
   /// Only call if you call FromJson right after
   ComponentRenderable();

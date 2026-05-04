@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IJson.hpp"
 #include "JsonFileBase.hpp"
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
@@ -24,7 +25,7 @@ public:
   json data;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentJson, object_type, type, data);
-class IComponent {
+class IComponent : public IJson {
 public:
   virtual ~IComponent() = default;
   virtual void Setup() = 0;
@@ -33,5 +34,6 @@ public:
   virtual void Save() = 0;
   virtual void Load() = 0;
   virtual ENGINE_COMPONENT_TYPE GetType() = 0;
+  static std::map<ENGINE_COMPONENT_TYPE, void(json &js)> constructors;
 };
 } // namespace Engine

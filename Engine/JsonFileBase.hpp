@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
+#include "nlohmann/json.hpp" // IWYU pragma: keep
 using json = nlohmann::json;
 
 namespace Engine {

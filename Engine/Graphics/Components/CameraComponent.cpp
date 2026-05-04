@@ -65,5 +65,6 @@ ENGINE_COMPONENT_TYPE CameraComponent::GetType() {
 void CameraComponent::FromJson(json &js) {}
 
 json CameraComponent::ToJson() { return {}; }
+CameraComponent::CameraComponent(json &js) { FromJson(js); } //
 } // namespace Graphics
 } // namespace Engine

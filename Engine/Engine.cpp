@@ -12,7 +12,7 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
   e->setupLogger();
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Loading config...");
-  e->config = new Config("Main.ini");
+  e->config = new Config("Engine.ini");
   SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
   e->graphics = new Graphics::Main();
 

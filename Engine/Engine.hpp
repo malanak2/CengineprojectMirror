@@ -17,6 +17,6 @@ private:
 
   Graphics::Main *graphics;
   Config *config;
-  std::unique_ptr<Scene> scene;
+  std::shared_ptr<Scene> current_scene;
 };
 } // namespace Engine

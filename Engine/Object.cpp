@@ -121,4 +121,9 @@ void Object::fromParams(std::string name,
     this->_rotation = rotation;
   }
 }
+Object::Object() {
+  this->_components = {};
+  this->_position = {};
+  this->_rotation = {};
+}
 } // namespace Engine
