@@ -2,6 +2,7 @@
 
 #include "Program.hpp"
 #include <memory>
+namespace Engine {
 namespace Graphics {
 class Material {
 public:
@@ -17,7 +18,9 @@ public:
   Material(std::string path);
   Material();
   ~Material();
+
 private:
   static bool ran_from_create;
 };
 } // namespace Graphics
+} // namespace Engine

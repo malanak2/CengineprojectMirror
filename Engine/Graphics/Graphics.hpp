@@ -4,7 +4,7 @@
 #pragma once
 #include "../Config/Config.hpp"
 #include "Material.hpp"
-#include "Components/CameraComponent.hpp"
+#include "Object.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -13,7 +13,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-namespace Graphics {
+namespace Engine::Graphics {
 
 #ifdef DEBUG
 #define CHECK_GL_ERROR()                                                       \
@@ -41,9 +41,9 @@ public:
 
 private:
   GLFWwindow *window = nullptr;
-  std::unique_ptr<CameraComponent> camera = nullptr;
+  std::unique_ptr<Engine::Object> camera = nullptr;
   // TODO: Remove
   std::shared_ptr<Material> material = nullptr;
   unsigned int vao = 0;
 };
-}; // namespace Graphics
+}; // namespace Engine::Graphics

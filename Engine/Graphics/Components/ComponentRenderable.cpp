@@ -4,7 +4,7 @@
 #include "Util/FileUtil.hpp"
 #include <spdlog/spdlog.h>
 
-using namespace Graphics;
+using namespace Engine::Graphics;
 
 ComponentRenderable::ComponentRenderable(std::string path) {
   this->path = path;
@@ -13,8 +13,7 @@ ComponentRenderable::ComponentRenderable(std::string path) {
 
 ComponentRenderable::ComponentRenderable(
     std::string material_path,
-    std::map<std::string, std::vector<float>> uniforms
-    ) {
+    std::map<std::string, std::vector<float>> uniforms) {
   this->_material_path = material_path;
   this->_material = Material::Create(material_path);
   for (auto &[key, val] : _material->program->uniforms) {
@@ -101,7 +100,7 @@ json ComponentRenderable::ToJson() {
   return j;
 }
 
-ENGINE_COMPONENT_TYPE ComponentRenderable::GetType() {
+Engine::ENGINE_COMPONENT_TYPE ComponentRenderable::GetType() {
   return ENGINE_COMPONENT_TYPE::renderable;
 }
 

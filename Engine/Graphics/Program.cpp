@@ -5,7 +5,7 @@
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <vector>
-using namespace Graphics;
+using namespace Engine::Graphics;
 using json = nlohmann::json;
 Program::Program(std::vector<UniformJson> uniforms_json,
                  std::vector<std::shared_ptr<Shader>> shaders) {

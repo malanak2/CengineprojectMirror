@@ -6,7 +6,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
-namespace Graphics {
+namespace Engine::Graphics {
 /// Class in which shader info is stored
 /// Properties
 ///   - type
@@ -40,4 +40,4 @@ public:
   Shader(ShaderType type, std::string path, std::string entrypoint,
          bool reusable = false);
 };
-} // namespace Graphics
+} // namespace Engine::Graphics

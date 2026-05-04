@@ -3,11 +3,7 @@
 //
 
 #include "Graphics.hpp"
-#include "Graphics/Components/ComponentRenderable.hpp"
-#include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
-#include "Components/CameraComponent.hpp"
-#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
@@ -17,6 +13,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
+namespace Engine {
 namespace Graphics {
 // Initialize vecotrs
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
@@ -48,8 +45,7 @@ int Main::Init(Config *config) {
   CHECK_GL_ERROR();
   // TODO: Remove
 
-  std::shared_ptr<Material> m =
-      Material::Create("materials/basic.json");
+  std::shared_ptr<Material> m = Material::Create("materials/basic.json");
   if (!m->usable)
     return -1;
   CHECK_GL_ERROR();
@@ -88,19 +84,20 @@ int Main::Init(Config *config) {
   CHECK_GL_ERROR();
   auto a = config->graphics->CameraRot;
   a.insert(a.begin(), 0);
-/*
-  camera = std::make_unique<CameraComponent>(
-      "Default camera", std::vector<std::shared_ptr<IComponent>>{},
-      config->graphics->CameraPos, a);
+  /*
+    camera = std::make_unique<CameraComponent>(
+        "Default camera", std::vector<std::shared_ptr<IComponent>>{},
+        config->graphics->CameraPos, a);
 
-  camera->_components[ENGINE_COMPONENT_TYPE::renderable] =
-      std::make_shared<ComponentRenderable>(
-          "materials/basic.json",
-          std::unordered_map<std::string, std::vector<float>>{{"color", {1, 0, 0, 1}}});
-    /*
-  std::string camerajs = camera->ToJson().dump();
-  FileUtil::SaveFile("generated/camera.json", &(camerajs));
-  */
+    camera->_components[ENGINE_COMPONENT_TYPE::renderable] =
+        std::make_shared<ComponentRenderable>(
+            "materials/basic.json",
+            std::unordered_map<std::string, std::vector<float>>{{"color", {1, 0,
+    0, 1}}});
+      /
+    std::string camerajs = camera->ToJson().dump();
+    FileUtil::SaveFile("generated/camera.json", &(camerajs));
+    */
   return 0;
 }
 
@@ -124,3 +121,4 @@ int Main::Tick() {
 
 void Main::Terminate() { glfwTerminate(); }
 } // namespace Graphics
+} // namespace Engine

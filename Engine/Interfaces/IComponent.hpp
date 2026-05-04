@@ -11,8 +11,12 @@
 #endif
 
 using json = nlohmann::json;
-
-enum ENGINE_COMPONENT_TYPE { renderable, camera, ENGINE_CUSTOM_COMPONENT_TYPES_expand };
+namespace Engine {
+enum ENGINE_COMPONENT_TYPE {
+  renderable,
+  camera,
+  ENGINE_CUSTOM_COMPONENT_TYPES_expand
+};
 struct ComponentJson {
 public:
   ObjectType object_type;
@@ -30,3 +34,4 @@ public:
   virtual void Load() = 0;
   virtual ENGINE_COMPONENT_TYPE GetType() = 0;
 };
+} // namespace Engine

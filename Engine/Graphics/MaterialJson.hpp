@@ -2,7 +2,7 @@
 #include "Shader.hpp"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <string>
-namespace Graphics {
+namespace Engine::Graphics {
 struct ShaderJson {
 public:
   ShaderType type;
@@ -25,6 +25,7 @@ public:
   bool uses_camera;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms, uses_camera)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms,
+                                   uses_camera)
 
-} // namespace Graphics
+} // namespace Engine::Graphics

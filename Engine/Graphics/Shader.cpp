@@ -5,7 +5,7 @@
 #include <cpptrace/basic.hpp>
 #include <memory>
 
-namespace Graphics {
+namespace Engine::Graphics {
 Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
   auto logger = spdlog::get("console");
@@ -119,4 +119,4 @@ void Shader::Delete() {
 Shader::~Shader() { Delete(); }
 
 // void Shader::SetUniform(std::string uniform, float value) {};
-} // namespace Graphics
+} // namespace Engine::Graphics

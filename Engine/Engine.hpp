@@ -2,13 +2,13 @@
 // Created by malan on 20.04.2026.
 //
 #pragma once
-#include "Scene.hpp"
 #include "Config/Config.hpp"
 #include "Graphics/Graphics.hpp"
+#include "Scene.hpp"
 namespace Engine {
-class Engine {
+class Main {
 public:
-  static std::shared_ptr<Engine> Create();
+  static std::shared_ptr<Main> Create();
   void Run();
 
 private:
@@ -19,4 +19,4 @@ private:
   Config *config;
   std::unique_ptr<Scene> scene;
 };
-}
+} // namespace Engine

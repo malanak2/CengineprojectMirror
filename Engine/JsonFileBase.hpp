@@ -1,17 +1,18 @@
 #pragma once
 
 #include "nlohmann/json.hpp"
-#include <nlohmann/detail/macro_scope.hpp>
 using json = nlohmann::json;
 
-enum ObjectType { Component, Object, Material, Shader, Invalid };
-NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType, {
-                                             {Component, "component"},
-                                             {Object, "object"},
-                                             {Material, "material"},
-                                             {Shader, "shader"},
-                                             {Invalid, nullptr},
-                                         });
+namespace Engine {
+enum class ObjectType { Component, Object, Material, Shader, Invalid };
+NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
+                             {
+                                 {ObjectType::Component, "component"},
+                                 {ObjectType::Object, "object"},
+                                 {ObjectType::Material, "material"},
+                                 {ObjectType::Shader, "shader"},
+                                 {ObjectType::Invalid, nullptr},
+                             });
 
 struct JsonFileBase {
 public:
@@ -19,3 +20,4 @@ public:
   json data;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(JsonFileBase, object_type, data)
+} // namespace Engine

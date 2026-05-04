@@ -3,9 +3,8 @@
 #include "Shader.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <unordered_map>
 #include <vector>
-namespace Graphics {
+namespace Engine::Graphics {
 
 using json = nlohmann::json;
 /// Class in which program info is stored
@@ -34,4 +33,4 @@ public:
   //  void SetUniform(std::string uniform, float value);
   //  void SetUniform(std::string uniform, float value);
 };
-} // namespace Graphics
+} // namespace Engine::Graphics

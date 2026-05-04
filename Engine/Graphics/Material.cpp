@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Graphics {
+namespace Engine::Graphics {
 
 using json = nlohmann::json;
 
@@ -22,7 +22,9 @@ Material::Material() { throw std::logic_error("Function not implemented"); }
 bool Material::ran_from_create = false;
 Material::Material(std::string path) {
   if (!ran_from_create) {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "DO NOT CALL THIS CONSTRUCTOR FROM OUTSIDE OF Material::Create!!!!!!!!!!!!");
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "DO NOT CALL THIS CONSTRUCTOR FROM OUTSIDE OF "
+                        "Material::Create!!!!!!!!!!!!");
   }
   auto logger = spdlog::get("console");
   std::string file;
@@ -95,10 +97,11 @@ std::shared_ptr<Material> Material::Create(std::string path) {
   if (material->usable) {
     Main::materials[path] = material;
   } else {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Created an unusable material at {}", path);
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Created an unusable material at {}", path);
   }
   return material;
 }
 
 Material::~Material() { Main::materials.erase(path); }
-} // namespace Graphics
+} // namespace Engine::Graphics

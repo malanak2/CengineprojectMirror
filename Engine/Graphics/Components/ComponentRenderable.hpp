@@ -2,12 +2,11 @@
 
 #include "Engine/Graphics/Material.hpp"
 #include "Interfaces/IComponent.hpp"
-#include "nlohmann/json.hpp"
 #include <string>
-#include <unordered_map>
 
 #include "Interfaces/IJson.hpp"
 using json = nlohmann::json;
+namespace Engine {
 namespace Graphics {
 struct RenderableDataJson {
 public:
@@ -15,18 +14,15 @@ public:
   std::string material_path;
   std::map<std::string, std::vector<float>> uniforms;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path,
-                                    uniforms);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms);
 
 class ComponentRenderable : public IComponent, public IJson {
 public:
   /// Only call if you call FromJson right after
   ComponentRenderable();
   ComponentRenderable(std::string path);
-  ComponentRenderable(
-      std::string material_path,
-      std::map<std::string, std::vector<float>> uniforms
-      );
+  ComponentRenderable(std::string material_path,
+                      std::map<std::string, std::vector<float>> uniforms);
   void Setup() override;
   void Update() override;
   void FixedUpdate() override;
@@ -48,3 +44,4 @@ private:
   std::map<std::string, std::vector<float>> _uniforms;
 };
 } // namespace Graphics
+} // namespace Engine
