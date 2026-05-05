@@ -2,8 +2,8 @@
 // Created by malan on 30.04.2026.
 //
 #pragma once
-#include <memory>
-#include <nlohmann/detail/macro_scope.hpp>
+#include "JsonFileBase.hpp"
+#include <nlohmann/json.hpp>
 #include <vector>
 
 #include "Object.hpp"
@@ -13,7 +13,7 @@ namespace Engine {
 //
 class SceneObjectJson {
 public:
-  std::vector<SceneObjectJson> children;
+  std::vector<JsonFileBase> children;
   JsonFileBase data;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneObjectJson, children, data)
@@ -22,15 +22,15 @@ public:
   std::shared_ptr<Engine::Object> instance;
   std::shared_ptr<SceneObject> Parent;
   std::vector<std::shared_ptr<SceneObject>> Children;
-  std::shared_ptr<SceneObjectJson> ToJson();
+  JsonFileBase ToJson();
   void SetParent(std::shared_ptr<SceneObject> parent);
-  void FromJson(SceneObjectJson js,
+  void FromJson(JsonFileBase jsbase,
                 std::shared_ptr<SceneObject> parent = nullptr);
 };
 
 class SceneJson {
 public:
-  std::vector<SceneObjectJson> objects;
+  std::vector<JsonFileBase> objects;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneJson, objects)

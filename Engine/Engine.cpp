@@ -8,6 +8,7 @@
 #include "JsonFileBase.hpp"
 #include "Object.hpp"
 #include "Scene.hpp"
+#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -52,7 +53,7 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     object_default->fromParams("Test object", {com_render});
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
-    // FileUtil::SaveFile("scenes/default.json", &scene_json);
+    FileUtil::SaveFile("scenes/default.json", &scene_json);
   }
   CHECK_GL_ERROR();
   return e;
@@ -83,8 +84,10 @@ void Engine::Main::Run() {
 
 void Engine::Main::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");
-  spdlog::get("console")->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
-  SPDLOG_LOGGER_INFO(spdlog::get("console"), "Set up logger!");
+  console->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
+  spdlog::set_level(spdlog::level::debug);
+  spdlog::flush_on(spdlog::level::debug);
+  SPDLOG_LOGGER_INFO(console, "Set up logger!");
 }
 
 void Engine::Main::Terminate() { graphics->Terminate(); }

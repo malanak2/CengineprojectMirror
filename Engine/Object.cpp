@@ -1,5 +1,6 @@
 #include "Object.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
@@ -56,18 +57,20 @@ void Object::FromJson(json &js) { FromJson(js, "%internal%"); }
 
 void Object::FromJson(json &js, std::string path) {
   JsonFileBase jsbase;
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Checkpoint3");
   ObjectJson jsobj;
   try {
     jsbase = js;
     if (jsbase.object_type != ObjectType::Object)
-      throw std::exception();
+      throw std::logic_error("Not of type objet");
   } catch (const std::exception &e) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Failed to parse Object/Tried to load a "
                         "different obj type at {}",
                         path);
-    return;
+    throw e;
   }
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Checkpoint4");
   jsobj = jsbase.data;
   std::vector<std::shared_ptr<IComponent>> cmps;
   for (auto c : jsobj.components) {
@@ -78,10 +81,11 @@ void Object::FromJson(json &js, std::string path) {
           path, (int)c.object_type);
       continue;
     }
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Checkpoint5, {}", c.data.dump());
     switch (c.type) {
     case renderable: {
       std::shared_ptr<Graphics::ComponentRenderable> r =
-          std::make_shared<Graphics::ComponentRenderable>(c.data);
+          Graphics::ComponentRenderable::Create(c.data);
       cmps.insert(cmps.begin(), r);
       break;
     }

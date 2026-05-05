@@ -107,12 +107,15 @@ void ComponentRenderable::Load() {
 };*/
 
 json ComponentRenderable::ToJson() {
+  JsonFileBase jb;
   RenderableDataJson j;
   j.material_path = _material_path;
   j.uniforms = _uniforms;
   j.indices = indices;
   j.vertices = vertices;
-  return j;
+  jb.object_type = ObjectType::Component;
+  jb.data = j;
+  return jb;
 }
 
 Engine::ENGINE_COMPONENT_TYPE ComponentRenderable::GetType() {
@@ -185,11 +188,14 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(json &js) {
 };
 
 void ComponentRenderable::FromJson(json &js) {
-  SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Do not call FromJson, call Create instead");
+  SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                     "Do not call FromJson, call Create instead");
   JsonFileBase file_base;
   file_base = js;
   if (file_base.object_type != ObjectType::Component) {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to load a component::renderable from a json file of different object_type.");
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Tried to load a component::renderable from a json "
+                        "file of different object_type.");
     return;
   }
   RenderableDataJson json_inst;
@@ -203,6 +209,4 @@ void ComponentRenderable::FromJson(json &js) {
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
 
-ComponentRenderable::ComponentRenderable() {
-
-}
+ComponentRenderable::ComponentRenderable() {}

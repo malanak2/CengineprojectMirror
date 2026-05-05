@@ -3,9 +3,12 @@
 //
 
 #include "Scene.hpp"
+#include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
+#include <cmath>
 #include <memory>
+#include <stdexcept>
 
 namespace Engine {
 Scene::Scene(std::string path) {
@@ -25,21 +28,30 @@ Scene::Scene(std::string path) {
     throw std::logic_error("Failed to parse json scene at " + path + " " +
                            e.what());
   }
+  FromJson(js);
 }
 
 json Scene::ToJson() {
   SceneJson sj;
   sj.objects = {};
   for (auto var : objects) {
-    sj.objects.insert(sj.objects.end(), *(var->ToJson()));
+    sj.objects.insert(sj.objects.end(), var->ToJson());
   }
   return sj;
 }
 
-void SceneObject::FromJson(SceneObjectJson js,
+void SceneObject::FromJson(JsonFileBase jsbase,
                            std::shared_ptr<SceneObject> parent) {
+  if (jsbase.object_type != ObjectType::Object) {
+    throw std::logic_error("Bad object type");
+  }
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Data: {}", jsbase.data.dump());
+  SceneObjectJson js = jsbase.data;
   this->Parent = parent;
+  if (parent != nullptr)
+    parent->Children.insert(parent->Children.begin(), this->shared_from_this());
   auto o = std::make_shared<Object>();
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Data2: {}", ((json)js.data).dump());
   auto ojsref = ((json)js.data);
   o->FromJson(ojsref);
   this->instance = o;
@@ -56,19 +68,23 @@ void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
   parent->Children.insert(parent->Children.end(), this->shared_from_this());
 }
 
-std::shared_ptr<SceneObjectJson> SceneObject::ToJson() {
+JsonFileBase SceneObject::ToJson() {
   auto ret = std::make_shared<SceneObjectJson>();
   try {
-  ret->data = instance->ToJson();
+    ret->data = instance->ToJson();
   } catch (const std::exception &e) {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Could not convert object to json: {}", e.what());
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Could not convert object to json: {}", e.what());
   }
-  std::vector<SceneObjectJson> child = {};
-  for (auto scene_object_json: this->Children) {
-    child.insert(child.end(), (*scene_object_json->ToJson()));
+  std::vector<JsonFileBase> child = {};
+  for (auto scene_object_json : this->Children) {
+    child.insert(child.end(), (scene_object_json->ToJson()));
   }
   ret->children = child;
-  return ret;
+  JsonFileBase retbase;
+  retbase.object_type = ObjectType::Object;
+  retbase.data = *ret;
+  return retbase;
 }
 
 void Scene::FromJson(json &js) {
@@ -89,8 +105,7 @@ void Scene::FromJson(json &js) {
       this->objects.insert(this->objects.end(), j);
     } catch (const std::exception &e) {
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                          "Failed to parse scene object: {}, skipping",
-                          e.what());
+                          "Failed to parse scene object: ({})", e.what());
       continue;
     }
   }
@@ -104,7 +119,7 @@ void Scene::Instantiate(std::shared_ptr<Object> object,
   if (Parent != nullptr) {
     Parent->Children.insert(Parent->Children.end(), so);
   } else {
-  objects.insert(objects.end(), so);
+    objects.insert(objects.end(), so);
   }
   so->instance = object;
   so->Children = {};

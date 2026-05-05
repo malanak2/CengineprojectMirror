@@ -24,6 +24,11 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
+void glfw_error_callback(int error, const char *description) {
+  SPDLOG_LOGGER_ERROR(spdlog::get("console"), "GLFW Error ({}): {}", error,
+                      description);
+}
+
 namespace Engine {
 namespace Graphics {
 // Initialize vecotrs
@@ -35,20 +40,29 @@ std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 
 int Main::Init(Config *config) {
   auto logger = ENGINE_UTIL_LOGGER;
-  glfwInit();
+  glfwSetErrorCallback(glfw_error_callback);
+  SPDLOG_LOGGER_INFO(logger, "Initializing GLFW...");
+  if (!glfwInit()) {
+    SPDLOG_LOGGER_ERROR(logger, "Failed to initialize GLFW.");
+    return -1;
+  }
+  SPDLOG_LOGGER_INFO(logger, "GLFW initialized.");
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (800x600, title: {})...",
+                     config->window->title);
   window =
       glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
   if (window == NULL) {
-    SPDLOG_LOGGER_ERROR(spdlog::get("console"),
-                        "Failed to create GLFW window.");
+    SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
     glfwTerminate();
     return -1;
   }
+  SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(0);
+  glfwSwapInterval(1);
 
 #ifdef IMGUI
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "IMGUI initializing");

@@ -10,7 +10,6 @@
 #include "Shader.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <chrono>
-#include <ratio>
 #ifdef IMGUI
 #include <imgui.h>
 #endif

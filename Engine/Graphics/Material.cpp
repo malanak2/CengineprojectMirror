@@ -83,7 +83,8 @@ Material::Material(std::string path) {
 void Material::SetupMaterial() { glUseProgram(program->id); }
 
 void Material::RenderObjects() {
-  for (auto element: this->renderableObjects) {
+  for (auto element : this->renderableObjects) {
+
     glBindVertexArray(element->vao);
     glDrawArrays(GL_TRIANGLES, 0, sizeof(element->indices));
   }
@@ -106,6 +107,5 @@ std::shared_ptr<Material> Material::Create(std::string path) {
   return material;
 }
 
-Material::~Material() {
-}
+Material::~Material() {}
 } // namespace Engine::Graphics
