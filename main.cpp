@@ -6,6 +6,7 @@
 
 #include "Engine/Engine.hpp"
 #include "cpptrace/from_current.hpp"
+#include "easy/profiler.h"
 
 void sigsegvHandler(int sig) {
   cpptrace::generate_trace().print();
@@ -15,6 +16,7 @@ void sigsegvHandler(int sig) {
 void sigabrtHandler(int sig) { sigsegvHandler(sig); }
 
 int main() {
+  profiler::startListen();
   signal(SIGSEGV, sigsegvHandler);
   signal(SIGABRT, sigabrtHandler);
   CPPTRACE_TRY {

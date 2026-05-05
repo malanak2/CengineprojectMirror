@@ -11,9 +11,8 @@
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+#include <chrono>
 #include <memory>
-
-#include "Util/FileUtil.hpp"
 
 namespace Engine {
 std::shared_ptr<Engine::Main> Engine::Main::Create() {
@@ -63,8 +62,17 @@ void Engine::Main::Run() {
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
+  std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
   while (true) {
-    if (graphics->Tick(this->current_scene) != 0) {
+    auto current_time = std::chrono::steady_clock::now();
+    auto duration = current_time - last_tick_begin;
+    last_tick_begin = current_time;
+    if (graphics->Tick(
+#ifdef IMGUI
+            this->current_scene,
+#endif
+            std::chrono::duration_cast<std::chrono::duration<double>>(
+                duration)) != 0) {
       Terminate();
       break;
     }
@@ -79,7 +87,5 @@ void Engine::Main::setupLogger() {
   SPDLOG_LOGGER_INFO(spdlog::get("console"), "Set up logger!");
 }
 
-void Engine::Main::Terminate() {
-  graphics->Terminate();
-}
+void Engine::Main::Terminate() { graphics->Terminate(); }
 } // namespace Engine

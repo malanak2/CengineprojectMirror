@@ -9,6 +9,7 @@ find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(implot CONFIG REQUIRED)
 
 FetchContent_Declare(inipp GIT_REPOSITORY https://github.com/Rookfighter/inifile-cpp.git)
 FetchContent_MakeAvailable(inipp)
@@ -51,7 +52,7 @@ target_include_directories(cengineengine PUBLIC ..)
 target_include_directories(cengineengine PUBLIC .)
 
 set_target_properties(cengineengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-target_link_libraries(cengineengine PUBLIC spdlog::spdlog imgui::imgui)
+target_link_libraries(cengineengine PUBLIC spdlog::spdlog imgui::imgui implot::implot)
 target_link_libraries(cengineengine PRIVATE cpptrace::cpptrace glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json)
 if(WIN32)
       add_custom_command(

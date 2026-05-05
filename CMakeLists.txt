@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)
 set(IMGUI true)
+set(PROFILE true)
 include(FetchContent)
 FetchContent_Declare(
   cpptrace
@@ -12,19 +13,18 @@ FetchContent_Declare(
   GIT_TAG        v1.0.4 # <HASH or TAG>
 )
 FetchContent_MakeAvailable(cpptrace)
-
+find_package(easy_profiler REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
 add_executable(cengineproject main.cpp )
 add_compile_definitions(DEBUG=1 )
 if(IMGUI)
-  #Locate imgui
   add_compile_definitions(IMGUI=1 )
 endif()
 add_subdirectory(Util)
 add_subdirectory(Engine)
 
-target_link_libraries(cengineproject PRIVATE cengineengine cengineutil cpptrace::cpptrace spdlog::spdlog)
+target_link_libraries(cengineproject PRIVATE cengineengine cengineutil cpptrace::cpptrace spdlog::spdlog easy_profiler)
 if(IMGUI)
   # Add imgui
 endif()
