@@ -57,7 +57,6 @@ void Object::FromJson(json &js) { FromJson(js, "%internal%"); }
 
 void Object::FromJson(json &js, std::string path) {
   JsonFileBase jsbase;
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Checkpoint3");
   ObjectJson jsobj;
   try {
     jsbase = js;
@@ -70,7 +69,6 @@ void Object::FromJson(json &js, std::string path) {
                         path);
     throw e;
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Checkpoint4");
   jsobj = jsbase.data;
   std::vector<std::shared_ptr<IComponent>> cmps;
   for (auto c : jsobj.components) {
@@ -81,7 +79,6 @@ void Object::FromJson(json &js, std::string path) {
           path, (int)c.object_type);
       continue;
     }
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Checkpoint5, {}", c.data.dump());
     switch (c.type) {
     case renderable: {
       std::shared_ptr<Graphics::ComponentRenderable> r =

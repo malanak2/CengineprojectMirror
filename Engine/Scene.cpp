@@ -45,13 +45,11 @@ void SceneObject::FromJson(JsonFileBase jsbase,
   if (jsbase.object_type != ObjectType::Object) {
     throw std::logic_error("Bad object type");
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Data: {}", jsbase.data.dump());
   SceneObjectJson js = jsbase.data;
   this->Parent = parent;
   if (parent != nullptr)
     parent->Children.insert(parent->Children.begin(), this->shared_from_this());
   auto o = std::make_shared<Object>();
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Data2: {}", ((json)js.data).dump());
   auto ojsref = ((json)js.data);
   o->FromJson(ojsref);
   this->instance = o;
