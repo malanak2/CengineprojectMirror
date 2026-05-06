@@ -10,7 +10,9 @@
 using namespace Engine::Graphics;
 using json = nlohmann::json;
 Program::Program(std::vector<UniformJson> uniforms_json,
-                 std::vector<std::shared_ptr<Shader>> shaders) {
+                 std::vector<std::shared_ptr<Shader>> shaders,
+                 bool uses_camera) {
+  _uses_camera = uses_camera;
   auto logger = spdlog::get("console");
   unsigned int program;
   program = glCreateProgram();
@@ -45,106 +47,114 @@ Program::Program(std::vector<UniformJson> uniforms_json,
       continue;
     }
   }
+  unsigned int ubo;
+  glGenBuffers(1, &ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+  unsigned int total_size = _uses_camera ? 128 : 0;
   for (auto uniform : uniforms_json) {
-    unsigned int ubo;
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, (int)uniform.size, NULL, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, (int)uniform.bind_point, ubo);
-
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    uniforms[uniform.name] = ubo;
+    UniformInfo ui;
+    ui.id = ubo;
+    ui.offset = (unsigned int)uniform.size;
+    uniforms[uniform.name] = ui;
+    uniforms_info[uniform.bind_point] = uniform.name;
+    total_size += ui.offset;
     CHECK_GL_ERROR();
     SPDLOG_LOGGER_INFO(spdlog::get("console"),
                        "Created buffer {} with pos {} and size {}",
                        uniform.name, uniform.bind_point, uniform.size);
   }
-  CHECK_GL_ERROR();
-
-  /*
-  // Link the block to binding point 0
-  glUniformBlockBinding(id, blockIndex, 0);
-  // Bind the buffer to binding point 0
+  glBufferData(GL_UNIFORM_BUFFER, total_size, NULL, GL_DYNAMIC_DRAW);
   glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
-  GLint numUniforms;
-  glGetActiveUniformBlockiv(id, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
-                            &numUniforms);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  CHECK_GL_ERROR();
+}
 
-  std::vector<GLint> uniformIndices(numUniforms);
-  glGetActiveUniformBlockiv(id, blockIndex,
-                            GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-                            uniformIndices.data());
+/*
+// Link the block to binding point 0
+glUniformBlockBinding(id, blockIndex, 0);
+// Bind the buffer to binding point 0
+glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+GLint numUniforms;
+glGetActiveUniformBlockiv(id, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
+                          &numUniforms);
 
-  std::vector<GLint> offsets(numUniforms);
-  glGetActiveUniformsiv(id, numUniforms, (GLuint *)uniformIndices.data(),
-                        GL_UNIFORM_OFFSET, offsets.data());
+std::vector<GLint> uniformIndices(numUniforms);
+glGetActiveUniformBlockiv(id, blockIndex,
+                          GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
+                          uniformIndices.data());
 
-  for (int i = 0; i < numUniforms; i++) {
-    char name[256];
-    GLsizei length;
-    glGetActiveUniformName(id, uniformIndices[i], 256, &length, name);
+std::vector<GLint> offsets(numUniforms);
+glGetActiveUniformsiv(id, numUniforms, (GLuint *)uniformIndices.data(),
+                      GL_UNIFORM_OFFSET, offsets.data());
 
-    std::string uniformName(name);
+for (int i = 0; i < numUniforms; i++) {
+  char name[256];
+  GLsizei length;
+  glGetActiveUniformName(id, uniformIndices[i], 256, &length, name);
 
-    // Clean up the name (remove "MaterialData." prefix if present)
-    size_t dot = uniformName.find('.');
-    if (dot != std::string::npos)
-      uniformName = uniformName.substr(dot + 1);
+  std::string uniformName(name);
 
-    uniforms[uniformName] = {offsets[i]};
-    spdlog::get("console")->info("Found Uniform: {} at offset {}", uniformName,
-                                 offsets[i]);
-  }
-  */
-};
+  // Clean up the name (remove "MaterialData." prefix if present)
+  size_t dot = uniformName.find('.');
+  if (dot != std::string::npos)
+    uniformName = uniformName.substr(dot + 1);
+
+  uniforms[uniformName] = {offsets[i]};
+  spdlog::get("console")->info("Found Uniform: {} at offset {}", uniformName,
+                               offsets[i]);
+}
+*/
 
 Program::~Program() {
   glDeleteProgram(id);
   id = 0;
   for (auto ubo : uniforms) {
-    glDeleteBuffers(1, &(ubo.second));
+    glDeleteBuffers(1, &(ubo.second).id);
   }
   uniforms.clear();
 }
 
 /// Assumes program is used
-void Program::SetUniform(std::string uniform, float value) {
+void Program::SetUniform(std::string uniform, float value, bool camera) {
 
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
                        uniform);
     return;
   }
-  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float), &value);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform].id);
+  glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
+                  sizeof(float), &value);
   CHECK_GL_ERROR();
 }
 
 /// Assumes program is used
 void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
-                         float v4) {
+                         float v4, bool camera) {
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
                        uniform);
     return;
   }
-  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform].id);
   float data[4] = {v1, v2, v3, v4};
   /* spdlog::get("console")->info(
        "Binding ubo {} id {}, setting the data to {} {} {} {}", uniform,
        uniforms[uniform], v1, v2, v3, v4);*/
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(data), data);
+  glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
+                  sizeof(data), data);
   CHECK_GL_ERROR();
 }
 
-void Program::SetUniform(std::string key, std::vector<float> values) {
+void Program::SetUniform(std::string key, std::vector<float> values,
+                         bool camera) {
   switch (values.size()) {
   case 1: {
-    SetUniform(key, values[0]);
+    SetUniform(key, values[0], camera);
     break;
   }
   case 4: {
-    SetUniform(key, values[0], values[1], values[2], values[3]);
+    SetUniform(key, values[0], values[1], values[2], values[3], camera);
     break;
   }
   default: {
@@ -155,15 +165,29 @@ void Program::SetUniform(std::string key, std::vector<float> values) {
   CHECK_GL_ERROR();
 }
 
-void Program::SetUniform(std::string uniform, glm::mat4 mat) {
+void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
   CHECK_GL_ERROR();
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
                        uniform);
     return;
   }
-  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform].id);
   CHECK_GL_ERROR();
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(mat));
+
+  glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
+                  sizeof(glm::mat4), glm::value_ptr(mat));
   CHECK_GL_ERROR();
+}
+
+unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
+  unsigned int offset = 0;
+  if (camera)
+    offset = 128;
+  for (auto [key, val] : uniforms_info) {
+    if (val == uniform)
+      return offset;
+    offset += uniforms[val].offset;
+  }
+  return -1;
 }

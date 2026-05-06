@@ -1,7 +1,8 @@
 {
   "object_type": "material",
   "name": "Basic Material",
-  "uses_camera": false,
+  "uses_camera": true,
+  "uses_translate": true,
   "shaders": [
     {
       "type": "vertex",
@@ -17,13 +18,18 @@
   "uniforms": [
     {
       "name": "color",
-      "bind_point": 0,
+      "bind_point": 2,
       "size": 16
     },
     {
       "name": "translate",
       "bind_point": 1,
       "size": 64
+    },
+    {
+      "name": "camera",
+      "bind_point": 0,
+      "size": 0
     }
   ]
 }

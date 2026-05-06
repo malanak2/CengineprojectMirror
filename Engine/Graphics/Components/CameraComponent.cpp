@@ -1,13 +1,37 @@
 #include "CameraComponent.hpp"
+#include "Engine.hpp"
 #include "Interfaces/IComponent.hpp"
+#include <GLFW/glfw3.h>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/trigonometric.hpp>
+#include <memory>
 namespace Engine {
 namespace Graphics {
 
 // TODO:
 using json = nlohmann::json;
-void CameraComponent::Setup() {}
+void CameraComponent::Setup() {
+  Update();
+}
 
-void CameraComponent::Update() {}
+void CameraComponent::Update() {
+  auto obj = object.lock();
+  if (!obj) return;
+  glm::vec3 front;
+  front.x = glm::cos(glm::radians(obj->_rotation.y)) *
+            glm::cos(glm::radians(obj->_rotation.x));
+  front.y = glm::sin(glm::radians(obj->_rotation.x));
+  front.z = glm::sin(glm::radians(obj->_rotation.y)) *
+            glm::cos(glm::radians(obj->_rotation.x));
+
+  glm::vec3 frontnormal = glm::normalize(front);
+  projmat = glm::perspective(
+      glm::radians(45.0f),
+      (float)Engine::Main::width / (float)Engine::Main::height, 0.1f, 100.0f);
+  viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
+                        glm::vec3(0, 1, 0));
+}
 
 void CameraComponent::FixedUpdate() {}
 
@@ -15,7 +39,8 @@ void CameraComponent::Save() {}
 
 void CameraComponent::Load() {}
 
-CameraComponent::CameraComponent() {
+CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
+  this->object = object;
   // fromParams(name, comps, position, rotation);
 }
 
@@ -66,6 +91,11 @@ ENGINE_COMPONENT_TYPE CameraComponent::GetType() {
 void CameraComponent::FromJson(json &js) {}
 
 json CameraComponent::ToJson() { return {}; }
-CameraComponent::CameraComponent(json &js) { FromJson(js); } //
+CameraComponent::CameraComponent(json &js, std::shared_ptr<Object> object) {
+  this->object = object;
+  FromJson(js);
+} //
+glm::mat4 CameraComponent::GetProjMatrix() { return projmat; }
+glm::mat4 CameraComponent::GetViewMatrix() { return viewmat; }
 } // namespace Graphics
 } // namespace Engine

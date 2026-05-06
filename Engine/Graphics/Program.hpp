@@ -12,6 +12,10 @@ using json = nlohmann::json;
 /// Properties
 ///   - id
 ///     OpenGL id
+struct UniformInfo {
+  unsigned int id;
+  unsigned int offset;
+};
 class Program {
 public:
   /*struct UniformInfo {
@@ -22,18 +26,23 @@ public:
   bool isValid = false;
   /// Takes in a variadic argument of Shader pointers.
   Program(std::vector<UniformJson> uniforms,
-          std::vector<std::shared_ptr<Shader>> shaders);
+          std::vector<std::shared_ptr<Shader>> shaders, bool uses_camera = false);
   ~Program();
-  void SetUniform(std::string uniform, float value);
-  void SetUniform(std::string uniform, float v1, float v2, float v3, float v4);
-  void SetUniform(std::string uniform, std::vector<float> values);
-  void SetUniform(std::string uniform, glm::mat4 mat);
+  void SetUniform(std::string uniform, float value, bool camera);
+  void SetUniform(std::string uniform, float v1, float v2, float v3, float v4,
+                  bool camera);
+  void SetUniform(std::string uniform, std::vector<float> values, bool camera);
+  void SetUniform(std::string uniform, glm::mat4 mat, bool camera);
 
   /// Map of name specified in material json, and the index also specified in
   /// there
-  std::map<std::string, unsigned int> uniforms = {};
+  std::map<std::string, UniformInfo> uniforms = {};
+  std::map<int, std::string> uniforms_info = {};
+  bool _uses_camera = false;
   //  std::vector<uint8_t> cpuBuffer = {};
   //  void SetUniform(std::string uniform, float value);
   //  void SetUniform(std::string uniform, float value);
+private:
+  unsigned int GetUniformOffset(std::string uniform, bool camera);
 };
 } // namespace Engine::Graphics

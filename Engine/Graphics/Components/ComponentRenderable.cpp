@@ -9,8 +9,9 @@
 using namespace Engine::Graphics;
 
 ComponentRenderable::ComponentRenderable(std::string path,
-                                         std::shared_ptr<void> object) {
+                                         std::shared_ptr<Object> object) {
   this->path = path;
+  this->object = object;
   Load();
 }
 /*
@@ -125,7 +126,7 @@ Engine::ENGINE_COMPONENT_TYPE ComponentRenderable::GetType() {
 }
 
 std::shared_ptr<ComponentRenderable>
-ComponentRenderable::Create(json &js, std::shared_ptr<void> object) {
+ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
   JsonFileBase jb;
   jb = js;
   if (jb.object_type != ObjectType::Component) {
@@ -161,11 +162,11 @@ ComponentRenderable::Create(json &js, std::shared_ptr<void> object) {
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0]),
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &(vertices[0]),
                GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &(indices[0]),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(int),
+               &(indices[0]), GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   // TODO: Load from json
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
@@ -212,6 +213,6 @@ void ComponentRenderable::FromJson(json &js) {
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
 
-ComponentRenderable::ComponentRenderable(std::shared_ptr<void> object) {
+ComponentRenderable::ComponentRenderable(std::shared_ptr<Object> object) {
   this->object = object;
 }

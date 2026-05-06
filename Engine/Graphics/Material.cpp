@@ -9,6 +9,7 @@
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <cpptrace/basic.hpp>
 #include <exception>
+#include <glm/trigonometric.hpp>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
@@ -66,7 +67,7 @@ Material::Material(std::string path) {
       }
     }
     std::shared_ptr<Program> program =
-        std::make_shared<Program>(m.uniforms, shaders);
+        std::make_shared<Program>(m.uniforms, shaders, m.uses_camera);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");
@@ -88,24 +89,47 @@ void Material::SetupMaterial() { glUseProgram(program->id); }
 void Material::RenderObjects() {
   for (auto element : this->renderableObjects) {
     glBindVertexArray(element->vao);
+    if (uses_camera) {
+      auto obj = element->object.lock();
+      if (obj) {
+        auto scene = obj->scene.lock();
+        if (scene && scene->camera) {
+          auto proj = scene->camera->GetProjMatrix();
+          auto view = scene->camera->GetViewMatrix();
+          glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"].id);
+          CHECK_GL_ERROR();
+
+          glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                          glm::value_ptr(proj));
+          glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
+                          glm::value_ptr(view));
+          CHECK_GL_ERROR();
+        }
+      }
+    }
     for (auto [key, val] : program->uniforms) {
+      if (key == "camera")
+        continue;
       if (key == "translate") {
         glm::mat4 transform = glm::mat4(1);
-        auto obj = std::static_pointer_cast<Object>(element->object);
-        transform =
-            glm::translate(transform, glm::make_vec3(&(obj->_position[0])));
-        transform =
-            glm::rotate(transform, obj->_rotation[0], glm::vec3(1, 0, 0));
-        transform =
-            glm::rotate(transform, obj->_rotation[1], glm::vec3(0, 1, 0));
-        transform =
-            glm::rotate(transform, obj->_rotation[2], glm::vec3(0, 0, 1));
-        program->SetUniform("translate", transform);
+        auto obj = element->object.lock();
+        if (obj) {
+          transform =
+              glm::translate(transform, glm::make_vec3(&(obj->_position[0])));
+          transform = glm::rotate(transform, glm::radians(obj->_rotation[0]),
+                                  glm::vec3(1, 0, 0));
+          transform = glm::rotate(transform, glm::radians(obj->_rotation[1]),
+                                  glm::vec3(0, 1, 0));
+          transform = glm::rotate(transform, glm::radians(obj->_rotation[2]),
+                                  glm::vec3(0, 0, 1));
+          program->SetUniform("translate", transform, uses_camera);
+        }
         continue;
       }
-      program->SetUniform(key, element->_uniforms[key]);
+      program->SetUniform(key, element->_uniforms[key], uses_camera);
     }
-    glDrawArrays(GL_TRIANGLES, 0, sizeof(element->indices));
+    glDrawElements(GL_TRIANGLES, element->indices.size(), GL_UNSIGNED_INT, 0);
+    CHECK_GL_ERROR();
   }
 }
 

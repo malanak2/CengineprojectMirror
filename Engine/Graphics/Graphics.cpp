@@ -3,6 +3,7 @@
 //
 
 #include "Graphics.hpp"
+#include "Engine.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
@@ -25,6 +26,8 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
+  Engine::Main::width = width;
+  Engine::Main::height = height;
 }
 
 void glfw_error_callback(int error, const char *description) {
@@ -58,6 +61,8 @@ int Main::Init(Config *config) {
                      config->window->title);
   window =
       glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
+  Engine::Main::width = 800;
+  Engine::Main::height = 600;
   if (window == NULL) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
     glfwTerminate();
@@ -65,7 +70,7 @@ int Main::Init(Config *config) {
   }
   SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(0);
+  glfwSwapInterval(1);
 
 #ifdef IMGUI
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "IMGUI initializing");
@@ -167,8 +172,8 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
       sceneObject = nullptr;
     else {
       ImGui::Text("Parent: %s",
-                  sceneObject->Parent
-                      ? sceneObject->Parent->instance->_name.c_str()
+                  sceneObject->Parent.lock()
+                      ? sceneObject->Parent.lock()->instance->_name.c_str()
                       : "nullptr");
       if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload *payload =
@@ -205,7 +210,7 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
       }
     }
     if (ImGui::Button("Create")) {
-      auto o = std::make_shared<Object>();
+      auto o = std::make_shared<Object>(scene);
       std::vector<float> pos = {};
       std::vector<float> rot = {};
       pos.assign(coords, coords + sizeof(coords) / sizeof(float));
@@ -268,6 +273,16 @@ void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
       // Render uniforms
       auto c = std::static_pointer_cast<ComponentRenderable>(component);
       ImGui::InputText("Material path", &c->_material_path[0], 100);
+      if (ImGui::CollapsingHeader("Values")) {
+        auto obj = c->object.lock();
+        if (obj) {
+          // Position:
+          ImGui::InputFloat3("XYZ", &obj->_position[0]);
+          // Rotation:
+          ImGui::SliderFloat3("Rotations:", &obj->_rotation[0], -360, 360);
+          ImGui::InputFloat3(": Rotation", &obj->_rotation[0]);
+        }
+      }
       if (ImGui::CollapsingHeader("Uniforms")) {
         for (auto &[key, val] : c->_uniforms) {
           switch (val.size()) {

@@ -10,7 +10,7 @@
 
 namespace Engine {
 
-Object::Object(std::string path) {
+Object::Object(std::string path, std::shared_ptr<Scene> scene) {
   // TODO:
   // Load data...
   std::string js;
@@ -27,6 +27,7 @@ Object::Object(std::string path) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Invalid json at {}", path);
     return;
   }
+  this->scene = scene;
   FromJson(j);
 }
 
@@ -45,20 +46,26 @@ json Object::ToJson() {
     cmps.insert(cmps.end(), static_cast<ComponentJson>(j));
   }
   js.components = cmps;
-  js.position = _position;
-  js.rotation = _rotation;
+  js.position = {_position[0], _position[1], _position[2]};
+  js.rotation = {_rotation[0], _rotation[1], _rotation[2]};
   js.name = _name;
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "HMMMMM {} {}", _name, js.name);
   ret.data = js;
   json r = ret;
   return r;
 }
+void Object::FromJson(json &js) { FromJson(js, nullptr); }
 
-void Object::FromJson(json &js) { FromJson(js, "%internal%"); }
+std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js, void *) {
+  return FromJson(js, "%internal%");
+}
 
-void Object::FromJson(json &js, std::string path) {
+std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
+                                                            std::string path) {
   JsonFileBase jsbase;
   ObjectJson jsobj;
+
+  std::shared_ptr<Graphics::CameraComponent> cc = nullptr;
   try {
     jsbase = js;
     if (jsbase.object_type != ObjectType::Object)
@@ -90,8 +97,10 @@ void Object::FromJson(json &js, std::string path) {
     }
     case camera: {
       std::shared_ptr<Engine::Graphics::CameraComponent> r =
-          std::make_shared<Engine::Graphics::CameraComponent>(c.data);
+          std::make_shared<Engine::Graphics::CameraComponent>(
+              c.data, shared_from_this());
       cmps.insert(cmps.begin(), r);
+      cc = r;
       break;
     }
     default:
@@ -101,6 +110,7 @@ void Object::FromJson(json &js, std::string path) {
     }
   }
   fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation);
+  return cc;
 }
 
 void Object::fromParams(std::string name,
@@ -116,18 +126,29 @@ void Object::fromParams(std::string name,
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Bad position passed to Object : {}",
                        position.size());
   } else {
-    this->_position = position;
+    this->_position = glm::vec3(position[0], position[1], position[2]);
   }
-  if (rotation.size() != 4) {
+  if (rotation.size() != 3) {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Bad rotation passed to Object : {}",
-                       position.size());
+                       rotation.size());
   } else {
-    this->_rotation = rotation;
+    this->_rotation = glm::vec3(rotation[0], rotation[1], rotation[2]);
   }
 }
-Object::Object() {
+Object::Object(std::shared_ptr<Scene> scene) {
+  this->scene = scene;
   this->_components = {};
   this->_position = {};
   this->_rotation = {};
+}
+void Object::Setup() {
+  for (auto &[key, comp] : this->_components) {
+    comp->Setup();
+  }
+}
+void Object::Update() {
+  for (auto &[key, comp] : this->_components) {
+    comp->Update();
+  }
 }
 } // namespace Engine

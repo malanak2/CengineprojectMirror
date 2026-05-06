@@ -17,6 +17,8 @@
 #include <memory>
 
 namespace Engine {
+int Main::width = 0;
+int Main::height = 0;
 std::shared_ptr<Engine::Main> Engine::Main::Create() {
   std::shared_ptr<Main> e = std::make_shared<Main>();
   e->setupLogger();
@@ -32,11 +34,10 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
   }
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading scene");
   try {
-    e->current_scene =
-        std::make_shared<Scene>(e->config->defaults->StartupScenePath);
+    e->current_scene = Scene::Load(e->config->defaults->StartupScenePath);
   } catch (const std::exception &ex) {
     e->current_scene = std::make_shared<Scene>();
-    auto object_default = std::make_shared<Object>();
+    auto object_default = std::make_shared<Object>(e->current_scene);
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
     Graphics::RenderableDataJson rdj;
@@ -50,11 +51,9 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     rdj.uniforms = {{"color", {1, 0, 0, 1}}};
     jsbase.data = rdj;
     json jsbase_js = jsbase;
-    auto com_render = Graphics::ComponentRenderable::Create(jsbase_js, nullptr);
+    auto com_render =
+        Graphics::ComponentRenderable::Create(jsbase_js, object_default);
     object_default->fromParams("Test object", {com_render});
-    std::static_pointer_cast<Graphics::ComponentRenderable>(
-        object_default->_components[ENGINE_COMPONENT_TYPE::renderable])
-        ->object = object_default->shared_from_this();
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
     FileUtil::SaveFile("scenes/default.json", &scene_json);
@@ -68,10 +67,12 @@ void Engine::Main::Run() {
   SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
+  current_scene->Setup();
   while (true) {
     auto current_time = std::chrono::steady_clock::now();
     auto duration = current_time - last_tick_begin;
     last_tick_begin = current_time;
+    current_scene->Update();
     if (graphics->Tick(
 #ifdef IMGUI
             this->current_scene,
