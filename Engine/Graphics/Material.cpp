@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cpptrace/basic.hpp>
 #include <memory>
-#include <spdlog/spdlog-inl.h>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <vector>
 
