@@ -4,7 +4,7 @@ struct VSOutput {
   };
 
 [shader("vertex")]
-VSOutput main(float3 aPos : POSITION)
+VSOutput mainVertex(float3 aPos : POSITION)
 {
   VSOutput output;
   output.pos = float4(aPos, 1.0);
@@ -12,11 +12,10 @@ VSOutput main(float3 aPos : POSITION)
   return output;
 }
 
-cbuffer ShaderData {
-    float4 color;
-  }
+[vk::binding(0,0)]
+uniform float4 u_color;
 [shader("pixel")]
-float4 mainFrag(VSOutput out) : SV_Target
+float4 mainPixel(VSOutput out) : SV_Target
 {
-  return float4(color);
+  return float4(u_color);
 }

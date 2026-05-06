@@ -4,10 +4,11 @@
 #pragma once
 #include "Config/Config.hpp"
 #include "Graphics/Graphics.hpp"
-
-class Engine {
+#include "Scene.hpp"
+namespace Engine {
+class Main {
 public:
-  int Init();
+  static std::shared_ptr<Main> Create();
   void Run();
 
 private:
@@ -16,4 +17,6 @@ private:
 
   Graphics::Main *graphics;
   Config *config;
+  std::shared_ptr<Scene> current_scene;
 };
+} // namespace Engine

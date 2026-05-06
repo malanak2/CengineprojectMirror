@@ -1,11 +1,14 @@
 #include "Program.hpp"
+#include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
 #include "glad/glad.h"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
-using namespace Graphics;
-
-Program::Program(std::vector<std::shared_ptr<Shader>> shaders) {
+#include <vector>
+using namespace Engine::Graphics;
+using json = nlohmann::json;
+Program::Program(std::vector<UniformJson> uniforms_json,
+                 std::vector<std::shared_ptr<Shader>> shaders) {
   auto logger = spdlog::get("console");
   unsigned int program;
   program = glCreateProgram();
@@ -13,7 +16,8 @@ Program::Program(std::vector<std::shared_ptr<Shader>> shaders) {
     std::shared_ptr<Shader> shad = shaders[i];
     shaders[i] = shad;
     if (!shad->isValid) {
-      logger->warn("Tried to add an invalid shader to a program, ignoring...");
+      SPDLOG_LOGGER_WARN(
+          logger, "Tried to add an invalid shader to a program, ignoring...");
       continue;
     }
     glAttachShader(program, shad->id);
@@ -24,7 +28,7 @@ Program::Program(std::vector<std::shared_ptr<Shader>> shaders) {
   glGetProgramiv(program, GL_LINK_STATUS, &success);
   if (!success) {
     glGetProgramInfoLog(program, 512, NULL, infoLog);
-    logger->error("ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
+    SPDLOG_LOGGER_ERROR(logger, "ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
     cpptrace::generate_trace().print();
     isValid = false;
     return;
@@ -33,48 +37,29 @@ Program::Program(std::vector<std::shared_ptr<Shader>> shaders) {
   id = program;
   for (int i = 0; i < shaders.size(); i++) {
     std::shared_ptr<Shader> shad = shaders[i];
+    glDetachShader(program, shad->id);
     if (!shad->_reusable) {
       shad->Delete();
       continue;
     }
   }
-  int blockIndex =
-      glGetUniformBlockIndex(id, "block_SLANG_ParameterGroup_ShaderData_0");
+  for (auto uniform : uniforms_json) {
+    unsigned int ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, (int)uniform.size, NULL, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, (int)uniform.bind_point, ubo);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    uniforms[uniform.name] = ubo;
+    CHECK_GL_ERROR();
+    SPDLOG_LOGGER_INFO(spdlog::get("console"),
+                       "Created buffer {} with pos {} and size {}",
+                       uniform.name, uniform.bind_point, uniform.size);
+  }
   CHECK_GL_ERROR();
-  if (blockIndex == GL_INVALID_INDEX) {
-    GLint numBlocks;
-    glGetProgramiv(id, GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
-    logger->warn("ShaderData_0 not found. Active uniform blocks: {}",
-                 numBlocks);
-    for (int i = 0; i < numBlocks; i++) {
-      char name[256];
-      GLsizei length;
-      glGetActiveUniformBlockName(id, i, 256, &length, name);
-      logger->info("  Block {}: {}", i, name);
-    }
-  }
 
-  spdlog::get("console")->info("BlockIndex is {}, invalid would be {}",
-                               blockIndex, GL_INVALID_INDEX);
-  if (blockIndex == GL_INVALID_INDEX) {
-    logger->warn("Shader found missing ubo block");
-    return;
-  }
-
-  int blocksize = 0;
-  glGetActiveUniformBlockiv(id, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE,
-                            &blocksize);
-  CHECK_GL_ERROR();
-  if (blocksize <= 0 || blocksize > 1024 * 1024) {
-    spdlog::get("console")->error("Invalid block size: {}", blocksize);
-    return;
-  }
-  this->cpuBuffer.resize(blocksize);
-  glGenBuffers(1, &ubo);
-  glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-  glBufferData(GL_UNIFORM_BUFFER, blocksize, NULL, GL_DYNAMIC_DRAW);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
+  /*
   // Link the block to binding point 0
   glUniformBlockBinding(id, blockIndex, 0);
   // Bind the buffer to binding point 0
@@ -108,15 +93,20 @@ Program::Program(std::vector<std::shared_ptr<Shader>> shaders) {
     spdlog::get("console")->info("Found Uniform: {} at offset {}", uniformName,
                                  offsets[i]);
   }
+  */
 };
 
 Program::~Program() {
   glDeleteProgram(id);
-  glDeleteBuffers(1, &ubo);
+  id = 0;
+  for (auto ubo : uniforms) {
+    glDeleteBuffers(1, &(ubo.second));
+  }
+  uniforms.clear();
 }
 
 /// Assumes program is used
-void Program::SetUniform(std::string uniform, float value) {
+/*void Program::SetUniform(std::string uniform, float value) {
 
   if (!uniforms.contains(uniform))
     return;
@@ -129,22 +119,20 @@ void Program::SetUniform(std::string uniform, float value) {
   glBindBuffer(GL_UNIFORM_BUFFER, ubo);
   glBufferSubData(GL_UNIFORM_BUFFER, 0, cpuBuffer.size(), cpuBuffer.data());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-}
+}*/
 
 /// Assumes program is used
 void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
                          float v4) {
   if (!uniforms.contains(uniform)) {
-    spdlog::get("console")->info("Uniform not found: {}", uniform);
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
+                       uniform);
     return;
   }
-
-  int offset = uniforms[uniform].offset;
-
-  float values[4] = {v1, v2, v3, v4};
-  memcpy(cpuBuffer.data() + offset, values, sizeof(values));
-
-  glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, cpuBuffer.size(), cpuBuffer.data());
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
+  float data[4] = {v1, v2, v3, v4};
+  /* spdlog::get("console")->info(
+       "Binding ubo {} id {}, setting the data to {} {} {} {}", uniform,
+       uniforms[uniform], v1, v2, v3, v4);*/
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(data), data);
 }

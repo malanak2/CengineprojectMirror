@@ -1,93 +1,111 @@
 #include "Material.hpp"
 #include "../../Util/FileUtil.hpp"
+#include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
-#include "nlohmann/json.hpp"
-#include <algorithm>
+#include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <cpptrace/basic.hpp>
+#include <exception>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <vector>
 
-using namespace Graphics;
+namespace Engine::Graphics {
 
 using json = nlohmann::json;
 
-Material::Material() { throw new std::logic_error("Function not implemented"); }
-
+Material::Material() { throw std::logic_error("Function not implemented"); }
+bool Material::ran_from_create = false;
 Material::Material(std::string path) {
+  if (!ran_from_create) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "DO NOT CALL THIS CONSTRUCTOR FROM OUTSIDE OF "
+                        "Material::Create!!!!!!!!!!!!");
+  }
   auto logger = spdlog::get("console");
   std::string file;
   if (FileUtil::ReadFile(path, &file) != 0) {
-    logger->warn("Could not open material {}", path);
+    SPDLOG_LOGGER_WARN(logger, "Could not open material at {}", path);
     return;
   }
   json data = json::parse(file);
   if (data["object_type"] != "material") {
-    logger->warn("Tried to open {} as material (path: {})",
-                 (std::string)data["object_type"], path);
+    SPDLOG_LOGGER_WARN(logger, "Tried to open {} as material (path: {})",
+                       static_cast<std::string>(data["object_type"]), path);
+    return;
+  }
+  MaterialJson m;
+  try {
+    m = data;
+  } catch (const std::exception &e) {
+    SPDLOG_LOGGER_ERROR(logger, "Failed to parse material json at {}", path);
     return;
   }
   this->path = path;
+  CHECK_GL_ERROR();
+  uses_camera = m.uses_camera;
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
-    auto data_shaders = data["shaders"];
-    std::for_each(
-        data_shaders.begin(), data_shaders.end(),
-        [&shaders, path](auto &data_shader) {
-          Shader::ShaderType type = Shader::ShaderType::Invalid;
-          if ((std::string)data_shader["type"] == "vertex") {
-            type = Shader::ShaderType::Vertex;
-          } else if ((std::string)data_shader["type"] == "fragment") {
-            type = Shader::ShaderType::Fragment;
-          }
-          std::string source;
-          if (FileUtil::ReadFile((std::string)data_shader["path"], &source) !=
-              0) {
-            throw std::invalid_argument("Failed to open shader file at " +
-                                        (std::string)data_shader["path"]);
-          }
-          std::shared_ptr<Shader> shader = Shader::Create(type, source, false);
-          if (shader->isValid) {
-            shaders.insert(shaders.end(), shader);
-          } else {
-            throw std::invalid_argument(
-                "Invalid shader specified in material at " + path +
-                ", shader path is " + (std::string)data_shader["path"]);
-          }
-        });
-    std::shared_ptr<Program> program = std::make_shared<Program>(shaders);
+    auto data_shaders = m.shaders;
+    for (auto &data_shader : data_shaders) {
+      std::shared_ptr<Shader> shader = Shader::Create(
+          data_shader.type, data_shader.path, data_shader.entrypoint, false);
+      if (shader->isValid) {
+        shaders.insert(shaders.end(), shader);
+      } else {
+        throw std::invalid_argument("Invalid shader specified in material at " +
+                                    path + ", shader path is " +
+                                    data_shader.path);
+      }
+    }
+    std::shared_ptr<Program> program =
+        std::make_shared<Program>(m.uniforms, shaders);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");
     }
     this->program = program;
     this->usable = true;
+    CHECK_GL_ERROR();
   } catch (const std::exception &e) {
-    logger->error("Failed to parse material at {}. ({})", path, e.what());
+    SPDLOG_LOGGER_ERROR(logger, "Failed to parse material at {}. ({})", path,
+                        e.what());
     cpptrace::generate_trace().print();
     return;
   }
+  CHECK_GL_ERROR();
 }
 
 void Material::SetupMaterial() { glUseProgram(program->id); }
 
 void Material::RenderObjects() {
-  throw std::logic_error("Function not implemented");
+  for (auto element : this->renderableObjects) {
+
+    glBindVertexArray(element->vao);
+    glDrawArrays(GL_TRIANGLES, 0, sizeof(element->indices));
+  }
 }
 
 std::shared_ptr<Material> Material::Create(std::string path) {
   if (Main::materials.contains(path)) {
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for material {}", path);
     return Main::materials[path];
   }
+  ran_from_create = true;
   auto material = std::make_shared<Material>(path);
+  ran_from_create = false;
   if (material->usable) {
     Main::materials[path] = material;
+  } else {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Created an unusable material at {}", path);
   }
   return material;
 }
 
-Material::~Material() { Main::materials.erase(path); }
+Material::~Material() {}
+} // namespace Engine::Graphics

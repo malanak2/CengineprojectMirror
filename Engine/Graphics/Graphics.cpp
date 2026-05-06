@@ -3,17 +3,34 @@
 //
 
 #include "Graphics.hpp"
-#include "../../Util/FileUtil.hpp"
 #include "Material.hpp"
+#include "Scene.hpp"
+#include "Util/LoggerUtil.hpp"
+#include <chrono>
+#include <ctime>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <unordered_map>
+
+#ifdef IMGUI
+#include "implot.h"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#define IMGUI_SCALE 1
+#endif
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-using namespace Graphics;
+void glfw_error_callback(int error, const char *description) {
+  SPDLOG_LOGGER_ERROR(spdlog::get("console"), "GLFW Error ({}): {}", error,
+                      description);
+}
+
+namespace Engine {
+namespace Graphics {
 // Initialize vecotrs
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
     {};
@@ -22,107 +39,283 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
 std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 
 int Main::Init(Config *config) {
-  auto logger = spdlog::get("console");
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  auto logger = ENGINE_UTIL_LOGGER;
+  glfwSetErrorCallback(glfw_error_callback);
+  SPDLOG_LOGGER_INFO(logger, "Initializing GLFW...");
+  if (!glfwInit()) {
+    SPDLOG_LOGGER_ERROR(logger, "Failed to initialize GLFW.");
+    return -1;
+  }
+  SPDLOG_LOGGER_INFO(logger, "GLFW initialized.");
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  window = glfwCreateWindow(800, 600, config->Window_Title.c_str(), NULL, NULL);
+
+  SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (800x600, title: {})...",
+                     config->window->title);
+  window =
+      glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
   if (window == NULL) {
-    spdlog::get("console")->error("Failed to create GLFW window.");
+    SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
     glfwTerminate();
     return -1;
   }
+  SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
   glfwMakeContextCurrent(window);
+  glfwSwapInterval(1);
+
+#ifdef IMGUI
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "IMGUI initializing");
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImPlot::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+
+  ImGui::StyleColorsDark();
+
+  ImGuiStyle &style = ImGui::GetStyle();
+  style.ScaleAllSizes(IMGUI_SCALE);
+  style.FontScaleDpi = IMGUI_SCALE;
+  if (io.ConfigFlags) { // ImGuiConfigFlags_ViewportsEnable) {
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+  }
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 460");
+#endif
+
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    spdlog::get("console")->error("Failed to initialize glfw.");
+    SPDLOG_LOGGER_ERROR(spdlog::get("console"), "Failed to initialize GLAD.");
     return -1;
   }
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  // Setup vectors
+  CHECK_GL_ERROR();
   // TODO: Remove
-  /*
-  std::string src = "generated/shaders/glsl/basic.vert.glsl";
-  std::string out;
-  if (FileUtil::ReadFile(src, &out) != 0) {
-    logger->error("Failed to read shader file");
-    return -1;
-  }
-  std::shared_ptr<Shader> vert =
-      std::shared_ptr<Shader>(new Shader(Shader::ShaderType::Vertex, out));
-  logger->info("New vert shader with id of {}, is reusable? {} valid? {}",
-               vert->id, vert->_reusable, vert->isValid);
-  src = "../generated/shaders/glsl/basic.frag.glsl";
-  out = "";
-  if (FileUtil::ReadFile(src, &out) != 0) {
-    logger->error("Failed to read shader file");
-    return -1;
-  }
-  std::shared_ptr<Shader> frag =
-      std::shared_ptr<Shader>(new Shader(Shader::ShaderType::Fragment, out));
-  logger->info("New frag shader with id of {}, is reusable? {} valid? {}",
-               frag->id, frag->_reusable, frag->isValid);
-  Program *prog = new Program({vert, frag});
-  logger->info("New frag shader with id of {}, is valid? {}", prog->id,
-               prog->isValid);
-  if (!prog->isValid) {
-    logger->error("Failed to link program");
-    return -1;
-  }
-  */
-  std::shared_ptr<Material> m =
-      std::make_shared<Material>("materials/basic.json");
-  glUseProgram(m->program->id);
-  float vertices[] = {
-      -0.5f, -0.5f, 0.0f, // left
-      0.5f,  -0.5f, 0.0f, // right
-      0.0f,  0.5f,  0.0f  // top
-  };
-
-  unsigned int VBO, VAO;
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
-  // then configure vertex attributes(s).
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-
-  // note that this is allowed, the call to glVertexAttribPointer registered VBO
-  // as the vertex attribute's bound vertex buffer object so afterwards we can
-  // safely unbind
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  // You can unbind the VAO afterwards so other VAO calls won't accidentally
-  // modify this VAO, but this rarely happens. Modifying other VAOs requires a
-  // call to glBindVertexArray anyways so we generally don't unbind VAOs (nor
-  // VBOs) when it's not directly necessary.
-  glBindVertexArray(0);
-  vao = VAO;
-  this->material = m;
-
   return 0;
 }
 
-int Main::Tick() {
+#ifdef IMGUI
+void Main::ShowSceneObjectMenu(
+    std::vector<std::shared_ptr<SceneObject>> *sceneObjects) {
+  if (!sceneObjects)
+    return;
+  for (auto &obj : *sceneObjects) {
+    if (!obj || !obj->instance)
+      continue;
+    ImGui::PushID(obj.get());
+
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowOverlap;
+    if (obj->Children.empty()) {
+      flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    bool open = ImGui::TreeNodeEx(obj->instance->_name.c_str(), flags);
+
+    if (ImGui::BeginDragDropSource()) {
+      SceneObject *ptr = obj.get();
+      ImGui::SetDragDropPayload("OBJ_PARENT", &ptr, sizeof(SceneObject *));
+      ImGui::Text("%s", obj->instance->_name.c_str());
+      ImGui::EndDragDropSource();
+    }
+
+    /*if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload =
+    ImGui::AcceptDragDropPayload("OBJ_PARENT")) { SceneObject* draggedObjRaw =
+    *(SceneObject**)payload->Data; std::shared_ptr<SceneObject> draggedObj =
+    draggedObjRaw->shared_from_this(); if (draggedObj != obj) {
+                draggedObj->Parent = obj;
+                // Note: Real re-parenting should also update Children vectors
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }*/
+
+    if (this->sceneObject != obj) {
+      ImGui::SameLine(ImGui::GetContentRegionAvail().x - 50);
+      if (ImGui::Button("Select")) {
+        this->sceneObject = obj;
+      }
+    }
+
+    if (open) {
+      ShowSceneObjectMenu(&obj->Children);
+      ImGui::TreePop();
+    }
+
+    ImGui::PopID();
+  }
+}
+
+void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
+  ImGui::Begin("Scene");
+  ImGui::Text("Edit current scene");
+  if (ImGui::CollapsingHeader("Objects")) {
+    ShowSceneObjectMenu(&scene->objects);
+  }
+  if (sceneObject != nullptr) {
+    ImGui::Text("Scene object %s", sceneObject->instance->_name.c_str());
+    if (ImGui::Button("Deselect"))
+      sceneObject = nullptr;
+    else {
+      ImGui::Text("Parent: %s",
+                  sceneObject->Parent
+                      ? sceneObject->Parent->instance->_name.c_str()
+                      : "nullptr");
+      if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload *payload =
+                ImGui::AcceptDragDropPayload("OBJ_PARENT")) {
+          SceneObject *draggedObj = *(SceneObject **)payload->Data;
+          if (draggedObj->shared_from_this() != sceneObject) {
+            sceneObject->SetParent(draggedObj->shared_from_this());
+          }
+        }
+        ImGui::EndDragDropTarget();
+      }
+    }
+  } else {
+    ImGui::Text("New Scene Object");
+    ImGui::InputText("Name", namebuf, 64);
+    ImGui::InputText("Material path", matbuf, 64);
+    ImGui::InputFloat3("Position: ", coords);
+    ImGui::InputFloat4("Rotation: ", coords);
+    ImGui::Text("Parent: %s", newObjectParent
+                                  ? newObjectParent->instance->_name.c_str()
+                                  : "nullptr");
+    if (ImGui::BeginDragDropTarget()) {
+      if (const ImGuiPayload *payload =
+              ImGui::AcceptDragDropPayload("OBJ_PARENT")) {
+        SceneObject *draggedObj = *(SceneObject **)payload->Data;
+        newObjectParent = draggedObj->shared_from_this();
+      }
+      ImGui::EndDragDropTarget();
+    }
+    if (newObjectParent != nullptr) {
+      ImGui::SameLine();
+      if (ImGui::Button("Remove")) {
+        newObjectParent = nullptr;
+      }
+    }
+    if (ImGui::Button("Create")) {
+      auto o = std::make_shared<Object>();
+      std::vector<float> pos = {};
+      std::vector<float> rot = {};
+      pos.assign(coords, coords + sizeof(coords) / sizeof(float));
+      rot.assign(rotation, rotation + sizeof(rotation) / sizeof(float));
+      o->fromParams(namebuf, {}, pos, rot);
+      scene->Instantiate(o, newObjectParent);
+    }
+  }
+  ImGui::End();
+}
+void Main::RenderPerformanceGraph() {
+  ImGui::Begin("Performance");
+
+  float total = 0;
+  float largest = 0;
+  for (auto var : frameTimes) {
+    if (var > largest)
+      largest = var;
+    total += var;
+  }
+  ImGui::Text("Fps: %f (total: %f, count: %zu)", frameTimes.size() / total,
+              total, frameTimes.size());
+  if (ImGui::CollapsingHeader("Graph")) {
+    if (ImPlot::BeginPlot("Frame Times")) {
+      ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoTickLabels,
+                        ImPlotAxisFlags_NoTickLabels);
+      ImPlot::SetupAxisLimits(ImAxis_X1, 0, frameTimes.size(),
+                              ImGuiCond_Always);
+      ImPlot::SetupAxisLimits(ImAxis_Y1, 0, largest * 1.5, ImGuiCond_Always);
+      ImPlot::PlotLine("ms", &frameTimes[0], frameTimes.size());
+      ImPlot::EndPlot();
+    }
+  }
+
+  ImGui::End();
+}
+#endif
+
+int Main::Tick(
+#ifdef IMGUI
+    std::shared_ptr<Scene> scene,
+#endif
+    std::chrono::duration<float, std::chrono::seconds::period> duration) {
   if (glfwWindowShouldClose(window)) {
-    spdlog::get("console")->info("GLFW Window should close.");
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "GLFW Window should close.");
     return -1;
   }
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
+  CHECK_GL_ERROR();
+  frameTimes.insert(frameTimes.end(), duration.count());
+  if (frameTimes.size() > 2000)
+    frameTimes.erase(frameTimes.begin(), frameTimes.begin() + 1);
+
+#ifndef IMGUI
+  float total = 0;
+  for (auto var : frameTimes) {
+    total += var;
+  }
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Fps: {}", frameTimes.size() / total);
+#endif
+#ifdef IMGUI
+  // Calc frame times
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  ImGuiWindowFlags window_flags =
+      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+  //           ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
+  //           ImGuiDockNodeFlags_PassthruCentralNode);
+  // DEMO:
+  // ImGui::ShowDemoWindow();
+  // ImPlot::ShowDemoWindow();
+  RenderSceneView(scene);
+  RenderPerformanceGraph();
+
+#endif
+  /*
   material->SetupMaterial();
   material->program->SetUniform("color", 1, 0, 0, 1);
   glBindVertexArray(vao);
   glDrawArrays(GL_TRIANGLES, 0, 3);
+  CHECK_GL_ERROR();
+  */
+  for (auto &[key, val] : materials) {
+    val->SetupMaterial();
+    val->RenderObjects();
+  }
+#ifdef IMGUI
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+#endif
   glfwSwapBuffers(window);
   glfwPollEvents();
-  return 0;
-}
 
-void Main::Terminate() { glfwTerminate(); }
+  return 0;
+} // namespace Graphics
+
+void Main::Terminate() {
+  materials.clear();
+  vertexShaders.clear();
+  fragmentShaders.clear();
+#ifdef IMGUI
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImPlot::DestroyContext();
+  ImGui::DestroyContext();
+#endif
+  glfwDestroyWindow(window);
+  glfwTerminate();
+}
+} // namespace Graphics
+} // namespace Engine

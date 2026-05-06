@@ -1,12 +1,14 @@
 #include "FileUtil.hpp"
 #include "fstream"
+#include <fstream>
+#include <iterator>
 #include <regex>
-#include <spdlog/spdlog.h>
 
+/// Loads a text file from the resources directory
 int FileUtil::ReadFile(std::string path, std::string *result) {
   std::ifstream file;
   path = "resources/" + path;
-  // Everything should be in the resources directory. if it is not, the move it
+  // Everything should be in the resources directory. if it is not, then move it
   // there!
   path = std::regex_replace(path, std::regex("\\.\\."), ".");
   file.open(path, std::ios::in | std::ios::ate);
@@ -19,5 +21,36 @@ int FileUtil::ReadFile(std::string path, std::string *result) {
   file.read(&out[0], size);
   file.close();
   result->append(out);
+  return 0;
+}
+
+int FileUtil::SaveFile(std::string path, std::string *content) {
+  std::ofstream file;
+  path = "resources/" + path;
+  file.open(path, std::ios::out);
+  if (!file.is_open()) {
+    return -1;
+  }
+  file << *content;
+  file.close();
+
+  return 0;
+}
+
+/// Loads a binary file from the resources directory
+int FileUtil::LoadBinary(std::string path, std::vector<unsigned char> *res) {
+  res->clear();
+  std::ifstream file;
+  path = "resources/" + path;
+  // Everything should be in the resources directory. if it is not, then move it
+  // there!
+  path = std::regex_replace(path, std::regex("\\.\\."), ".");
+  file.open(path, std::ios::binary);
+  if (!file.is_open()) {
+    return -1;
+  }
+  std::vector<unsigned char> out(std::istreambuf_iterator<char>(file), {});
+  res->assign(out.begin(), out.end());
+  file.close();
   return 0;
 }

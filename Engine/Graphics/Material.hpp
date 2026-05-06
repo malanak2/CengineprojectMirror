@@ -1,9 +1,9 @@
 #pragma once
 
-#include "IRenderable.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Program.hpp"
 #include <memory>
-#include <vector>
+namespace Engine {
 namespace Graphics {
 class Material {
 public:
@@ -12,12 +12,17 @@ public:
   std::string path = "";
   std::string name = "";
   bool usable = false;
-  std::vector<std::shared_ptr<IRenderable>> objects;
+  bool uses_camera;
   void SetupMaterial();
   void RenderObjects();
-  Material(std::string path);
+  std::vector<std::shared_ptr<ComponentRenderable>> renderableObjects;
   static std::shared_ptr<Material> Create(std::string path);
+  Material(std::string path);
   Material();
   ~Material();
+
+private:
+  static bool ran_from_create;
 };
 } // namespace Graphics
+} // namespace Engine
