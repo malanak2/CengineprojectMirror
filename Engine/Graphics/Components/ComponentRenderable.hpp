@@ -3,6 +3,7 @@
 #include "Interfaces/IComponent.hpp"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 #include <string>
 
 using json = nlohmann::json;
@@ -23,13 +24,14 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
 class ComponentRenderable : public IComponent {
 public:
   /// Only call if you call FromJson right after
-  ComponentRenderable();
-  ComponentRenderable(std::string path);
+  ComponentRenderable(std::shared_ptr<void> object);
+  ComponentRenderable(std::string path, std::shared_ptr<void> object);
   /*  static std::shared_ptr<ComponentRenderable>
     Create(std::string material_path,
            std::map<std::string, std::vector<float>> uniforms);*/
 
-  static std::shared_ptr<ComponentRenderable> Create(json &js);
+  static std::shared_ptr<ComponentRenderable>
+  Create(json &js, std::shared_ptr<void> object);
   void Setup() override;
   void Update() override;
   void FixedUpdate() override;
@@ -49,16 +51,17 @@ public:
   // TODO: Remove
   std::vector<float> vertices;
   std::vector<int> indices;
+  std::map<std::string, std::vector<float>> _uniforms;
+  std::string _material_path;
+  std::shared_ptr<void> object;
+
 private:
   std::string path;
-  std::string _material_path;
-  std::map<std::string, std::vector<float>> _uniforms;
 
   /// Material, but...
   std::shared_ptr<void>
   FromData(std::string material_path,
            std::map<std::string, std::vector<float>> uniforms);
-
 };
 } // namespace Graphics
 } // namespace Engine

@@ -3,8 +3,11 @@
 //
 
 #include "Graphics.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
+#include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
 #include "Scene.hpp"
+#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <chrono>
 #include <ctime>
@@ -62,7 +65,7 @@ int Main::Init(Config *config) {
   }
   SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
+  glfwSwapInterval(0);
 
 #ifdef IMGUI
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "IMGUI initializing");
@@ -211,6 +214,20 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
       scene->Instantiate(o, newObjectParent);
     }
   }
+  ImGui::Text("File scene controls");
+  ImGui::InputText("Scene location", &scene->path[0], 100);
+  if (ImGui::Button("Save scene")) {
+    if (!wasSavePressedThisFrame) {
+      wasSavePressedThisFrame = true;
+      SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Saving scene to {}...",
+                         scene->path);
+      json scenejs = scene->ToJson();
+      auto st = scenejs.dump();
+      FileUtil::SaveFile(scene->path, &st);
+    }
+  } else {
+    wasSavePressedThisFrame = false;
+  }
   ImGui::End();
 }
 void Main::RenderPerformanceGraph() {
@@ -237,6 +254,71 @@ void Main::RenderPerformanceGraph() {
     }
   }
 
+  ImGui::End();
+}
+void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
+                                    ENGINE_COMPONENT_TYPE type) {
+  switch (type) {
+  case Engine::ENGINE_COMPONENT_TYPE::camera: {
+    if (ImGui::CollapsingHeader("Camera")) {
+    }
+  }
+  case Engine::ENGINE_COMPONENT_TYPE::renderable: {
+    if (ImGui::CollapsingHeader("Renderable")) {
+      // Render uniforms
+      auto c = std::static_pointer_cast<ComponentRenderable>(component);
+      ImGui::InputText("Material path", &c->_material_path[0], 100);
+      if (ImGui::CollapsingHeader("Uniforms")) {
+        for (auto &[key, val] : c->_uniforms) {
+          switch (val.size()) {
+          case 1: {
+            ImGui::InputFloat(&key[0], &val[0]);
+            break;
+          }
+          case 2: {
+            ImGui::InputFloat2(&key[0], &val[0]);
+            break;
+          }
+          case 3: {
+            ImGui::InputFloat3(&key[0], &val[0]);
+            break;
+          }
+          case 4: {
+            if (key == "color") {
+              ImGui::ColorPicker4(&key[0], &val[0]);
+            } else {
+              ImGui::InputFloat4(&key[0], &val[0]);
+            }
+            break;
+          }
+          default: {
+            ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
+                        val.size());
+          }
+          }
+        }
+      }
+    }
+  }
+  }
+}
+
+void Main::RenderObjectInspector() {
+  ImGui::Begin("Object inspetor");
+  if (this->sceneObject == nullptr) {
+    ImGui::Text("Please select an object");
+    ImGui::End();
+    return;
+  }
+  char buf[64] = {0};
+  strncpy(buf, sceneObject->instance->_name.c_str(), 63);
+
+  if (ImGui::InputText("Name:", buf, 64)) {
+    sceneObject->instance->_name = buf; // This correctly updates the size
+  }
+  for (auto [type, comp] : sceneObject->instance->_components) {
+    RenderComponentInspector(comp, type);
+  }
   ImGui::End();
 }
 #endif
@@ -281,6 +363,7 @@ int Main::Tick(
   // ImPlot::ShowDemoWindow();
   RenderSceneView(scene);
   RenderPerformanceGraph();
+  RenderObjectInspector();
 
 #endif
   /*

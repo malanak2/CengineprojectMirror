@@ -28,6 +28,8 @@ Scene::Scene(std::string path) {
     throw std::logic_error("Failed to parse json scene at " + path + " " +
                            e.what());
   }
+  this->path = path;
+  this->path.reserve(100);
   FromJson(js);
 }
 

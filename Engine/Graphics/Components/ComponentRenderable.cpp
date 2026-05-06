@@ -8,7 +8,8 @@
 
 using namespace Engine::Graphics;
 
-ComponentRenderable::ComponentRenderable(std::string path) {
+ComponentRenderable::ComponentRenderable(std::string path,
+                                         std::shared_ptr<void> object) {
   this->path = path;
   Load();
 }
@@ -28,6 +29,7 @@ std::shared_ptr<void> ComponentRenderable::FromData(
     std::string material_path,
     std::map<std::string, std::vector<float>> uniforms) {
   auto _material = Material::Create(material_path);
+  _material_path.reserve(100);
   auto logger = spdlog::get("console");
   if (!_material->usable) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to load material at {}", material_path);
@@ -122,7 +124,8 @@ Engine::ENGINE_COMPONENT_TYPE ComponentRenderable::GetType() {
   return ENGINE_COMPONENT_TYPE::renderable;
 }
 
-std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(json &js) {
+std::shared_ptr<ComponentRenderable>
+ComponentRenderable::Create(json &js, std::shared_ptr<void> object) {
   JsonFileBase jb;
   jb = js;
   if (jb.object_type != ObjectType::Component) {
@@ -134,7 +137,7 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(json &js) {
   RenderableDataJson json_inst;
   json_inst = js["data"];
   std::shared_ptr<ComponentRenderable> cr =
-      std::make_shared<ComponentRenderable>();
+      std::make_shared<ComponentRenderable>(object);
   cr->_material_path = json_inst.material_path;
   std::shared_ptr<Material> m = std::static_pointer_cast<Material>(
       cr->FromData(json_inst.material_path, json_inst.uniforms));
@@ -209,4 +212,6 @@ void ComponentRenderable::FromJson(json &js) {
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
 
-ComponentRenderable::ComponentRenderable() {}
+ComponentRenderable::ComponentRenderable(std::shared_ptr<void> object) {
+  this->object = object;
+}

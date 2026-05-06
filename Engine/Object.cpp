@@ -48,6 +48,7 @@ json Object::ToJson() {
   js.position = _position;
   js.rotation = _rotation;
   js.name = _name;
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "HMMMMM {} {}", _name, js.name);
   ret.data = js;
   json r = ret;
   return r;
@@ -82,7 +83,8 @@ void Object::FromJson(json &js, std::string path) {
     switch (c.type) {
     case renderable: {
       std::shared_ptr<Graphics::ComponentRenderable> r =
-          Graphics::ComponentRenderable::Create(c.data);
+          Graphics::ComponentRenderable::Create(c.data,
+                                                this->shared_from_this());
       cmps.insert(cmps.begin(), r);
       break;
     }
@@ -106,6 +108,7 @@ void Object::fromParams(std::string name,
                         std::vector<float> position,
                         std::vector<float> rotation) {
   _name = name;
+  _name.reserve(50);
   for (auto cmp : comps) {
     _components[cmp->GetType()] = cmp;
   }

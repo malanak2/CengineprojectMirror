@@ -5,6 +5,7 @@
 #include "Engine.hpp"
 #include "Engine/Graphics/Graphics.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Object.hpp"
 #include "Scene.hpp"
@@ -49,8 +50,11 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     rdj.uniforms = {{"color", {1, 0, 0, 1}}};
     jsbase.data = rdj;
     json jsbase_js = jsbase;
-    auto com_render = Graphics::ComponentRenderable::Create(jsbase_js);
+    auto com_render = Graphics::ComponentRenderable::Create(jsbase_js, nullptr);
     object_default->fromParams("Test object", {com_render});
+    std::static_pointer_cast<Graphics::ComponentRenderable>(
+        object_default->_components[ENGINE_COMPONENT_TYPE::renderable])
+        ->object = object_default->shared_from_this();
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
     FileUtil::SaveFile("scenes/default.json", &scene_json);

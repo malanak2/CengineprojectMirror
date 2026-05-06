@@ -1,9 +1,11 @@
 #include "Program.hpp"
 #include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
+#include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <vector>
 using namespace Engine::Graphics;
 using json = nlohmann::json;
@@ -106,20 +108,17 @@ Program::~Program() {
 }
 
 /// Assumes program is used
-/*void Program::SetUniform(std::string uniform, float value) {
+void Program::SetUniform(std::string uniform, float value) {
 
-  if (!uniforms.contains(uniform))
+  if (!uniforms.contains(uniform)) {
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
+                       uniform);
     return;
-
-  int offset = uniforms[uniform].offset;
-
-  float values[1] = {value};
-  memcpy(cpuBuffer.data() + offset, values, sizeof(values));
-
-  glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, cpuBuffer.size(), cpuBuffer.data());
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
-}*/
+  }
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float), &value);
+  CHECK_GL_ERROR();
+}
 
 /// Assumes program is used
 void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
@@ -135,4 +134,36 @@ void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
        "Binding ubo {} id {}, setting the data to {} {} {} {}", uniform,
        uniforms[uniform], v1, v2, v3, v4);*/
   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(data), data);
+  CHECK_GL_ERROR();
+}
+
+void Program::SetUniform(std::string key, std::vector<float> values) {
+  switch (values.size()) {
+  case 1: {
+    SetUniform(key, values[0]);
+    break;
+  }
+  case 4: {
+    SetUniform(key, values[0], values[1], values[2], values[3]);
+    break;
+  }
+  default: {
+    SPDLOG_LOGGER_INFO(spdlog::get("console"),
+                       "Unimplemented length of uniform ({})", values.size());
+  }
+  }
+  CHECK_GL_ERROR();
+}
+
+void Program::SetUniform(std::string uniform, glm::mat4 mat) {
+  CHECK_GL_ERROR();
+  if (!uniforms.contains(uniform)) {
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
+                       uniform);
+    return;
+  }
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]);
+  CHECK_GL_ERROR();
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(mat));
+  CHECK_GL_ERROR();
 }

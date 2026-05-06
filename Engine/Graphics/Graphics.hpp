@@ -58,7 +58,11 @@ private:
   ShowSceneObjectMenu(std::vector<std::shared_ptr<SceneObject>> *sceneObjects);
   void RenderSceneView(std::shared_ptr<Scene> scene);
   void RenderPerformanceGraph();
+  void RenderComponentInspector(std::shared_ptr<IComponent> component,
+                                ENGINE_COMPONENT_TYPE type);
+  void RenderObjectInspector();
   std::shared_ptr<SceneObject> newObjectParent = nullptr;
+  bool wasSavePressedThisFrame = false;
   char namebuf[64] = "";
   char matbuf[64] = "";
   float coords[3] = {0, 0, 0};

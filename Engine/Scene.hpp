@@ -38,6 +38,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneJson, objects)
 class Scene : public IJson {
 public:
   Scene(std::string path);
+  std::string path;
   Scene();
   std::vector<std::shared_ptr<SceneObject>> objects;
   void Instantiate(std::shared_ptr<Object> object,

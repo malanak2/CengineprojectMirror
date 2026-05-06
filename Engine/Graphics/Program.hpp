@@ -1,6 +1,7 @@
 #pragma once
 #include "MaterialJson.hpp"
 #include "Shader.hpp"
+#include "glm/glm.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <vector>
@@ -25,6 +26,8 @@ public:
   ~Program();
   void SetUniform(std::string uniform, float value);
   void SetUniform(std::string uniform, float v1, float v2, float v3, float v4);
+  void SetUniform(std::string uniform, std::vector<float> values);
+  void SetUniform(std::string uniform, glm::mat4 mat);
 
   /// Map of name specified in material json, and the index also specified in
   /// there

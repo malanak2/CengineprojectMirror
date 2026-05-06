@@ -14,6 +14,9 @@
 #include <stdexcept>
 #include <vector>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 namespace Engine::Graphics {
 
 using json = nlohmann::json;
@@ -84,8 +87,24 @@ void Material::SetupMaterial() { glUseProgram(program->id); }
 
 void Material::RenderObjects() {
   for (auto element : this->renderableObjects) {
-
     glBindVertexArray(element->vao);
+    for (auto [key, val] : program->uniforms) {
+      if (key == "translate") {
+        glm::mat4 transform = glm::mat4(1);
+        auto obj = std::static_pointer_cast<Object>(element->object);
+        transform =
+            glm::translate(transform, glm::make_vec3(&(obj->_position[0])));
+        transform =
+            glm::rotate(transform, obj->_rotation[0], glm::vec3(1, 0, 0));
+        transform =
+            glm::rotate(transform, obj->_rotation[1], glm::vec3(0, 1, 0));
+        transform =
+            glm::rotate(transform, obj->_rotation[2], glm::vec3(0, 0, 1));
+        program->SetUniform("translate", transform);
+        continue;
+      }
+      program->SetUniform(key, element->_uniforms[key]);
+    }
     glDrawArrays(GL_TRIANGLES, 0, sizeof(element->indices));
   }
 }
