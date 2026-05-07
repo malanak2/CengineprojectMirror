@@ -47,11 +47,18 @@ public:
   static std::unordered_map<std::string, std::shared_ptr<Shader>>
       fragmentShaders;
   static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
+  // Inputs
+  void SetKeyCallback(const int key, void (*action)(int action, int mods));
+  void keyCallback(int key, int scancode, int action, int mods);
+  static void keyCallbackStatic(GLFWwindow *window, int key, int scancode,
+                                int action, int mods);
 
 private:
   GLFWwindow *window = nullptr;
   std::unique_ptr<Engine::Object> camera = nullptr;
   std::vector<float> frameTimes = {};
+  std::map<int, std::vector<void (*)(int, int)>> keyMap = {};
+
 #ifdef IMGUI
   std::shared_ptr<SceneObject> sceneObject = nullptr;
   void

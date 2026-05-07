@@ -44,6 +44,8 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         glad/src/glad.c
         glad/include/KHR/khrplatform.h
         glad/include/glad/glad.h
+        Components/ComponentScript.cpp
+        Components/ComponentScript.hpp
         Scene.cpp
         Scene.hpp
 )

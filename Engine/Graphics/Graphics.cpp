@@ -10,6 +10,7 @@
 #include "Scene.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
+#include <GLFW/glfw3.h>
 #include <chrono>
 #include <ctime>
 #include <memory>
@@ -101,9 +102,19 @@ int Main::Init(Config *config) {
   }
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  auto func = &Main::keyCallbackStatic;
+  glfwSetKeyCallback(window, func);
   CHECK_GL_ERROR();
   // TODO: Remove
   return 0;
+}
+void Main::keyCallbackStatic(GLFWwindow *window, int key, int scancode,
+                             int action, int mods) {
+  // Retrieve the instance pointer we stored earlier
+  Main *instance = static_cast<Main *>(glfwGetWindowUserPointer(window));
+  if (instance) {
+    instance->keyCallback(key, scancode, action, mods);
+  }
 }
 
 #ifdef IMGUI
@@ -267,22 +278,14 @@ void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
   case Engine::ENGINE_COMPONENT_TYPE::camera: {
     if (ImGui::CollapsingHeader("Camera")) {
     }
+    break;
   }
   case Engine::ENGINE_COMPONENT_TYPE::renderable: {
     if (ImGui::CollapsingHeader("Renderable")) {
       // Render uniforms
       auto c = std::static_pointer_cast<ComponentRenderable>(component);
       ImGui::InputText("Material path", &c->_material_path[0], 100);
-      if (ImGui::CollapsingHeader("Values")) {
-        auto obj = c->object.lock();
-        if (obj) {
-          // Position:
-          ImGui::InputFloat3("XYZ", &obj->_position[0]);
-          // Rotation:
-          ImGui::SliderFloat3("Rotations:", &obj->_rotation[0], -360, 360);
-          ImGui::InputFloat3(": Rotation", &obj->_rotation[0]);
-        }
-      }
+
       if (ImGui::CollapsingHeader("Uniforms")) {
         for (auto &[key, val] : c->_uniforms) {
           switch (val.size()) {
@@ -331,8 +334,19 @@ void Main::RenderObjectInspector() {
   if (ImGui::InputText("Name:", buf, 64)) {
     sceneObject->instance->_name = buf; // This correctly updates the size
   }
+  if (ImGui::CollapsingHeader("Values")) {
+    auto obj = sceneObject->instance;
+    if (obj) {
+      // Position:
+      ImGui::InputFloat3("XYZ", &obj->_position[0]);
+      // Rotation:
+      ImGui::SliderFloat3("Rotations:", &obj->_rotation[0], -360, 360);
+      ImGui::InputFloat3(": Rotation", &obj->_rotation[0]);
+    }
+  }
   for (auto [type, comp] : sceneObject->instance->_components) {
-    RenderComponentInspector(comp, type);
+    if (comp != nullptr)
+      RenderComponentInspector(comp, type);
   }
   ImGui::End();
 }
@@ -414,6 +428,20 @@ void Main::Terminate() {
 #endif
   glfwDestroyWindow(window);
   glfwTerminate();
+}
+void Main::keyCallback(int key, int scancode, int action, int mods) {
+  if (keyMap.contains(scancode)) {
+    for (auto var : keyMap[scancode]) {
+      var(action, mods);
+    }
+  }
+}
+void Main::SetKeyCallback(const int key, void (*action)(int, int)) {
+  const int scancode = glfwGetKeyScancode(key);
+  if (!keyMap.contains(scancode)) {
+    keyMap[scancode] = {};
+  }
+  keyMap[scancode].insert(keyMap[scancode].end(), action);
 }
 } // namespace Graphics
 } // namespace Engine

@@ -49,7 +49,6 @@ json Object::ToJson() {
   js.position = {_position[0], _position[1], _position[2]};
   js.rotation = {_rotation[0], _rotation[1], _rotation[2]};
   js.name = _name;
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "HMMMMM {} {}", _name, js.name);
   ret.data = js;
   json r = ret;
   return r;

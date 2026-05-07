@@ -17,6 +17,7 @@ class Object;
 enum ENGINE_COMPONENT_TYPE {
   renderable,
   camera,
+  generic,
   ENGINE_CUSTOM_COMPONENT_TYPES_expand
 };
 struct ComponentJson {
