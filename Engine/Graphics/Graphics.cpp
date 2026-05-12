@@ -323,12 +323,17 @@ void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
           default: {
             ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
                         val.size());
+            break;
           }
           }
         }
       }
+      break;
     }
   }
+  default:
+    ImGui::Text("Unsupported component enum value %d", (int)type);
+    break;
   }
 }
 

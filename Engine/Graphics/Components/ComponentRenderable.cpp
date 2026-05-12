@@ -37,7 +37,7 @@ std::shared_ptr<void> ComponentRenderable::FromData(
     return _material;
   }
   for (auto &[key, val] : _material->program->uniforms) {
-    if (!uniforms.contains(key)) {
+    if (!uniforms.contains(key) && key != "camera") {
       SPDLOG_LOGGER_WARN(
           spdlog::get("console"),
           "Component at {} doesnt contain uniform {} specified in material",
@@ -45,7 +45,7 @@ std::shared_ptr<void> ComponentRenderable::FromData(
     }
   }
   for (auto &[key, val] : uniforms) {
-    if (!_material->program->uniforms.contains(key)) {
+    if (!_material->program->uniforms.contains(key) && key != "camera") {
       SPDLOG_LOGGER_WARN(spdlog::get("console"),
                          "Component at {} specifies uniform {} that is not "
                          "specified in material",
