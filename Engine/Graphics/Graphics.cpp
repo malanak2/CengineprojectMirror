@@ -102,6 +102,8 @@ int Main::Init(Config *config) {
   }
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   auto func = &Main::keyCallbackStatic;
   glfwSetKeyCallback(window, func);
   CHECK_GL_ERROR();
@@ -174,6 +176,15 @@ void Main::ShowSceneObjectMenu(
 void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
   ImGui::Begin("Scene");
   ImGui::Text("Edit current scene");
+  ImGui::Checkbox("Wireframe mode", &wireframe_b);
+  if (wireframe_b && !wireframe) {
+    wireframe = true;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  }
+  if (!wireframe_b && wireframe) {
+    wireframe = false;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
   if (ImGui::CollapsingHeader("Objects")) {
     ShowSceneObjectMenu(&scene->objects);
   }
@@ -363,7 +374,7 @@ int Main::Tick(
   }
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   CHECK_GL_ERROR();
   frameTimes.insert(frameTimes.end(), duration.count());
   if (frameTimes.size() > 2000)

@@ -1,1 +1,119 @@
-{"objects":[{"data":{"children":[{"data":{"children":[],"data":{"data":{"components":[{"data":null,"object_type":"component","type":1}],"name":"asdf","position":[-5.0,0.0,0.0],"rotation":[0.0,16.18000030517578,0.0]},"object_type":"object"}},"object_type":"object"}],"data":{"data":{"components":[{"data":{"data":{"indices":[0,2,1,0,3,2,0,4,1,1,4,2,2,4,3,3,4,0],"material_path":"materials/basic.json","uniforms":{"color":[0.060000061988830566,1.0,0.0,1.0],"translate":[0.0,0.0,0.0,0.0]},"vertices":[-1.0,-1.0,-1.0,1.0,-1.0,-1.0,1.0,-1.0,1.0,-1.0,-1.0,1.0,0.0,1.0,0.0]},"object_type":"component"},"object_type":"component","type":0}],"name":"Zeleny trojuhelnicek","position":[0.0,0.0,0.0],"rotation":[360.0,-80.89900207519531,152.0]},"object_type":"object"}},"object_type":"object"}]}
+{
+  "objects": [
+    {
+      "data": {
+        "children": [
+          {
+            "data": {
+              "children": [],
+              "data": {
+                "data": {
+                  "components": [
+                    {
+                      "data": null,
+                      "object_type": "component",
+                      "type": 1
+                    }
+                  ],
+                  "name": "Camera",
+                  "position": [
+                    -5.0,
+                    0.0,
+                    0.0
+                  ],
+                  "rotation": [
+                    0.0,
+                    16.18000030517578,
+                    0.0
+                  ]
+                },
+                "object_type": "object"
+              }
+            },
+            "object_type": "object"
+          }
+        ],
+        "data": {
+          "data": {
+            "components": [
+              {
+                "data": {
+                  "data": {
+                    "indices": [
+                      0,
+                      1,
+                      2,
+                      0,
+                      2,
+                      3,
+                      0,
+                      4,
+                      1,
+                      1,
+                      4,
+                      2,
+                      2,
+                      4,
+                      3,
+                      3,
+                      4,
+                      0
+                    ],
+                    "material_path": "materials/basic.json",
+                    "uniforms": {
+                      "color": [
+                        0.060000061988830566,
+                        1.0,
+                        0.0,
+                        1.0
+                      ],
+                      "translate": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                      ]
+                    },
+                    "vertices": [
+                      -1.0,
+                      -1.0,
+                      -1.0,
+                      1.0,
+                      -1.0,
+                      -1.0,
+                      1.0,
+                      -1.0,
+                      1.0,
+                      -1.0,
+                      -1.0,
+                      1.0,
+                      0.0,
+                      1.0,
+                      0.0
+                    ]
+                  },
+                  "object_type": "component"
+                },
+                "object_type": "component",
+                "type": 0
+              }
+            ],
+            "name": "Zeleny trojuhelnicek",
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              360.0,
+              360.0,
+              -16.0
+            ]
+          },
+          "object_type": "object"
+        }
+      },
+      "object_type": "object"
+    }
+  ]
+}

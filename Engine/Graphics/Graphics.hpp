@@ -74,6 +74,8 @@ private:
   char matbuf[64] = "";
   float coords[3] = {0, 0, 0};
   float rotation[4] = {0, 0, 0, 0};
+  bool wireframe = false;
+  bool wireframe_b = false;
 #endif
 };
 }; // namespace Engine::Graphics

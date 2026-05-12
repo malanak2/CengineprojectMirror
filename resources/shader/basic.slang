@@ -13,7 +13,7 @@ struct Data {
 [vk::binding(0,0)]
 ConstantBuffer<Data> data;
 [shader("vertex")]
-VSOutput mainVertex(float3 aPos : POSITION)
+VSOutput mainVertex(float3 aPos : POSITION, uint vertexID : SV_VertexID)
 {
   VSOutput output;
   output.pos =mul(data.proj, mul(data.view, mul(data.translate, float4(aPos, 1.0))));
@@ -24,5 +24,6 @@ VSOutput mainVertex(float3 aPos : POSITION)
 [shader("pixel")]
 float4 mainPixel(VSOutput out) : SV_Target
 {
+
   return float4(data.u_color);
 }
