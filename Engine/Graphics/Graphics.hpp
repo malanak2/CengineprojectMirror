@@ -38,7 +38,8 @@ public:
 #ifdef IMGUI
       std::shared_ptr<Scene> scene,
 #endif
-      std::chrono::duration<float, std::chrono::seconds::period> duration);
+      std::chrono::duration<float, std::chrono::seconds::period> dur_other,
+      std::chrono::duration<float, std::chrono::seconds::period> dur_graphics);
   void Terminate();
 
   Shader GetShader(ShaderType type, std::string source);
@@ -56,7 +57,12 @@ public:
 private:
   GLFWwindow *window = nullptr;
   std::unique_ptr<Engine::Object> camera = nullptr;
-  std::vector<float> frameTimes = {};
+  std::vector<float> frameTimesGraphics = {};
+  float dur_graphics_total = 0;
+  std::vector<float> frameTimesOther = {};
+  float dur_other_total = 0;
+  float dur_total = 0;
+  float dur_largest = 0;
   std::map<int, std::vector<void (*)(int, int)>> keyMap = {};
 
 #ifdef IMGUI

@@ -70,15 +70,19 @@ void Engine::Main::Run() {
   current_scene->Setup();
   while (true) {
     auto current_time = std::chrono::steady_clock::now();
-    auto duration = current_time - last_tick_begin;
-    last_tick_begin = current_time;
+    auto dur_graphics = current_time - last_tick_begin;
     current_scene->Update();
+    auto cur = std::chrono::steady_clock::now();
+    auto dur_other = cur - current_time;
+    last_tick_begin = cur;
     if (graphics->Tick(
 #ifdef IMGUI
             this->current_scene,
 #endif
             std::chrono::duration_cast<std::chrono::duration<double>>(
-                duration)) != 0) {
+                dur_other),
+            std::chrono::duration_cast<std::chrono::duration<double>>(
+                dur_graphics)) != 0) {
       Terminate();
       break;
     }

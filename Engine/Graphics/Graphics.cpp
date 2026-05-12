@@ -260,23 +260,29 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
 void Main::RenderPerformanceGraph() {
   ImGui::Begin("Performance");
 
-  float total = 0;
-  float largest = 0;
-  for (auto var : frameTimes) {
-    if (var > largest)
-      largest = var;
-    total += var;
-  }
-  ImGui::Text("Fps: %f (total: %f, count: %zu)", frameTimes.size() / total,
-              total, frameTimes.size());
+  ImGui::Text("Fps: %f (total: %f, count: %zu)",
+              frameTimesGraphics.size() / dur_total, dur_total,
+              frameTimesGraphics.size());
   if (ImGui::CollapsingHeader("Graph")) {
+    const char *titles[] = {""};
+    const char *groups[] = {"Graphics", "Other"};
+    std::vector<float> total = {};
+    total.insert(total.end(), frameTimesGraphics.begin(),
+                 frameTimesGraphics.end());
+    total.insert(total.end(), frameTimesOther.begin(), frameTimesOther.end());
     if (ImPlot::BeginPlot("Frame Times")) {
       ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoTickLabels,
                         ImPlotAxisFlags_NoTickLabels);
-      ImPlot::SetupAxisLimits(ImAxis_X1, 0, frameTimes.size(),
+      ImPlot::SetupAxisLimits(ImAxis_X1, 0, frameTimesGraphics.size(),
                               ImGuiCond_Always);
-      ImPlot::SetupAxisLimits(ImAxis_Y1, 0, largest * 1.5, ImGuiCond_Always);
-      ImPlot::PlotLine("ms", &frameTimes[0], frameTimes.size());
+      ImPlot::SetupAxisLimits(ImAxis_Y1, 0, dur_largest * 1.5,
+                              ImGuiCond_Always);
+
+      double pos[] = {0, 1};
+      ImPlot::SetupAxisTicks(ImAxis_Y1, pos, 2, groups);
+      static ImPlotBarGroupsFlags flags = 0;
+      ImPlot::PlotBarGroups(titles, &total[0], frameTimesGraphics.size(), 2,
+                            0.67, 0, ImPlotSpec();
       ImPlot::EndPlot();
     }
   }
@@ -328,8 +334,8 @@ void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
           }
         }
       }
-      break;
     }
+    break;
   }
   default:
     ImGui::Text("Unsupported component enum value %d", (int)type);
@@ -372,7 +378,8 @@ int Main::Tick(
 #ifdef IMGUI
     std::shared_ptr<Scene> scene,
 #endif
-    std::chrono::duration<float, std::chrono::seconds::period> duration) {
+    std::chrono::duration<float, std::chrono::seconds::period> dur_other,
+    std::chrono::duration<float, std::chrono::seconds::period> dur_graphics) {
   if (glfwWindowShouldClose(window)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "GLFW Window should close.");
     return -1;
@@ -381,9 +388,19 @@ int Main::Tick(
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   CHECK_GL_ERROR();
-  frameTimes.insert(frameTimes.end(), duration.count());
-  if (frameTimes.size() > 2000)
-    frameTimes.erase(frameTimes.begin(), frameTimes.begin() + 1);
+  frameTimesGraphics.insert(frameTimesGraphics.end(), dur_graphics.count());
+  dur_graphics_total += dur_graphics.count();
+  if (frameTimesGraphics.size() > 2000) {
+    dur_graphics_total -= frameTimesGraphics[0];
+    frameTimesGraphics.erase(frameTimesGraphics.begin(),
+                             frameTimesGraphics.begin() + 1);
+  }
+  frameTimesOther.insert(frameTimesOther.end(), dur_other.count());
+  dur_other_total += dur_other.count();
+  if (frameTimesOther.size() > 2000) {
+    dur_other_total -= frameTimesOther[0];
+    frameTimesOther.erase(frameTimesOther.begin(), frameTimesOther.begin() + 1);
+  }
 
 #ifndef IMGUI
   float total = 0;
@@ -405,7 +422,7 @@ int Main::Tick(
   //           ImGuiDockNodeFlags_PassthruCentralNode);
   // DEMO:
   // ImGui::ShowDemoWindow();
-  // ImPlot::ShowDemoWindow();
+  ImPlot::ShowDemoWindow();
   RenderSceneView(scene);
   RenderPerformanceGraph();
   RenderObjectInspector();
