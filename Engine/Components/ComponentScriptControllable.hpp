@@ -14,8 +14,6 @@ public:
 
   void Load() override;
 
-  ENGINE_COMPONENT_TYPE GetType() override;
-
   json ToJson() override;
 
   void FromJson(json &js) override;

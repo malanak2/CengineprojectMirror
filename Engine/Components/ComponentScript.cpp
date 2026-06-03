@@ -3,7 +3,7 @@
 #include <imgui.h>
 
 Engine::ENGINE_COMPONENT_TYPE Engine::ComponentScript::GetType() {
-  return ENGINE_COMPONENT_TYPE::generic;
+  return ENGINE_COMPONENT_TYPE::script;
 }
 
 void Engine::ComponentScript::RenderImGui() {

@@ -13,7 +13,6 @@ FetchContent_Declare(
   GIT_TAG        v1.0.4 # <HASH or TAG>
 )
 FetchContent_MakeAvailable(cpptrace)
-find_package(easy_profiler REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
 add_executable(cengineproject main.cpp )
@@ -24,7 +23,7 @@ endif()
 add_subdirectory(Util)
 add_subdirectory(Engine)
 
-target_link_libraries(cengineproject PRIVATE cengineengine cengineutil cpptrace::cpptrace spdlog::spdlog easy_profiler)
+target_link_libraries(cengineproject PRIVATE cengineengine cengineutil cpptrace::cpptrace spdlog::spdlog)
 if(IMGUI)
   # Add imgui
 endif()

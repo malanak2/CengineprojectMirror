@@ -5,20 +5,13 @@
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
 
-#ifndef ENGINE_CUSTOM_COMPONENT_TYPES
-#define ENGINE_CUSTOM_COMPONENT_TYPES_expand
-#else
-#define ENGINE_CUSTOM_COMPONENT_TYPES_expand , ENGINE_CUSTOM_COMPONENT_TYPES
-#endif
-
 using json = nlohmann::json;
 namespace Engine {
 class Object;
 enum ENGINE_COMPONENT_TYPE {
   renderable,
   camera,
-  generic,
-  ENGINE_CUSTOM_COMPONENT_TYPES_expand
+  script,
 };
 struct ComponentJson {
 public:

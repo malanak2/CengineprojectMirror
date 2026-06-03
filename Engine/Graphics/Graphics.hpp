@@ -61,8 +61,8 @@ private:
   float dur_graphics_total = 0;
   std::vector<float> frameTimesOther = {};
   float dur_other_total = 0;
-  float dur_total = 0;
   float dur_largest = 0;
+
   std::map<int, std::vector<void (*)(int, int)>> keyMap = {};
 
 #ifdef IMGUI

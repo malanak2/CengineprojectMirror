@@ -36,8 +36,7 @@ void glfw_error_callback(int error, const char *description) {
                       description);
 }
 
-namespace Engine {
-namespace Graphics {
+namespace Engine::Graphics {
 // Initialize vecotrs
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
     {};
@@ -259,17 +258,16 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
 }
 void Main::RenderPerformanceGraph() {
   ImGui::Begin("Performance");
-
+  float dur_total = dur_graphics_total + dur_other_total;
   ImGui::Text("Fps: %f (total: %f, count: %zu)",
               frameTimesGraphics.size() / dur_total, dur_total,
               frameTimesGraphics.size());
   if (ImGui::CollapsingHeader("Graph")) {
-    const char *titles[] = {""};
     const char *groups[] = {"Graphics", "Other"};
     std::vector<float> total = {};
-    total.insert(total.end(), frameTimesGraphics.begin(),
-                 frameTimesGraphics.end());
-    total.insert(total.end(), frameTimesOther.begin(), frameTimesOther.end());
+    for (size_t i = 0; i < frameTimesGraphics.size(); ++i) {
+      total.push_back(frameTimesGraphics[i] + frameTimesOther[i]);
+    }
     if (ImPlot::BeginPlot("Frame Times")) {
       ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoTickLabels,
                         ImPlotAxisFlags_NoTickLabels);
@@ -277,12 +275,19 @@ void Main::RenderPerformanceGraph() {
                               ImGuiCond_Always);
       ImPlot::SetupAxisLimits(ImAxis_Y1, 0, dur_largest * 1.5,
                               ImGuiCond_Always);
-
-      double pos[] = {0, 1};
-      ImPlot::SetupAxisTicks(ImAxis_Y1, pos, 2, groups);
-      static ImPlotBarGroupsFlags flags = 0;
-      ImPlot::PlotBarGroups(titles, &total[0], frameTimesGraphics.size(), 2,
-                            0.67, 0, ImPlotSpec();
+      ImPlot::PlotLine("fps", &total[0], total.size());
+      ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("Frame times distribution")) {
+      ImPlotPieChartFlags flags = 0 | ImPlotPieChartFlags_Normalize;
+      const char *titles[] = {"Graphics", "Other"};
+      ImPlot::PlotPieChart(
+          titles,
+          std::vector<float>{dur_graphics_total / frameTimesGraphics.size(),
+                             dur_other_total / frameTimesOther.size()}
+              .data(),
+          2, 0, 0, 10, "%.2f", 90, {ImPlotProp_Flags, flags});
+      ;
       ImPlot::EndPlot();
     }
   }
@@ -390,15 +395,41 @@ int Main::Tick(
   CHECK_GL_ERROR();
   frameTimesGraphics.insert(frameTimesGraphics.end(), dur_graphics.count());
   dur_graphics_total += dur_graphics.count();
-  if (frameTimesGraphics.size() > 2000) {
+  if (dur_largest < dur_graphics.count())
+    dur_largest = dur_graphics.count();
+  if (frameTimesGraphics.size() > 1000) {
     dur_graphics_total -= frameTimesGraphics[0];
+    if (dur_largest == frameTimesGraphics[0]) {
+      dur_largest = 0;
+      for (auto var : frameTimesGraphics) {
+        if (var > dur_largest)
+          dur_largest = var;
+      }
+      for (auto var : frameTimesOther) {
+        if (var > dur_largest)
+          dur_largest = var;
+      }
+    }
     frameTimesGraphics.erase(frameTimesGraphics.begin(),
                              frameTimesGraphics.begin() + 1);
   }
   frameTimesOther.insert(frameTimesOther.end(), dur_other.count());
   dur_other_total += dur_other.count();
+  if (dur_largest < dur_other.count())
+    dur_largest = dur_other.count();
   if (frameTimesOther.size() > 2000) {
     dur_other_total -= frameTimesOther[0];
+    if (dur_largest == frameTimesOther[0]) {
+      dur_largest = 0;
+      for (auto var : frameTimesGraphics) {
+        if (var > dur_largest)
+          dur_largest = var;
+      }
+      for (auto var : frameTimesOther) {
+        if (var > dur_largest)
+          dur_largest = var;
+      }
+    }
     frameTimesOther.erase(frameTimesOther.begin(), frameTimesOther.begin() + 1);
   }
 
@@ -422,7 +453,7 @@ int Main::Tick(
   //           ImGuiDockNodeFlags_PassthruCentralNode);
   // DEMO:
   // ImGui::ShowDemoWindow();
-  ImPlot::ShowDemoWindow();
+  // ImPlot::ShowDemoWindow();
   RenderSceneView(scene);
   RenderPerformanceGraph();
   RenderObjectInspector();
@@ -447,7 +478,7 @@ int Main::Tick(
   glfwPollEvents();
 
   return 0;
-} // namespace Graphics
+}
 
 void Main::Terminate() {
   materials.clear();
@@ -462,6 +493,7 @@ void Main::Terminate() {
   glfwDestroyWindow(window);
   glfwTerminate();
 }
+
 void Main::keyCallback(int key, int scancode, int action, int mods) {
   if (keyMap.contains(scancode)) {
     for (auto var : keyMap[scancode]) {
@@ -469,6 +501,7 @@ void Main::keyCallback(int key, int scancode, int action, int mods) {
     }
   }
 }
+
 void Main::SetKeyCallback(const int key, void (*action)(int, int)) {
   const int scancode = glfwGetKeyScancode(key);
   if (!keyMap.contains(scancode)) {
@@ -476,5 +509,4 @@ void Main::SetKeyCallback(const int key, void (*action)(int, int)) {
   }
   keyMap[scancode].insert(keyMap[scancode].end(), action);
 }
-} // namespace Graphics
-} // namespace Engine
+} // namespace Engine::Graphics
