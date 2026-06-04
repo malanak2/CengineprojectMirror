@@ -5,6 +5,7 @@
 #include "Config/Config.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Scene.hpp"
+#include <memory>
 namespace Engine {
 class Main {
 public:
@@ -15,8 +16,8 @@ public:
 private:
   void setupLogger();
   void Terminate();
-  Graphics::Main *graphics;
-  Config *config;
+  std::unique_ptr<Graphics::Main> graphics;
+  std::shared_ptr<Config> config;
   std::shared_ptr<Scene> current_scene;
 };
 } // namespace Engine

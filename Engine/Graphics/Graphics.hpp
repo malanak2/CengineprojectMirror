@@ -19,7 +19,7 @@
 #include <string>
 #include <unordered_map>
 namespace Engine::Graphics {
-
+class Texture;
 #ifdef DEBUG
 #define CHECK_GL_ERROR()                                                       \
   {                                                                            \
@@ -33,7 +33,7 @@ namespace Engine::Graphics {
 #endif
 class Main {
 public:
-  int Init(Config *config);
+  int Init(std::shared_ptr<Config> config);
   int Tick(
 #ifdef IMGUI
       std::shared_ptr<Scene> scene,
@@ -53,6 +53,7 @@ public:
   void keyCallback(int key, int scancode, int action, int mods);
   static void keyCallbackStatic(GLFWwindow *window, int key, int scancode,
                                 int action, int mods);
+  static std::shared_ptr<Texture> FallbackTexture;
 
 private:
   GLFWwindow *window = nullptr;
@@ -62,6 +63,7 @@ private:
   std::vector<float> frameTimesOther = {};
   float dur_other_total = 0;
   float dur_largest = 0;
+  std::shared_ptr<Config> config = nullptr;
 
   std::map<int, std::vector<void (*)(int, int)>> keyMap = {};
 
@@ -82,6 +84,8 @@ private:
   float rotation[4] = {0, 0, 0, 0};
   bool wireframe = false;
   bool wireframe_b = false;
+  bool aa = false;
+  bool aa_b = false;
 #endif
 };
 }; // namespace Engine::Graphics

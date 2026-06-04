@@ -24,9 +24,9 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
   e->setupLogger();
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Loading config...");
-  e->config = new Config("Engine.ini");
+  e->config = std::make_shared<Config>("Engine.ini");
   SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
-  e->graphics = new Graphics::Main();
+  e->graphics = std::make_unique<Graphics::Main>();
 
   if (e->graphics->Init(e->config) != 0) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");

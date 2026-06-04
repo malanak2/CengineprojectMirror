@@ -1,0 +1,11 @@
+{
+  "object_type": "texture",
+  "data": {
+    "filterType": "linear",
+    "path": "textures/fallback.png",
+    "translucent": false,
+    "mipmap": false,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  }
+}

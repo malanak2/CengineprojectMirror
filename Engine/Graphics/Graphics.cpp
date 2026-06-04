@@ -8,6 +8,7 @@
 #include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
 #include "Scene.hpp"
+#include "Texture.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <GLFW/glfw3.h>
@@ -16,7 +17,6 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <unordered_map>
-
 #ifdef IMGUI
 #include "implot.h"
 #include <imgui.h>
@@ -24,7 +24,6 @@
 #include <imgui_impl_opengl3.h>
 #define IMGUI_SCALE 1
 #endif
-
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
   Engine::Main::width = width;
@@ -37,6 +36,8 @@ void glfw_error_callback(int error, const char *description) {
 }
 
 namespace Engine::Graphics {
+
+std::shared_ptr<Texture> Main::FallbackTexture = nullptr;
 // Initialize vecotrs
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
     {};
@@ -44,9 +45,10 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
     {};
 std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 
-int Main::Init(Config *config) {
+int Main::Init(std::shared_ptr<Config> config) {
   auto logger = ENGINE_UTIL_LOGGER;
   glfwSetErrorCallback(glfw_error_callback);
+  this->config = config;
   SPDLOG_LOGGER_INFO(logger, "Initializing GLFW...");
   if (!glfwInit()) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize GLFW.");
@@ -56,6 +58,7 @@ int Main::Init(Config *config) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_SAMPLES, 4);
 
   SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (800x600, title: {})...",
                      config->window->title);
@@ -103,8 +106,24 @@ int Main::Init(Config *config) {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+  if (config->graphics->enableAntiAliasing) {
+    aa = true;
+    aa_b = true;
+    glEnable(GL_MULTISAMPLE);
+  }
+
+  // Load fallback texture
+  FallbackTexture = std::make_shared<Texture>("textures/fallback.json", -1);
+  if (FallbackTexture->texture == -1) {
+    CHECK_GL_ERROR();
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to load fallback texture.");
+    return 1;
+  }
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loaded fallback texture to {}",
+                     FallbackTexture->texture);
   auto func = &Main::keyCallbackStatic;
   glfwSetKeyCallback(window, func);
+  // Load fallback Texture
   CHECK_GL_ERROR();
   // TODO: Remove
   return 0;
@@ -183,6 +202,15 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
   if (!wireframe_b && wireframe) {
     wireframe = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+  ImGui::Checkbox("AntiAliasing", &aa_b);
+  if (aa_b && !aa) {
+    aa = true;
+    glEnable(GL_MULTISAMPLE);
+  }
+  if (!aa_b && aa) {
+    aa = false;
+    glDisable(GL_MULTISAMPLE);
   }
   if (ImGui::CollapsingHeader("Objects")) {
     ShowSceneObjectMenu(&scene->objects);
@@ -471,8 +499,14 @@ int Main::Tick(
     val->RenderObjects();
   }
 #ifdef IMGUI
+  if (config->graphics->enableAntiAliasing) {
+    glDisable(GL_MULTISAMPLE);
+  }
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  if (config->graphics->enableAntiAliasing) {
+    glEnable(GL_MULTISAMPLE);
+  }
 #endif
   glfwSwapBuffers(window);
   glfwPollEvents();

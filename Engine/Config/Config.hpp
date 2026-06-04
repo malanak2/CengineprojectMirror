@@ -9,9 +9,7 @@ class Config {
 public:
   class Graphics {
   public:
-    // TODO: Move to level
-    std::vector<float> CameraPos;
-    std::vector<float> CameraRot;
+    bool enableAntiAliasing;
   };
   class Defaults {
   public:

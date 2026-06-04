@@ -78,18 +78,14 @@ Config::Config(std::string file_path) {
   if (cfg.empty()) {
     SPDLOG_LOGGER_INFO(logger, "Config is empty, generating new file...");
     cfg["Window"]["Title"] = "New Project";
-    cfg["Graphics"]["CameraPos"] = std::vector<float>{0.0, 0.0, 0.0};
-    cfg["Graphics"]["CameraRot"] = std::vector<float>{0.0, 0.0, 0.0, 0.0};
+    cfg["Graphics"]["EnableAntiAliasing"] = true;
     cfg["Defaults"]["StartupScenePath"] = "scenes/default.json";
     cfg.save(file_path);
   }
   window->title = cfg["Window"]["Title"].as<std::string>();
-  graphics->CameraPos = cfg["Graphics"]["CameraPos"].as<std::vector<float>>();
-  graphics->CameraRot = cfg["Graphics"]["CameraRot"].as<std::vector<float>>();
+  graphics->enableAntiAliasing =
+      cfg["Graphics"]["EnableAntiAliasing"].as<bool>();
   defaults->StartupScenePath =
       cfg["Defaults"]["StartupScenePath"].as<std::string>();
-  if (graphics->CameraPos.size() != 3 || graphics->CameraRot.size() != 4) {
-    SPDLOG_LOGGER_ERROR(logger, "Invalid camera parameters specified");
-  }
   SPDLOG_LOGGER_INFO(logger, "Loaded config!");
 }

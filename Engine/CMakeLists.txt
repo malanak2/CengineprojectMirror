@@ -36,6 +36,8 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Shader.hpp
         Graphics/Material.cpp
         Graphics/Material.hpp
+        Graphics/Texture.cpp
+        Graphics/Texture.hpp
         Graphics/MaterialJson.hpp
         Graphics/Components/ComponentRenderable.hpp
         Graphics/Components/ComponentRenderable.cpp
