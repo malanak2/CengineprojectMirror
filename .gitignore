@@ -4,3 +4,4 @@ generated
 build
 out
 /compile_commands.json
+Engine/glad
