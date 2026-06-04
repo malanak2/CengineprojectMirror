@@ -14,12 +14,14 @@ find_package(glm CONFIG REQUIRED)
 
 FetchContent_Declare(inipp GIT_REPOSITORY https://github.com/Rookfighter/inifile-cpp.git)
 FetchContent_MakeAvailable(inipp)
+
 FetchContent_Declare(
   cpptrace
   GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
   GIT_TAG        v1.0.4 # <HASH or TAG>
 )
 FetchContent_MakeAvailable(cpptrace)
+
 add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Object.cpp
         Object.hpp
@@ -43,16 +45,16 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Components/ComponentRenderable.cpp
         Config/Config.cpp
         Config/Config.hpp
-        glad/src/glad.c
-        glad/include/KHR/khrplatform.h
-        glad/include/glad/glad.h
+        External/glad/src/glad.c
+        External/glad/include/KHR/khrplatform.h
+        External/glad/include/glad/glad.h
         Components/ComponentScript.cpp
         Components/ComponentScript.hpp
         Scene.cpp
         Scene.hpp
 )
 
-target_include_directories(cengineengine PUBLIC glad/include)
+target_include_directories(cengineengine PUBLIC External/glad/include)
 target_include_directories(cengineengine PUBLIC ..)
 target_include_directories(cengineengine PUBLIC .)
 
