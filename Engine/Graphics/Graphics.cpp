@@ -536,10 +536,10 @@ void Main::keyCallback(int key, int scancode, int action, int mods) {
   }
 }
 
-void Main::SetKeyCallback(const int key, void (*action)(int, int)) {
+void Main::SetKeyCallback(const int key, std::function<void(int, int)> action) {
   const int scancode = glfwGetKeyScancode(key);
   if (!keyMap.contains(scancode)) {
-    keyMap[scancode] = {};
+    keyMap[scancode] = std::vector<std::function<void (int, int)>>{};
   }
   keyMap[scancode].insert(keyMap[scancode].end(), action);
 }

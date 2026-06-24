@@ -5,7 +5,7 @@
 #include <memory>
 #include <regex>
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
+#include "External/stb/stb_image.h"
 /// Loads a text file from the resources directory
 int FileUtil::ReadFile(std::string path, std::string *result) {
   std::ifstream file;

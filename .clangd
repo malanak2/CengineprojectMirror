@@ -1,2 +1,8 @@
 CompileFlags: 
   Remove: [-fmodules-ts, -fmodule-mapper=*, -fdeps-format=*]
+
+Diagnostics:
+    Suppress: [
+      "constexpr_var_requires_init",
+      "constant_property_never_constant"
+    ]

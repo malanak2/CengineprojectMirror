@@ -49,7 +49,7 @@ public:
       fragmentShaders;
   static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
   // Inputs
-  void SetKeyCallback(const int key, void (*action)(int action, int mods));
+  void SetKeyCallback(const int key, std::function<void(int action, int mods)> action);
   void keyCallback(int key, int scancode, int action, int mods);
   static void keyCallbackStatic(GLFWwindow *window, int key, int scancode,
                                 int action, int mods);
@@ -65,7 +65,7 @@ private:
   float dur_largest = 0;
   std::shared_ptr<Config> config = nullptr;
 
-  std::map<int, std::vector<void (*)(int, int)>> keyMap = {};
+  std::map<int, std::vector<std::function<void(int, int)>>> keyMap = {};
 
 #ifdef IMGUI
   std::shared_ptr<SceneObject> sceneObject = nullptr;
