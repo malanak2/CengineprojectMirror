@@ -1,6 +1,6 @@
 #include "ComponentScript.hpp"
+#include "ImGuiMacros.hpp"
 #include "Interfaces/IComponent.hpp"
-#include <imgui.h>
 
 Engine::ENGINE_COMPONENT_TYPE Engine::ComponentScript::GetType() {
   return ENGINE_COMPONENT_TYPE::script;

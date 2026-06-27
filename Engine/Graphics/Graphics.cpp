@@ -5,6 +5,7 @@
 #include "Graphics.hpp"
 #include "Engine.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "ImGuiMacros.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
 #include "Scene.hpp"
@@ -107,8 +108,6 @@ int Main::Init(std::shared_ptr<Config> config) {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   if (config->graphics->enableAntiAliasing) {
-    aa = true;
-    aa_b = true;
     glEnable(GL_MULTISAMPLE);
   }
 
@@ -194,24 +193,21 @@ void Main::ShowSceneObjectMenu(
 void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
   ImGui::Begin("Scene");
   ImGui::Text("Edit current scene");
-  ImGui::Checkbox("Wireframe mode", &wireframe_b);
-  if (wireframe_b && !wireframe) {
-    wireframe = true;
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  }
-  if (!wireframe_b && wireframe) {
-    wireframe = false;
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  }
-  ImGui::Checkbox("AntiAliasing", &aa_b);
-  if (aa_b && !aa) {
-    aa = true;
-    glEnable(GL_MULTISAMPLE);
-  }
-  if (!aa_b && aa) {
-    aa = false;
-    glDisable(GL_MULTISAMPLE);
-  }
+  IMGUI_CHECKBOX("Wireframe mode", false, [](bool state) {
+    if (state) {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+  });
+  IMGUI_CHECKBOX("AntiAliasing", config->graphics->enableAntiAliasing,
+                 [](bool state) {
+                   if (state) {
+                     glEnable(GL_MULTISAMPLE);
+                   } else {
+                     glDisable(GL_MULTISAMPLE);
+                   }
+                 });
   if (ImGui::CollapsingHeader("Objects")) {
     ShowSceneObjectMenu(&scene->objects);
   }

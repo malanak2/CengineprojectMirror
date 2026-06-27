@@ -11,7 +11,7 @@
 #include "Util/LoggerUtil.hpp"
 #include <chrono>
 #ifdef IMGUI
-#include <imgui.h>
+#include "ImGuiMacros.hpp"
 #endif
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
@@ -82,10 +82,6 @@ private:
   char matbuf[64] = "";
   float coords[3] = {0, 0, 0};
   float rotation[4] = {0, 0, 0, 0};
-  bool wireframe = false;
-  bool wireframe_b = false;
-  bool aa = false;
-  bool aa_b = false;
 #endif
 };
 }; // namespace Engine::Graphics
