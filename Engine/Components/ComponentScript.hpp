@@ -5,7 +5,7 @@ namespace Engine {
 class ComponentScript : public IComponent {
 public:
   ENGINE_COMPONENT_TYPE GetType() override;
-  virtual void RenderImGui();
-  virtual std::string GetName();
+  virtual void RenderImGui() override;
+  virtual std::string GetName() override;
 };
 } // namespace Engine

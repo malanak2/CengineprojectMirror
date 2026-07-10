@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/glm.hpp>
 #include <glm/trigonometric.hpp>
 #include <memory>
 namespace Engine {
@@ -58,6 +59,12 @@ CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
 }*/
 /*
 CameraComponent::CameraComponent*/
+
+void CameraComponent::RenderImGui() {
+  ImGui::InputFloat("Near", &near);
+  ImGui::InputFloat("Far", &far);
+}
+std::string CameraComponent::GetName() { return "Camera component"; }
 
 CameraComponent::~CameraComponent() {}
 /*

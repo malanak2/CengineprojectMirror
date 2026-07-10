@@ -49,7 +49,8 @@ public:
       fragmentShaders;
   static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
   // Inputs
-  void SetKeyCallback(const int key, std::function<void(int action, int mods)> action);
+  void SetKeyCallback(const int key,
+                      std::function<void(int action, int mods)> action);
   void keyCallback(int key, int scancode, int action, int mods);
   static void keyCallbackStatic(GLFWwindow *window, int key, int scancode,
                                 int action, int mods);
@@ -73,8 +74,7 @@ private:
   ShowSceneObjectMenu(std::vector<std::shared_ptr<SceneObject>> *sceneObjects);
   void RenderSceneView(std::shared_ptr<Scene> scene);
   void RenderPerformanceGraph();
-  void RenderComponentInspector(std::shared_ptr<IComponent> component,
-                                ENGINE_COMPONENT_TYPE type);
+
   void RenderObjectInspector();
   std::shared_ptr<SceneObject> newObjectParent = nullptr;
   bool wasSavePressedThisFrame = false;

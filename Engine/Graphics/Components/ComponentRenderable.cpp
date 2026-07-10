@@ -213,6 +213,46 @@ void ComponentRenderable::FromJson(json &js) {
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
 
+void Engine::Graphics::ComponentRenderable::RenderImGui() {
+  // Render uniforms
+  ImGui::InputText("Material path", &this->_material_path[0], 100);
+
+  if (ImGui::CollapsingHeader("Uniforms")) {
+    for (auto &[key, val] : this->_uniforms) {
+      switch (val.size()) {
+      case 1: {
+        ImGui::InputFloat(&key[0], &val[0]);
+        break;
+      }
+      case 2: {
+        ImGui::InputFloat2(&key[0], &val[0]);
+        break;
+      }
+      case 3: {
+        ImGui::InputFloat3(&key[0], &val[0]);
+        break;
+      }
+      case 4: {
+        if (key == "color") {
+          ImGui::ColorPicker4(&key[0], &val[0]);
+        } else {
+          ImGui::InputFloat4(&key[0], &val[0]);
+        }
+        break;
+      }
+      default: {
+        ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
+                    val.size());
+        break;
+      }
+      }
+    }
+  }
+}
+std::string Engine::Graphics::ComponentRenderable::GetName() {
+  return "Component Renderable";
+}
+
 ComponentRenderable::ComponentRenderable(std::shared_ptr<Object> object) {
   this->object = object;
 }
