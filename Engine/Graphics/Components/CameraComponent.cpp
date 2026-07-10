@@ -11,13 +11,12 @@ namespace Graphics {
 
 // TODO:
 using json = nlohmann::json;
-void CameraComponent::Setup() {
-  Update();
-}
+void CameraComponent::Setup() { Update(); }
 
 void CameraComponent::Update() {
   auto obj = object.lock();
-  if (!obj) return;
+  if (!obj)
+    return;
   glm::vec3 front;
   front.x = glm::cos(glm::radians(obj->_rotation.y)) *
             glm::cos(glm::radians(obj->_rotation.x));
@@ -28,7 +27,7 @@ void CameraComponent::Update() {
   glm::vec3 frontnormal = glm::normalize(front);
   projmat = glm::perspective(
       glm::radians(45.0f),
-      (float)Engine::Main::width / (float)Engine::Main::height, 0.1f, 100.0f);
+      (float)Engine::Main::width / (float)Engine::Main::height, near, far);
   viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
                         glm::vec3(0, 1, 0));
 }
@@ -41,6 +40,8 @@ void CameraComponent::Load() {}
 
 CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
   this->object = object;
+  this->near = 0.5f;
+  this->far = 100.0f;
   // fromParams(name, comps, position, rotation);
 }
 
@@ -88,9 +89,18 @@ ENGINE_COMPONENT_TYPE CameraComponent::GetType() {
 }
 
 // TODO:
-void CameraComponent::FromJson(json &js) {}
+void CameraComponent::FromJson(json &js) {
+  CameraComponentJson ccjs = js;
+  far = ccjs.far;
+  near = ccjs.near;
+}
 
-json CameraComponent::ToJson() { return {}; }
+json CameraComponent::ToJson() {
+  CameraComponentJson ccjs;
+  ccjs.far = far;
+  ccjs.near = near;
+  return ccjs;
+}
 CameraComponent::CameraComponent(json &js, std::shared_ptr<Object> object) {
   this->object = object;
   FromJson(js);

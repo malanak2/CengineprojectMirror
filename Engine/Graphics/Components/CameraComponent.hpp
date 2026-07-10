@@ -13,9 +13,11 @@ namespace Engine {
 namespace Graphics {
 struct CameraComponentJson {
 public:
+  float near;
+  float far;
 };
 
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson, near, far);
 
 class CameraComponent : public IComponent {
 public:
@@ -49,6 +51,7 @@ public:
 private:
   glm::mat4 projmat;
   glm::mat4 viewmat;
+  float near, far;
 };
 } // namespace Graphics
 } // namespace Engine

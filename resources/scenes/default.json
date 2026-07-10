@@ -10,7 +10,10 @@
                 "data": {
                   "components": [
                     {
-                      "data": null,
+                      "data": {
+                        "near": 0.1,
+                        "far": 100.0
+                      },
                       "object_type": "component",
                       "type": 1
                     }
