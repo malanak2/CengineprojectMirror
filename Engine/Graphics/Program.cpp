@@ -1,8 +1,6 @@
 #include "Program.hpp"
 #include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
-#include "Util/LoggerUtil.hpp"
-#include "glad/glad.h"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <glm/gtc/type_ptr.hpp>

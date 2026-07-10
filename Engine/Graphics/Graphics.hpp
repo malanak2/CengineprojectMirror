@@ -11,7 +11,6 @@
 #include "Util/LoggerUtil.hpp"
 #include <chrono>
 #ifdef IMGUI
-#include "ImGuiMacros.hpp"
 #endif
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>

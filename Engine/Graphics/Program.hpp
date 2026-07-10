@@ -1,7 +1,7 @@
 #pragma once
 #include "MaterialJson.hpp"
 #include "Shader.hpp"
-#include "glm/glm.hpp"
+#include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <vector>
@@ -26,7 +26,8 @@ public:
   bool isValid = false;
   /// Takes in a variadic argument of Shader pointers.
   Program(std::vector<UniformJson> uniforms,
-          std::vector<std::shared_ptr<Shader>> shaders, bool uses_camera = false);
+          std::vector<std::shared_ptr<Shader>> shaders,
+          bool uses_camera = false);
   ~Program();
   void SetUniform(std::string uniform, float value, bool camera);
   void SetUniform(std::string uniform, float v1, float v2, float v3, float v4,
