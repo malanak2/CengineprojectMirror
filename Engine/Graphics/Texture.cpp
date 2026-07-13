@@ -2,6 +2,7 @@
 #include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
+#include <memory>
 
 json Engine::Graphics::Texture::ToJson() {
   JsonFileBase ret = JsonFileBase();
@@ -98,4 +99,10 @@ Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
   if (mipmap) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+// TODO: Have a cache
+std::shared_ptr<Engine::Graphics::Texture>
+Engine::Graphics::Texture::Create(std::string json_path, int fallback) {
+  return std::make_shared<Texture>(json_path, fallback);
 }

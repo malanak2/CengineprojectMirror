@@ -2,6 +2,7 @@
 
 #include "Interfaces/IJson.hpp"
 #include "glad/glad.h"
+#include <memory>
 using json = nlohmann::json;
 namespace Engine::Graphics {
 enum TexFiltering { nearest, linear };
@@ -32,7 +33,10 @@ public:
   void FromJson(json &js) override;
 
   Texture(std::string json_path, int fallback);
-
+  /// Texture::Create
+  /// Checks the cache to avoid loading one texture more than once, using its
+  /// path as the index
+  static std::shared_ptr<Texture> Create(std::string json_path, int fallback);
   unsigned int texture = -1;
 
 private:

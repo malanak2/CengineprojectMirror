@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Texture.hpp"
 #include "Shader.hpp"
 #include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
@@ -20,7 +21,7 @@ public:
   unsigned int id = 0;
   bool isValid = false;
   Program(std::vector<UniformJson> uniforms,
-          std::vector<std::shared_ptr<Shader>> shaders,
+          std::vector<std::shared_ptr<Shader>> shaders, std::string texpath,
           bool uses_camera = false);
   ~Program();
   void SetUniform(std::string uniform, float value, bool camera);
@@ -28,6 +29,8 @@ public:
                   bool camera);
   void SetUniform(std::string uniform, std::vector<float> values, bool camera);
   void SetUniform(std::string uniform, glm::mat4 mat, bool camera);
+
+  void BindTexture2D(Texture tex);
 
   /// Map of name specified in material json, and the index also specified in
   /// there

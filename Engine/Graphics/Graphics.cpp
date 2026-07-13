@@ -453,6 +453,7 @@ int Main::Tick(
     glEnable(GL_MULTISAMPLE);
   }
 #endif
+  CHECK_GL_ERROR();
   glfwSwapBuffers(window);
   glfwPollEvents();
 

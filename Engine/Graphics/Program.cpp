@@ -1,14 +1,16 @@
 #include "Program.hpp"
 #include "Graphics.hpp"
+#include "Graphics/Texture.hpp"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
 #include <vector>
 using namespace Engine::Graphics;
 using json = nlohmann::json;
 Program::Program(std::vector<UniformJson> uniforms_json,
                  std::vector<std::shared_ptr<Shader>> shaders,
-                 bool uses_camera) {
+                 std::string texpath, bool uses_camera) {
   _uses_camera = uses_camera;
   auto logger = spdlog::get("console");
   unsigned int program;
@@ -60,6 +62,12 @@ Program::Program(std::vector<UniformJson> uniforms_json,
                        "Created buffer {} with pos {} and size {}",
                        uniform.name, uniform.bind_point, uniform.size);
   }
+  if (texpath != "") {
+    std::shared_ptr<Texture> tex =
+        Texture::Create(texpath, Main::FallbackTexture->texture);
+    glBindTexture(GL_TEXTURE_2D, tex->texture);
+  }
+
   glBufferData(GL_UNIFORM_BUFFER, total_size, NULL, GL_DYNAMIC_DRAW);
   glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -175,6 +183,9 @@ void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
   glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
                   sizeof(glm::mat4), glm::value_ptr(mat));
   CHECK_GL_ERROR();
+}
+void Engine::Graphics::Program::BindTexture2D(Texture tex) {
+  glBindTexture(GL_TEXTURE_2D, tex.texture);
 }
 
 unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {

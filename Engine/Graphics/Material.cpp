@@ -65,8 +65,8 @@ Material::Material(std::string path) {
                                     data_shader.path);
       }
     }
-    std::shared_ptr<Program> program =
-        std::make_shared<Program>(m.uniforms, shaders, m.uses_camera);
+    std::shared_ptr<Program> program = std::make_shared<Program>(
+        m.uniforms, shaders, m.texture_path, m.uses_camera);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");
