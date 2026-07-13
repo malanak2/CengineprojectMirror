@@ -1,5 +1,4 @@
 #include "Program.hpp"
-#include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>

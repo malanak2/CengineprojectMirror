@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 4.2)
 project(cengineproject)
 
+add_compile_options("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=")
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)

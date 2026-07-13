@@ -23,7 +23,8 @@ public:
   bool mipmap;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TextureJson, filterType, path, translucent);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TextureJson, filterType, wrapS, wrapT, path,
+                                   translucent, mipmap);
 
 class Texture : public IJson {
 public:

@@ -1,30 +1,24 @@
 #pragma once
-#include "MaterialJson.hpp"
 #include "Shader.hpp"
 #include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <vector>
 namespace Engine::Graphics {
-
+struct UniformJson;
 using json = nlohmann::json;
 /// Class in which program info is stored
 /// Properties
-///   - id
-///     OpenGL id
+///   - opengl id
+///   - byte offset in uniform
 struct UniformInfo {
   unsigned int id;
   unsigned int offset;
 };
 class Program {
 public:
-  /*struct UniformInfo {
-    int offset;
-    int size;
-  };*/
   unsigned int id = 0;
   bool isValid = false;
-  /// Takes in a variadic argument of Shader pointers.
   Program(std::vector<UniformJson> uniforms,
           std::vector<std::shared_ptr<Shader>> shaders,
           bool uses_camera = false);
@@ -40,9 +34,7 @@ public:
   std::map<std::string, UniformInfo> uniforms = {};
   std::map<int, std::string> uniforms_info = {};
   bool _uses_camera = false;
-  //  std::vector<uint8_t> cpuBuffer = {};
-  //  void SetUniform(std::string uniform, float value);
-  //  void SetUniform(std::string uniform, float value);
+
 private:
   unsigned int GetUniformOffset(std::string uniform, bool camera);
 };

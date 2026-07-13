@@ -1,6 +1,5 @@
 #include "Material.hpp"
 #include "../../Util/FileUtil.hpp"
-#include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
