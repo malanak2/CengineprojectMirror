@@ -13,9 +13,21 @@ using json = nlohmann::json;
 ///   - id
 ///     OpenGL id
 struct UniformInfo {
+public:
   unsigned int id;
   unsigned int offset;
 };
+  enum UniformType {
+    Vector,
+    Sampler
+};
+struct Uniform {
+public:
+  UniformType type;
+  UniformInfo info;
+  std::shared_ptr<void> Data;
+};
+
 class Program {
 public:
   /*struct UniformInfo {
@@ -36,7 +48,7 @@ public:
 
   /// Map of name specified in material json, and the index also specified in
   /// there
-  std::map<std::string, UniformInfo> uniforms = {};
+  std::map<std::string, Uniform> uniforms = {};
   std::map<int, std::string> uniforms_info = {};
   bool _uses_camera = false;
   //  std::vector<uint8_t> cpuBuffer = {};

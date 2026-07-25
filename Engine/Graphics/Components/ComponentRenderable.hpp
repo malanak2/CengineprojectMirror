@@ -6,14 +6,18 @@
 #include <memory>
 #include <string>
 
+#include "Graphics/Program.hpp"
+
+
 using json = nlohmann::json;
 namespace Engine {
 namespace Graphics {
+    class Material;
 struct RenderableDataJson {
 public:
   std::string path;
   std::string material_path;
-  std::map<std::string, std::vector<float>> uniforms;
+  std::map<std::string, Uniform> uniforms;
   // TODO: Move to model file
   std::vector<float> vertices;
   std::vector<int> indices;
@@ -48,19 +52,20 @@ public:
   unsigned int vao = 0;
   unsigned int vbo = 0;
   unsigned int ebo = 0;
+  std::shared_ptr<Material> material;
   // TODO: Remove
   std::vector<float> vertices;
   std::vector<int> indices;
-  std::map<std::string, std::vector<float>> _uniforms;
   std::string _material_path;
 
 private:
   std::string path;
-
+    // Value storing the values of uniforms
+  std::map<std::string, Uniform> _uniforms;
   /// Material, but...
-  std::shared_ptr<void>
+  void
   FromData(std::string material_path,
-           std::map<std::string, std::vector<float>> uniforms);
+           std::map<std::string, Uniform> uniforms);
 };
 } // namespace Graphics
 } // namespace Engine

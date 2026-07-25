@@ -57,7 +57,8 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
         0.0,  1.0,  0.0   // Top
     };
     rdj.material_path = "materials/basic.json";
-    rdj.uniforms = {{"color", {1, 0, 0, 1}}};
+    std::vector<float> unis = {0, 1, 0, 1};
+    rdj.uniforms = {{"color", Graphics::Uniform{Graphics::Vector, 0, 0, std::static_pointer_cast<void*>(unis.data())}}};
     jsbase.data = rdj;
     json jsbase_js = jsbase;
     auto com_render =

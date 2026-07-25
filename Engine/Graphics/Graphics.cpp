@@ -162,18 +162,6 @@ void Main::ShowSceneObjectMenu(
       ImGui::EndDragDropSource();
     }
 
-    /*if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload =
-    ImGui::AcceptDragDropPayload("OBJ_PARENT")) { SceneObject* draggedObjRaw =
-    *(SceneObject**)payload->Data; std::shared_ptr<SceneObject> draggedObj =
-    draggedObjRaw->shared_from_this(); if (draggedObj != obj) {
-                draggedObj->Parent = obj;
-                // Note: Real re-parenting should also update Children vectors
-            }
-        }
-        ImGui::EndDragDropTarget();
-    }*/
-
     if (this->sceneObject != obj) {
       ImGui::SameLine(ImGui::GetContentRegionAvail().x - 50);
       if (ImGui::Button("Select")) {
@@ -333,34 +321,45 @@ void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
       ImGui::InputText("Material path", &c->_material_path[0], 100);
 
       if (ImGui::CollapsingHeader("Uniforms")) {
-        for (auto &[key, val] : c->_uniforms) {
-          switch (val.size()) {
-          case 1: {
-            ImGui::InputFloat(&key[0], &val[0]);
-            break;
-          }
-          case 2: {
-            ImGui::InputFloat2(&key[0], &val[0]);
-            break;
-          }
-          case 3: {
-            ImGui::InputFloat3(&key[0], &val[0]);
-            break;
-          }
-          case 4: {
-            if (key == "color") {
-              ImGui::ColorPicker4(&key[0], &val[0]);
-            } else {
-              ImGui::InputFloat4(&key[0], &val[0]);
+        for (auto &[key, val] : c->material->program->uniforms) {
+            switch (val.type) {
+                case Sampler: {
+                    // Handle texture path
+                    // TODO: Implement
+                    ImGui::Text("TODO: Implement sampler texture picker");
+                }
+                case Vector: {
+                    auto v = std::static_pointer_cast<std::vector<float>>(val.Data);
+                    switch (v->size()) {
+                        case 1: {
+                            ImGui::InputFloat(&key[0], &(*v)[0]);
+                            break;
+                        }
+                        case 2: {
+                            ImGui::InputFloat2(&key[0], &(*v)[0]);
+                            break;
+                        }
+                        case 3: {
+                            ImGui::InputFloat3(&key[0], &(*v)[0]);
+                            break;
+                        }
+                        case 4: {
+                            if (key == "color") {
+                                ImGui::ColorPicker4(&key[0], &(*v)[0]);
+                            } else {
+                                ImGui::InputFloat4(&key[0], &(*v)[0]);
+                            }
+                            break;
+                        }
+                        default: {
+                            ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
+                                        v->size());
+                            break;
+                        }
+                    }
+                }
             }
-            break;
-          }
-          default: {
-            ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
-                        val.size());
-            break;
-          }
-          }
+
         }
       }
     }

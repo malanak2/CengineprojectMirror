@@ -26,17 +26,17 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(
   return cr;
 };*/
 
-std::shared_ptr<void> ComponentRenderable::FromData(
+void ComponentRenderable::FromData(
     std::string material_path,
-    std::map<std::string, std::vector<float>> uniforms) {
-  auto _material = Material::Create(material_path);
+    std::map<std::string, Uniform> uniforms) {
+  material = Material::Create(material_path);
   _material_path.reserve(100);
   auto logger = spdlog::get("console");
-  if (!_material->usable) {
+  if (!material->usable) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to load material at {}", material_path);
-    return _material;
+    return;
   }
-  for (auto &[key, val] : _material->program->uniforms) {
+  for (auto &[key, val] : material->program->uniforms) {
     if (!uniforms.contains(key) && key != "camera") {
       SPDLOG_LOGGER_WARN(
           spdlog::get("console"),
@@ -45,7 +45,7 @@ std::shared_ptr<void> ComponentRenderable::FromData(
     }
   }
   for (auto &[key, val] : uniforms) {
-    if (!_material->program->uniforms.contains(key) && key != "camera") {
+    if (!material->program->uniforms.contains(key) && key != "camera") {
       SPDLOG_LOGGER_WARN(spdlog::get("console"),
                          "Component at {} specifies uniform {} that is not "
                          "specified in material",
@@ -53,7 +53,6 @@ std::shared_ptr<void> ComponentRenderable::FromData(
     }
   }
   this->_uniforms = uniforms;
-  return _material;
 }
 
 void ComponentRenderable::Setup() {};
@@ -113,7 +112,6 @@ json ComponentRenderable::ToJson() {
   JsonFileBase jb;
   RenderableDataJson j;
   j.material_path = _material_path;
-  j.uniforms = _uniforms;
   j.indices = indices;
   j.vertices = vertices;
   jb.object_type = ObjectType::Component;
@@ -140,11 +138,10 @@ ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
   std::shared_ptr<ComponentRenderable> cr =
       std::make_shared<ComponentRenderable>(object);
   cr->_material_path = json_inst.material_path;
-  std::shared_ptr<Material> m = std::static_pointer_cast<Material>(
-      cr->FromData(json_inst.material_path, json_inst.uniforms));
-  m->renderableObjects.insert(m->renderableObjects.end(), cr);
+  cr->FromData(json_inst.material_path, json_inst.uniforms);
+  cr->material->renderableObjects.insert(cr->material->renderableObjects.end(), cr);
 
-  glUseProgram(m->program->id);
+  glUseProgram(cr->material->program->id);
   CHECK_GL_ERROR();
   std::vector<float> vertices = json_inst.vertices; /*{
        -0.5f, -0.5f, 0.0f, // left

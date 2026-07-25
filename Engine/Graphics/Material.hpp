@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Program.hpp"
 #include <memory>
 namespace Engine {
 namespace Graphics {
+        class ComponentRenderable;
 class Material {
 public:
   std::shared_ptr<Program> program;
