@@ -1,5 +1,6 @@
 CompileFlags: 
   Remove: [-fmodules-ts, -fmodule-mapper=*, -fdeps-format=*]
+  Add: [-target, x86_64-pc-windows-msvc, -fms-extensions, -fms-compatibility]
 
 Diagnostics:
     Suppress: [

@@ -1,6 +1,5 @@
 #include "Material.hpp"
 #include "../../Util/FileUtil.hpp"
-#include "Engine/Graphics/MaterialJson.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
@@ -66,8 +65,8 @@ Material::Material(std::string path) {
                                     data_shader.path);
       }
     }
-    std::shared_ptr<Program> program =
-        std::make_shared<Program>(m.uniforms, shaders, m.uses_camera);
+    std::shared_ptr<Program> program = std::make_shared<Program>(
+        m.uniforms, shaders, m.texture_path, m.uses_camera);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");

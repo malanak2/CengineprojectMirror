@@ -306,70 +306,6 @@ void Main::RenderPerformanceGraph() {
 
   ImGui::End();
 }
-void Main::RenderComponentInspector(std::shared_ptr<IComponent> component,
-                                    ENGINE_COMPONENT_TYPE type) {
-  switch (type) {
-  case Engine::ENGINE_COMPONENT_TYPE::camera: {
-    if (ImGui::CollapsingHeader("Camera")) {
-    }
-    break;
-  }
-  case Engine::ENGINE_COMPONENT_TYPE::renderable: {
-    if (ImGui::CollapsingHeader("Renderable")) {
-      // Render uniforms
-      auto c = std::static_pointer_cast<ComponentRenderable>(component);
-      ImGui::InputText("Material path", &c->_material_path[0], 100);
-
-      if (ImGui::CollapsingHeader("Uniforms")) {
-        for (auto &[key, val] : c->material->program->uniforms) {
-            switch (val.type) {
-                case Sampler: {
-                    // Handle texture path
-                    // TODO: Implement
-                    ImGui::Text("TODO: Implement sampler texture picker");
-                }
-                case Vector: {
-                    auto v = std::static_pointer_cast<std::vector<float>>(val.Data);
-                    switch (v->size()) {
-                        case 1: {
-                            ImGui::InputFloat(&key[0], &(*v)[0]);
-                            break;
-                        }
-                        case 2: {
-                            ImGui::InputFloat2(&key[0], &(*v)[0]);
-                            break;
-                        }
-                        case 3: {
-                            ImGui::InputFloat3(&key[0], &(*v)[0]);
-                            break;
-                        }
-                        case 4: {
-                            if (key == "color") {
-                                ImGui::ColorPicker4(&key[0], &(*v)[0]);
-                            } else {
-                                ImGui::InputFloat4(&key[0], &(*v)[0]);
-                            }
-                            break;
-                        }
-                        default: {
-                            ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
-                                        v->size());
-                            break;
-                        }
-                    }
-                }
-            }
-
-        }
-      }
-    }
-    break;
-  }
-  default:
-    ImGui::Text("Unsupported component enum value %d", (int)type);
-    break;
-  }
-}
 
 void Main::RenderObjectInspector() {
   ImGui::Begin("Object inspetor");
@@ -396,7 +332,9 @@ void Main::RenderObjectInspector() {
   }
   for (auto [type, comp] : sceneObject->instance->_components) {
     if (comp != nullptr)
-      RenderComponentInspector(comp, type);
+      if (ImGui::CollapsingHeader(comp->GetName().c_str())) {
+        comp->RenderImGui();
+      }
   }
   ImGui::End();
 }
@@ -503,6 +441,7 @@ int Main::Tick(
     glEnable(GL_MULTISAMPLE);
   }
 #endif
+  CHECK_GL_ERROR();
   glfwSwapBuffers(window);
   glfwPollEvents();
 
@@ -534,7 +473,7 @@ void Main::keyCallback(int key, int scancode, int action, int mods) {
 void Main::SetKeyCallback(const int key, std::function<void(int, int)> action) {
   const int scancode = glfwGetKeyScancode(key);
   if (!keyMap.contains(scancode)) {
-    keyMap[scancode] = std::vector<std::function<void (int, int)>>{};
+    keyMap[scancode] = std::vector<std::function<void(int, int)>>{};
   }
   keyMap[scancode].insert(keyMap[scancode].end(), action);
 }

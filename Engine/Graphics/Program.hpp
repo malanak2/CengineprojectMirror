@@ -1,17 +1,17 @@
 #pragma once
-#include "MaterialJson.hpp"
+#include "Graphics/Texture.hpp"
 #include "Shader.hpp"
-#include "glm/glm.hpp"
+#include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <vector>
 namespace Engine::Graphics {
-
+struct UniformJson;
 using json = nlohmann::json;
 /// Class in which program info is stored
 /// Properties
-///   - id
-///     OpenGL id
+///   - opengl id
+///   - byte offset in uniform
 struct UniformInfo {
 public:
   unsigned int id;
@@ -30,15 +30,11 @@ public:
 
 class Program {
 public:
-  /*struct UniformInfo {
-    int offset;
-    int size;
-  };*/
   unsigned int id = 0;
   bool isValid = false;
-  /// Takes in a variadic argument of Shader pointers.
   Program(std::vector<UniformJson> uniforms,
-          std::vector<std::shared_ptr<Shader>> shaders, bool uses_camera = false);
+          std::vector<std::shared_ptr<Shader>> shaders, std::string texpath,
+          bool uses_camera = false);
   ~Program();
   void SetUniform(std::string uniform, float value, bool camera);
   void SetUniform(std::string uniform, float v1, float v2, float v3, float v4,
@@ -46,14 +42,14 @@ public:
   void SetUniform(std::string uniform, std::vector<float> values, bool camera);
   void SetUniform(std::string uniform, glm::mat4 mat, bool camera);
 
+  void BindTexture2D(Texture tex);
+
   /// Map of name specified in material json, and the index also specified in
   /// there
   std::map<std::string, Uniform> uniforms = {};
   std::map<int, std::string> uniforms_info = {};
   bool _uses_camera = false;
-  //  std::vector<uint8_t> cpuBuffer = {};
-  //  void SetUniform(std::string uniform, float value);
-  //  void SetUniform(std::string uniform, float value);
+
 private:
   unsigned int GetUniformOffset(std::string uniform, bool camera);
 };

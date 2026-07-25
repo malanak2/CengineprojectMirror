@@ -1,31 +1,31 @@
 {
   "object_type": "material",
-  "name": "Basic Material",
+  "name": "Texture Material",
   "uses_camera": true,
   "uses_translate": true,
-  "texture_path": "",
+  "texture_path": "textures/testTex.json",
   "shaders": [
     {
       "type": "vertex",
-      "path": "generated/shaders/spirv/basic.spv",
+      "path": "generated/shaders/spirv/texture.spv",
       "entrypoint": "mainVertex"
     },
     {
       "type": "fragment",
-      "path": "generated/shaders/spirv/basic.spv",
+      "path": "generated/shaders/spirv/texture.spv",
       "entrypoint": "mainPixel"
     }
   ],
   "uniforms": [
     {
-      "name": "color",
-      "bind_point": 2,
-      "size": 16
-    },
-    {
       "name": "translate",
       "bind_point": 1,
       "size": 64
+    },
+    {
+      "name": "color",
+      "bind_point": 2,
+      "size": 16
     },
     {
       "name": "camera",

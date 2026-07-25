@@ -13,12 +13,18 @@ namespace Engine {
 namespace Graphics {
 struct CameraComponentJson {
 public:
+  float near;
+  float far;
 };
 
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson, near, far);
 
 class CameraComponent : public IComponent {
 public:
+  void RenderImGui() override;
+
+  std::string GetName() override;
+
   ~CameraComponent() override;
 
   ENGINE_COMPONENT_TYPE GetType() override;
@@ -43,12 +49,14 @@ public:
   json ToJson() override;
 
   void FromJson(json &js) override;
+
   glm::mat4 GetProjMatrix();
   glm::mat4 GetViewMatrix();
 
 private:
   glm::mat4 projmat;
   glm::mat4 viewmat;
+  float near, far;
 };
 } // namespace Graphics
 } // namespace Engine
