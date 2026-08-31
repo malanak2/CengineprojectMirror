@@ -3,7 +3,6 @@
 #include "Shader.hpp"
 #include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <vector>
 namespace Engine::Graphics {
 struct UniformJson;
@@ -17,10 +16,7 @@ public:
   unsigned int id;
   unsigned int offset;
 };
-  enum UniformType {
-    Vector,
-    Sampler
-};
+enum UniformType { Vector, Sampler };
 struct Uniform {
 public:
   UniformType type;
