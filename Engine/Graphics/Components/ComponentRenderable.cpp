@@ -114,6 +114,7 @@ json ComponentRenderable::ToJson() {
   j.material_path = _material_path;
   j.indices = indices;
   j.vertices = vertices;
+  j.uniforms = this->_uniforms;
   jb.object_type = ObjectType::Component;
   jb.data = j;
   return jb;

@@ -84,7 +84,7 @@ void Engine::Main::Run() {
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
   current_scene->Setup();
   while (true) {
-    break;
+    // break;
     auto current_time = std::chrono::steady_clock::now();
     auto dur_graphics = current_time - last_tick_begin;
     current_scene->Update();
