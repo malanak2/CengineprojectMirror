@@ -8,11 +8,10 @@
 
 #include "Graphics/Program.hpp"
 
-
 using json = nlohmann::json;
 namespace Engine {
 namespace Graphics {
-    class Material;
+class Material;
 struct RenderableDataJson {
 public:
   std::string path;
@@ -22,7 +21,8 @@ public:
   std::vector<float> vertices;
   std::vector<int> indices;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson,
+                                   material_path, // uniforms,
                                    vertices, indices);
 
 class ComponentRenderable : public IComponent {
@@ -61,15 +61,14 @@ public:
   std::vector<float> vertices;
   std::vector<int> indices;
   std::string _material_path;
+  // Value storing the values of uniforms
+  std::map<std::string, Uniform> _uniforms;
 
 private:
   std::string path;
-    // Value storing the values of uniforms
-  std::map<std::string, Uniform> _uniforms;
   /// Material, but...
-  void
-  FromData(std::string material_path,
-           std::map<std::string, Uniform> uniforms);
+  void FromData(std::string material_path,
+                std::map<std::string, Uniform> uniforms);
 };
 } // namespace Graphics
 } // namespace Engine

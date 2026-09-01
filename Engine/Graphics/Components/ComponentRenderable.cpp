@@ -26,9 +26,8 @@ std::shared_ptr<ComponentRenderable> ComponentRenderable::Create(
   return cr;
 };*/
 
-void ComponentRenderable::FromData(
-    std::string material_path,
-    std::map<std::string, Uniform> uniforms) {
+void ComponentRenderable::FromData(std::string material_path,
+                                   std::map<std::string, Uniform> uniforms) {
   material = Material::Create(material_path);
   _material_path.reserve(100);
   auto logger = spdlog::get("console");
@@ -139,7 +138,8 @@ ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
       std::make_shared<ComponentRenderable>(object);
   cr->_material_path = json_inst.material_path;
   cr->FromData(json_inst.material_path, json_inst.uniforms);
-  cr->material->renderableObjects.insert(cr->material->renderableObjects.end(), cr);
+  cr->material->renderableObjects.insert(cr->material->renderableObjects.end(),
+                                         cr);
 
   glUseProgram(cr->material->program->id);
   CHECK_GL_ERROR();
@@ -216,30 +216,41 @@ void Engine::Graphics::ComponentRenderable::RenderImGui() {
 
   if (ImGui::CollapsingHeader("Uniforms")) {
     for (auto &[key, val] : this->_uniforms) {
-      switch (val.size()) {
-      case 1: {
-        ImGui::InputFloat(&key[0], &val[0]);
-        break;
-      }
-      case 2: {
-        ImGui::InputFloat2(&key[0], &val[0]);
-        break;
-      }
-      case 3: {
-        ImGui::InputFloat3(&key[0], &val[0]);
-        break;
-      }
-      case 4: {
-        if (key == "color") {
-          ImGui::ColorPicker4(&key[0], &val[0]);
-        } else {
-          ImGui::InputFloat4(&key[0], &val[0]);
+      switch (val.type) {
+      case Vector: {
+        std::vector<float> a =
+            *std::static_pointer_cast<std::vector<float>>(val.Data);
+        switch (a.size()) {
+        case 1: {
+          ImGui::InputFloat(&key[0], &a[0]);
+          break;
+        }
+        case 2: {
+          ImGui::InputFloat2(&key[0], &a[0]);
+          break;
+        }
+        case 3: {
+          ImGui::InputFloat3(&key[0], &a[0]);
+          break;
+        }
+        case 4: {
+          if (key == "color") {
+            ImGui::ColorPicker4(&key[0], &a[0]);
+          } else {
+            ImGui::InputFloat4(&key[0], &a[0]);
+          }
+          break;
+        }
+        default: {
+          ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
+                      a.size());
+          break;
+        }
         }
         break;
       }
-      default: {
-        ImGui::Text("Unsupported float uniform %s of length %zu", &key[0],
-                    val.size());
+      case Sampler: {
+        ImGui::Text("Unsupported sampler uniform %s", &key[0]);
         break;
       }
       }
