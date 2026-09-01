@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Texture.hpp"
+#include "Interfaces/IUniform.hpp"
 #include "Shader.hpp"
 #include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
@@ -7,22 +8,6 @@
 namespace Engine::Graphics {
 struct UniformJson;
 using json = nlohmann::json;
-/// Class in which program info is stored
-/// Properties
-///   - opengl id
-///   - byte offset in uniform
-struct UniformInfo {
-public:
-  unsigned int id;
-  unsigned int offset;
-};
-enum UniformType { Vector, Sampler };
-struct Uniform {
-public:
-  UniformType type;
-  UniformInfo info;
-  std::shared_ptr<void> Data;
-};
 
 class Program {
 public:
@@ -42,11 +27,12 @@ public:
 
   /// Map of name specified in material json, and the index also specified in
   /// there
-  std::map<std::string, Uniform> uniforms = {};
+  std::map<std::string, std::shared_ptr<IUniform>> uniforms = {};
   std::map<int, std::string> uniforms_info = {};
   bool _uses_camera = false;
 
-private:
   unsigned int GetUniformOffset(std::string uniform, bool camera);
+
+private:
 };
 } // namespace Engine::Graphics

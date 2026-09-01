@@ -52,6 +52,10 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Components/ComponentScript.hpp
         Scene.cpp
         Scene.hpp
+        Graphics/Interfaces/IUniform.hpp
+        Graphics/Interfaces/IUniform.cpp
+        Graphics/Uniforms/UniformFloatVector.cpp
+        Graphics/Uniforms/UniformFloatVector.hpp
 )
 
 target_include_directories(cengineengine PUBLIC External/glad/include)

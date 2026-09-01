@@ -1,6 +1,7 @@
 #include "Program.hpp"
 #include "Graphics.hpp"
 #include "Graphics/Texture.hpp"
+#include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -54,7 +55,10 @@ Program::Program(std::vector<UniformJson> uniforms_json,
     UniformInfo ui;
     ui.id = ubo;
     ui.offset = (unsigned int)uniform.size;
-    uniforms[uniform.name].info = ui;
+    ui.name = std::make_shared<std::string>(uniform.name);
+    uniforms[uniform.name] = std::make_shared<UniformFloatVector>(
+        Vector, ubo, ui.offset, std::make_shared<std::string>(uniform.name),
+        std::vector<float>());
     uniforms_info[uniform.bind_point] = uniform.name;
     total_size += ui.offset;
     CHECK_GL_ERROR();
@@ -114,7 +118,7 @@ Program::~Program() {
   glDeleteProgram(id);
   id = 0;
   for (auto [name, uniform] : uniforms) {
-    glDeleteBuffers(1, &(uniform).info.id);
+    glDeleteBuffers(1, &(uniform)->info.id);
   }
   uniforms.clear();
 }
@@ -127,7 +131,7 @@ void Program::SetUniform(std::string uniform, float value, bool camera) {
                        uniform);
     return;
   }
-  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform].info.id);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]->info.id);
   glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
                   sizeof(float), &value);
   CHECK_GL_ERROR();
@@ -141,7 +145,7 @@ void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
                        uniform);
     return;
   }
-  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform].info.id);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]->info.id);
   float data[4] = {v1, v2, v3, v4};
   /* spdlog::get("console")->info(
        "Binding ubo {} id {}, setting the data to {} {} {} {}", uniform,
@@ -177,7 +181,7 @@ void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
                        uniform);
     return;
   }
-  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform].info.id);
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]->info.id);
   CHECK_GL_ERROR();
 
   glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
@@ -195,7 +199,7 @@ unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
   for (auto [key, val] : uniforms_info) {
     if (val == uniform)
       return offset;
-    offset += uniforms[val].info.offset;
+    offset += uniforms[val]->info.offset;
   }
   return -1;
 }

@@ -95,7 +95,7 @@ void Material::RenderObjects() {
         if (scene && scene->camera) {
           auto proj = scene->camera->GetProjMatrix();
           auto view = scene->camera->GetViewMatrix();
-          glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"].info.id);
+          glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"]->info.id);
           CHECK_GL_ERROR();
 
           glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
@@ -125,9 +125,16 @@ void Material::RenderObjects() {
         }
         continue;
       }
-      program->SetUniform(
+      if (!element->_uniforms.contains(key)) {
+        SPDLOG_LOGGER_INFO(spdlog::get("console"),
+                           "Uniform {} not found for object {}", key,
+                           element->object.lock()->_name);
+        continue;
+      }
+      element->_uniforms[key]->Use(program->GetUniformOffset(key, camera));
+      /*program->SetUniform(
           key, *std::static_pointer_cast<float>(element->_uniforms[key].Data),
-          uses_camera);
+          uses_camera);*/
     }
     glDrawElements(GL_TRIANGLES, element->indices.size(), GL_UNSIGNED_INT, 0);
     CHECK_GL_ERROR();

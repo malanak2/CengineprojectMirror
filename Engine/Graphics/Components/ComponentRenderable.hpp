@@ -16,7 +16,7 @@ struct RenderableDataJson {
 public:
   std::string path;
   std::string material_path;
-  std::map<std::string, Uniform> uniforms;
+  std::map<std::string, std::shared_ptr<IUniform>> uniforms;
   // TODO: Move to model file
   std::vector<float> vertices;
   std::vector<int> indices;
@@ -62,13 +62,13 @@ public:
   std::vector<int> indices;
   std::string _material_path;
   // Value storing the values of uniforms
-  std::map<std::string, Uniform> _uniforms;
+  std::map<std::string, std::shared_ptr<IUniform>> _uniforms;
 
 private:
   std::string path;
   /// Material, but...
   void FromData(std::string material_path,
-                std::map<std::string, Uniform> uniforms);
+                std::map<std::string, std::shared_ptr<IUniform>> uniforms);
 };
 } // namespace Graphics
 } // namespace Engine

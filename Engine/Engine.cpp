@@ -5,6 +5,7 @@
 #include "Engine.hpp"
 #include "Engine/Graphics/Graphics.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Object.hpp"
@@ -58,9 +59,11 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     };
     rdj.material_path = "materials/basic.json";
     std::vector<float> unis = {0, 1, 0, 1};
+    // TODO: Not properly saving these to the file - FIX, kinda critical!!!!!!
     rdj.uniforms = {
-        {"color", Graphics::Uniform{Graphics::Vector, 0, 0,
-                                    (std::shared_ptr<void>)(unis.data())}}};
+        {"color", std::make_shared<Graphics::UniformFloatVector>(
+                      Graphics::Vector, 0, 0,
+                      std::make_shared<std::string>("color"), unis)}};
     jsbase.data = rdj;
     json jsbase_js = jsbase;
     auto com_render =
@@ -81,6 +84,7 @@ void Engine::Main::Run() {
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
   current_scene->Setup();
   while (true) {
+    break;
     auto current_time = std::chrono::steady_clock::now();
     auto dur_graphics = current_time - last_tick_begin;
     current_scene->Update();
