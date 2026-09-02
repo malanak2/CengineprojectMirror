@@ -20,18 +20,23 @@ public:
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(UniformInfo, id, offset)
 
 enum UniformType { Vector, Sampler };
-NLOHMANN_JSON_SERIALIZE_ENUM(UniformType, Vector, Sampler)
+NLOHMANN_JSON_SERIALIZE_ENUM(UniformType, {
+                                              {Vector, "vector"},
+                                              {Sampler, "sampler"},
+                                          })
 class IUniform {
 public:
   UniformType type;
   UniformInfo info;
   IUniform(UniformType t, unsigned int id, unsigned int offset,
            std::shared_ptr<std::string> name);
+  virtual ~IUniform() = default;
   virtual void RenderImGui();
 
   virtual void Use(unsigned int offset) = 0;
   virtual json ToJson() const;
   virtual void FromJson(json) const;
+  static std::shared_ptr<IUniform> CreateUniformFromJson(const json &j);
 };
 
 inline void to_json(json &j, const IUniform &u) { j = u.ToJson(); }
@@ -47,11 +52,12 @@ inline void to_json(json &j, const std::shared_ptr<IUniform> &u) {
 }
 
 inline void from_json(const json &j, std::shared_ptr<IUniform> &u) {
-  if (j.is_null())
+  if (j.is_null()) {
+    u = nullptr;
     return;
+  }
   u = IUniform::CreateUniformFromJson(j);
 }
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(IUniform, type, info)
 } // namespace Graphics
 } // namespace Engine

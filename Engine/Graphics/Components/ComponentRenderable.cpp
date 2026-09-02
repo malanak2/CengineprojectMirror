@@ -50,6 +50,16 @@ void ComponentRenderable::FromData(
                          "Component at {} specifies uniform {} that is not "
                          "specified in material",
                          "%instantiated%", key);
+    } else if (material->program->uniforms.contains(key)) {
+      if (!val) {
+        val = material->program->uniforms[key];
+      } else if (material->program->uniforms[key]) {
+        val->info.id = material->program->uniforms[key]->info.id;
+        val->info.offset = material->program->uniforms[key]->info.offset;
+        if (!val->info.name || val->info.name->empty()) {
+          val->info.name = material->program->uniforms[key]->info.name;
+        }
+      }
     }
   }
   this->_uniforms = uniforms;

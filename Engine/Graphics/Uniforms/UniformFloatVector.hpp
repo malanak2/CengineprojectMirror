@@ -12,6 +12,7 @@ public:
                      std::shared_ptr<std::string> name,
                      std::vector<float> data);
   std::vector<float> data;
+  json ToJson() const override;
 };
 
 NLOHMANN_DEFINE_DERIVED_TYPE_NON_INTRUSIVE(UniformFloatVector, IUniform, data)

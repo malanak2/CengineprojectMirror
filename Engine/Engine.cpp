@@ -38,6 +38,12 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     e->current_scene = Scene::Load(e->config->defaults->StartupScenePath);
   } catch (const std::exception &ex) {
     e->current_scene = std::make_shared<Scene>();
+    auto camera_obj = std::make_shared<Object>(e->current_scene);
+    auto camera_comp = std::make_shared<Graphics::CameraComponent>(camera_obj);
+    camera_obj->fromParams("Main Camera", {camera_comp}, {0.0f, 0.0f, 5.0f}, {0.0f, -90.0f, 0.0f});
+    e->current_scene->Instantiate(camera_obj);
+    e->current_scene->camera = camera_comp;
+
     auto object_default = std::make_shared<Object>(e->current_scene);
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
