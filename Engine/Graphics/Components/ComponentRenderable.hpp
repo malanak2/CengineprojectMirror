@@ -21,8 +21,7 @@ public:
   std::vector<float> vertices;
   std::vector<int> indices;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson,
-                                   material_path, // uniforms,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
                                    vertices, indices);
 
 class ComponentRenderable : public IComponent {

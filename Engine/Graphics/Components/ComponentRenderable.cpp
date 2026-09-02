@@ -60,7 +60,7 @@ void ComponentRenderable::Update() {};
 void ComponentRenderable::FixedUpdate() {};
 
 void ComponentRenderable::Save() {
-  RenderableDataJson js = ToJson();
+  JsonFileBase js = ToJson();
   json a = js;
   std::string astr = a;
   if (FileUtil::SaveFile(path, &astr) != 0) {
