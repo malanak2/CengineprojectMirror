@@ -177,8 +177,24 @@ ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(int),
                &(indices[0]), GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
-  // TODO: Load from json
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  bool has_uv = !cr->material->texture_path.empty();
+
+  if (has_uv) {
+    // Attribute 0: float3 aPos : POSITION
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // Attribute 1: float2 aUV : TEXCOORD0
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+  } else {
+    // Attribute 0: float3 aPos : POSITION
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+  }
   glEnableVertexAttribArray(0);
 
   // note that this is allowed, the call to glVertexAttribPointer registered VBO

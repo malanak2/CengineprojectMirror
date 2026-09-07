@@ -74,7 +74,11 @@ int Main::Init(std::shared_ptr<Config> config) {
   }
   SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
+  if (config->graphics->enableVsync) {
+    glfwSwapInterval(1);
+  } else {
+    glfwSwapInterval(0);
+  }
 
 #ifdef IMGUI
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "IMGUI initializing");

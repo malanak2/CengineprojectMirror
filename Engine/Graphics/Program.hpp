@@ -32,7 +32,10 @@ public:
   bool _uses_camera = false;
 
   unsigned int GetUniformOffset(std::string uniform, bool camera);
+  void Setup();
+  std::shared_ptr<Texture> tex = nullptr;
 
 private:
+  unsigned int ubo;
 };
 } // namespace Engine::Graphics

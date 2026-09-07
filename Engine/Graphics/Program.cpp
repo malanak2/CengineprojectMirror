@@ -49,6 +49,7 @@ Program::Program(std::vector<UniformJson> uniforms_json,
   }
   unsigned int ubo;
   glGenBuffers(1, &ubo);
+  this->ubo = ubo;
   glBindBuffer(GL_UNIFORM_BUFFER, ubo);
   unsigned int total_size = _uses_camera ? 128 : 0;
   for (auto uniform : uniforms_json) {
@@ -67,8 +68,8 @@ Program::Program(std::vector<UniformJson> uniforms_json,
                        uniform.name, uniform.bind_point, uniform.size);
   }
   if (texpath != "") {
-    std::shared_ptr<Texture> tex =
-        Texture::Create(texpath, Main::FallbackTexture->texture);
+    glActiveTexture(GL_TEXTURE0);
+    tex = Texture::Create(texpath, Main::FallbackTexture->texture);
     glBindTexture(GL_TEXTURE_2D, tex->texture);
   }
 
@@ -203,4 +204,8 @@ unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
     offset += uniforms[val]->info.offset;
   }
   return -1;
+}
+void Engine::Graphics::Program::Setup() {
+  glUseProgram(id);
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
 }

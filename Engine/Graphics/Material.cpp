@@ -51,6 +51,7 @@ Material::Material(std::string path) {
   this->path = path;
   CHECK_GL_ERROR();
   uses_camera = m.uses_camera;
+  texture_path = m.texture_path;
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
     auto data_shaders = m.shaders;
@@ -83,7 +84,7 @@ Material::Material(std::string path) {
   CHECK_GL_ERROR();
 }
 
-void Material::SetupMaterial() { glUseProgram(program->id); }
+void Material::SetupMaterial() { program->Setup(); }
 
 void Material::RenderObjects() {
   for (auto element : this->renderableObjects) {
@@ -131,7 +132,8 @@ void Material::RenderObjects() {
                            element->object.lock()->_name);
         continue;
       }
-      element->_uniforms[key]->Use(program->GetUniformOffset(key, camera));
+      element->_uniforms[key]->Use(
+          program->GetUniformOffset(key, this->uses_camera));
       /*program->SetUniform(
           key, *std::static_pointer_cast<float>(element->_uniforms[key].Data),
           uses_camera);*/

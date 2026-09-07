@@ -80,11 +80,14 @@ Config::Config(std::string file_path) {
     cfg["Window"]["Title"] = "New Project";
     cfg["Graphics"]["EnableAntiAliasing"] = true;
     cfg["Defaults"]["StartupScenePath"] = "scenes/default.json";
+    cfg["Graphics"]["EnableVsync"] = true;
     cfg.save(file_path);
   }
   window->title = cfg["Window"]["Title"].as<std::string>();
   graphics->enableAntiAliasing =
       cfg["Graphics"]["EnableAntiAliasing"].as<bool>();
+  graphics->enableVsync = cfg["Graphics"]["EnableVsync"].as<bool>();
+
   defaults->StartupScenePath =
       cfg["Defaults"]["StartupScenePath"].as<std::string>();
   SPDLOG_LOGGER_INFO(logger, "Loaded config!");

@@ -10,6 +10,7 @@ public:
   class Graphics {
   public:
     bool enableAntiAliasing;
+    bool enableVsync;
   };
   class Defaults {
   public:
