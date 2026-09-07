@@ -24,11 +24,11 @@ cd cengineproject
 ```
 #### Generate cmake files
 ```bash
-cmake -S . -B out
+cmake -G Ninja -S . -B out
 ```
 
 #### Build the project
 ```bash
 cd out
-make
+ninja
 ```
