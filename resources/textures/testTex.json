@@ -2,7 +2,7 @@
   "object_type": "texture",
   "data": {
     "filterType": "linear",
-    "path": "textures/you_me.webp",
+    "path": "textures/you_me.jpg",
     "translucent": false,
     "mipmap": false,
     "wrapS": "repeat",
