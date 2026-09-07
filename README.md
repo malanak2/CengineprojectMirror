@@ -32,3 +32,16 @@ cmake -G Ninja -S . -B out
 cd out
 ninja
 ```
+
+#### Generate shaders
+##### Windows
+```powershell
+scripts/generate_shaders.ps1
+```
+
+##### Linux
+```bash
+scripts/generate_shaders.sh
+```
+
+#### Setup symlink out/.../bin/resources pointing to resources
