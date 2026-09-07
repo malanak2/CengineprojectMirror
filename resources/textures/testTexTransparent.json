@@ -1,0 +1,11 @@
+{
+  "object_type": "texture",
+  "data": {
+    "filterType": "linear",
+    "path": "textures/transparent_test.png",
+    "translucent": true,
+    "mipmap": false,
+    "wrapS": "clamp_to_edege",
+    "wrapT": "clamp_to_edege"
+  }
+}

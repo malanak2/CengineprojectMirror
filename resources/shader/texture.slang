@@ -27,5 +27,8 @@ VSOutput mainVertex(float3 aPos : POSITION,float2 aUV : TEXCOORD0)
 float4 mainPixel(VSOutput out) : SV_Target
 {
     float4 texColor = data.texture.Sample(out.uv);
+    if (texColor.a < 0.05f) {
+      discard;
+    }
     return texColor * float4(out.color, 1.0);
 }

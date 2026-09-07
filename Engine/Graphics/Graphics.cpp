@@ -111,6 +111,8 @@ int Main::Init(std::shared_ptr<Config> config) {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (config->graphics->enableAntiAliasing) {
     glEnable(GL_MULTISAMPLE);
   }

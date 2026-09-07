@@ -103,8 +103,13 @@ Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     break;
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex->width, tex->height, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, tex->data);
+  if (translucent) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, tex->data);
+  } else {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex->width, tex->height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, tex->data);
+  }
   if (mipmap) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
