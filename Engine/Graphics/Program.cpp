@@ -1,5 +1,6 @@
 #include "Program.hpp"
 #include "Graphics.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Texture.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "spdlog/spdlog.h"
@@ -68,7 +69,7 @@ Program::Program(std::vector<UniformJson> uniforms_json,
                        uniform.name, uniform.bind_point, uniform.size);
   }
   if (texpath != "") {
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE1);
     tex = Texture::Create(texpath, Main::FallbackTexture->texture);
     glBindTexture(GL_TEXTURE_2D, tex->texture);
   }
@@ -208,4 +209,8 @@ unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
 void Engine::Graphics::Program::Setup() {
   glUseProgram(id);
   glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+  if (tex) {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, tex->texture);
+  }
 }
