@@ -1,6 +1,7 @@
 #include "Shader.hpp"
 #include "Graphics.hpp"
 #include "Util/FileUtil.hpp"
+#include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <memory>
@@ -8,16 +9,17 @@
 namespace Engine::Graphics {
 Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
-  auto logger = spdlog::get("console");
   if (!GLAD_GL_VERSION_4_6) {
     SPDLOG_LOGGER_ERROR(
-        logger, "SPIR-V shaders require OpenGL 4.6, but it is not available.");
+        ENGINE_UTIL_LOGGER,
+        "SPIR-V shaders require OpenGL 4.6, but it is not available.");
     isValid = false;
     return;
   }
   std::vector<unsigned char> spirv;
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading shader at {}", path);
   if (FileUtil::LoadBinary(path, &spirv) != 0) {
-    SPDLOG_LOGGER_WARN(logger, "Failed to load spirv at {}", path);
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Failed to load spirv at {}", path);
     isValid = false;
     return;
   }
@@ -34,9 +36,10 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (success == GL_FALSE) {
       glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-      SPDLOG_LOGGER_ERROR(
-          logger, "ERROR::SHADER::VERTEX::COMPILATION_FAILED {}", infoLog);
-      SPDLOG_LOGGER_ERROR(logger, "Shader: {}", path);
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                          "ERROR::SHADER::VERTEX::COMPILATION_FAILED {}",
+                          infoLog);
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Shader: {}", path);
       glDeleteShader(vertexShader);
       cpptrace::generate_trace().print();
       isValid = false;
@@ -63,8 +66,9 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
     if (success == GL_FALSE) {
       glGetShaderInfoLog(fragShader, 512, NULL, infoLog);
-      SPDLOG_LOGGER_ERROR(
-          logger, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED {}", infoLog);
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                          "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED {}",
+                          infoLog);
       glDeleteShader(fragShader);
       cpptrace::generate_trace().print();
       isValid = false;
@@ -79,27 +83,44 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     break;
   }
   default: {
-    SPDLOG_LOGGER_ERROR(logger,
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Tried to create a shader of unimplemented type. ({})",
                         (int)type);
     isValid = false;
     break;
   }
   }
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loaded shader at {} with id {}", path,
+                     id);
 }
 
 std::shared_ptr<Shader> Shader::Create(ShaderType type, std::string path,
                                        std::string entrypoint, bool reusable) {
-  auto &cache =
-      type == ShaderType::Vertex ? Main::vertexShaders : Main::fragmentShaders;
-  if (cache.contains(path)) {
-    return cache[path];
+  if (type == ShaderType::Vertex) {
+    if (Main::vertexShaders.contains(path)) {
+      SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for {}", path);
+      return Main::vertexShaders[path];
+    }
+    auto shader = std::make_shared<Shader>(type, path, entrypoint, reusable);
+    if (shader->isValid) {
+      Main::vertexShaders[path] = shader;
+    }
+    return shader;
+  } else if (type == ShaderType::Fragment) {
+    if (Main::fragmentShaders.contains(path)) {
+      SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for {}", path);
+      return Main::fragmentShaders[path];
+    }
+    auto shader = std::make_shared<Shader>(type, path, entrypoint, reusable);
+    if (shader->isValid) {
+      Main::fragmentShaders[path] = shader;
+    }
+    return shader;
+  } else {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Failed to load shader at {} - invalid type", path);
+    return nullptr;
   }
-  auto shader = std::make_shared<Shader>(type, path, entrypoint, reusable);
-  if (shader->isValid) {
-    cache[path] = shader;
-  }
-  return shader;
 }
 void Shader::Delete() {
   glDeleteShader(id);
@@ -109,7 +130,7 @@ void Shader::Delete() {
   } else if (type == ShaderType::Fragment) {
     Main::fragmentShaders.erase(path);
   } else {
-    SPDLOG_LOGGER_WARN(spdlog::get("console"),
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
                        "Shader could not be deleted from cache as it "
                        "is of a type not defined: {}",
                        (int)type);

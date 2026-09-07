@@ -119,6 +119,7 @@ Program::~Program() {
   id = 0;
   for (auto [name, uniform] : uniforms) {
     glDeleteBuffers(1, &(uniform)->info.id);
+    break;
   }
   uniforms.clear();
 }

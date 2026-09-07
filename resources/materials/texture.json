@@ -23,11 +23,6 @@
       "size": 64
     },
     {
-      "name": "color",
-      "bind_point": 2,
-      "size": 16
-    },
-    {
       "name": "camera",
       "bind_point": 0,
       "size": 0

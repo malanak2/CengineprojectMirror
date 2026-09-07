@@ -28,7 +28,7 @@ public:
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms,
-                                   uses_camera)
+                                   texture_path, uses_camera)
 class ComponentRenderable;
 
 class Material {

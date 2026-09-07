@@ -59,9 +59,12 @@ std::shared_ptr<IUniform> IUniform::CreateUniformFromJson(const json &j) {
         type, id, offset, std::make_shared<std::string>(name), data);
   }
   case UniformType::Sampler: {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Implement sampler");
     break;
   }
   default: {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Missing implementation for Uniform type");
     break;
   }
   }

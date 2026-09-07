@@ -41,10 +41,14 @@ Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
   FileUtil::ReadFile(json_path, &js);
   json parsed = json::parse(js);
   FromJson(parsed);
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
+                     "Loading texture at {}, with image at {}", this->path,
+                     this->texture_path);
   auto tex = FileUtil::LoadImage(this->texture_path);
   if (!tex->data) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                        "Failed to load image at {}, using backup...");
+                        "Failed to load image at {}, using backup...",
+                        this->texture_path);
     texture = fallback;
     return;
   }
