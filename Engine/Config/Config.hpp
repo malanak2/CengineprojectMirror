@@ -27,4 +27,5 @@ public:
   std::unique_ptr<Defaults> defaults;
 
   Config(std::string file_path);
+  static std::shared_ptr<Config> inst;
 };

@@ -52,7 +52,12 @@ Material::Material(std::string path) {
   CHECK_GL_ERROR();
   uses_camera = m.uses_camera;
   texture_path.reserve(100);
-  texture_path = m.texture_path;
+  if (m.texture_path == "") {
+    texture_path = "";
+  } else {
+    texture_path = Config::inst->graphics->texturePath + "/" + m.texture_path;
+  }
+
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};
     auto data_shaders = m.shaders;
@@ -68,7 +73,7 @@ Material::Material(std::string path) {
       }
     }
     std::shared_ptr<Program> program = std::make_shared<Program>(
-        m.uniforms, shaders, m.texture_path, m.uses_camera);
+        m.uniforms, shaders, texture_path, uses_camera);
     if (!program->isValid) {
       throw std::invalid_argument("Compiled program for material at " + path +
                                   " is invalid.");

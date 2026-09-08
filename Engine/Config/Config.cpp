@@ -68,6 +68,7 @@ template <typename T> struct Convert<std::vector<T>> {
   }
 };
 } // namespace ini
+std::shared_ptr<Config> Config::inst = nullptr;
 Config::Config(std::string file_path) {
   ini::IniFile cfg;
   auto logger = spdlog::get("console");

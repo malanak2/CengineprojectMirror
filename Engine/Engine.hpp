@@ -2,7 +2,6 @@
 // Created by malan on 20.04.2026.
 //
 #pragma once
-#include "Config/Config.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Scene.hpp"
 #include <memory>
@@ -17,7 +16,6 @@ private:
   void setupLogger();
   void Terminate();
   std::unique_ptr<Graphics::Main> graphics;
-  std::shared_ptr<Config> config;
   std::shared_ptr<Scene> current_scene;
 };
 } // namespace Engine

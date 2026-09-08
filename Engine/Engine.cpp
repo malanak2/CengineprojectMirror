@@ -1,7 +1,6 @@
 //
 // Created by malan on 20.04.2026.
 //
-
 #include "Engine.hpp"
 #include "Engine/Graphics/Graphics.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
@@ -12,10 +11,10 @@
 #include "Scene.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
-#include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 #include <chrono>
 #include <memory>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace Engine {
 int Main::width = 0;
@@ -24,23 +23,28 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
   std::shared_ptr<Main> e = std::make_shared<Main>();
   e->setupLogger();
   auto logger = spdlog::get("console");
-  SPDLOG_LOGGER_INFO(logger, "Loading config...");
-  e->config = std::make_shared<Config>("Engine.ini");
-  SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
+
+  if (!Config::inst) {
+    SPDLOG_LOGGER_INFO(logger, "Loading config...");
+    Config::inst = std::make_shared<Config>("Engine.ini");
+    SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
+  }
+  auto config = Config::inst;
   e->graphics = std::make_unique<Graphics::Main>();
 
-  if (e->graphics->Init(e->config) != 0) {
+  if (e->graphics->Init(config) != 0) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");
     throw std::logic_error("Failed to initialize graphics!");
   }
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading scene");
   try {
-    e->current_scene = Scene::Load(e->config->defaults->StartupScenePath);
+    e->current_scene = Scene::Load(config->defaults->StartupScenePath);
   } catch (const std::exception &ex) {
     e->current_scene = std::make_shared<Scene>();
     auto camera_obj = std::make_shared<Object>(e->current_scene);
     auto camera_comp = std::make_shared<Graphics::CameraComponent>(camera_obj);
-    camera_obj->fromParams("Main Camera", {camera_comp}, {0.0f, 0.0f, 5.0f}, {0.0f, -90.0f, 0.0f});
+    camera_obj->fromParams("Main Camera", {camera_comp}, {0.0f, 0.0f, 5.0f},
+                           {0.0f, -90.0f, 0.0f});
     e->current_scene->Instantiate(camera_obj);
     e->current_scene->camera = camera_comp;
 
