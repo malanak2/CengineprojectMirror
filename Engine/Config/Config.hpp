@@ -4,13 +4,15 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <vector>
 class Config {
 public:
   class Graphics {
   public:
     bool enableAntiAliasing;
     bool enableVsync;
+    std::string materialPath;
+    std::string texturePath;
+    std::string scenesPath;
   };
   class Defaults {
   public:

@@ -3,7 +3,7 @@
   "name": "Texture Material",
   "uses_camera": true,
   "uses_translate": true,
-  "texture_path": "textures/testTex.json",
+  "texture_path": "textures/testTexTransparent.json",
   "shaders": [
     {
       "type": "vertex",
