@@ -246,6 +246,10 @@ void Engine::Graphics::ComponentRenderable::RenderImGui() {
     for (auto &[key, val] : this->_uniforms) {
       val->RenderImGui();
     }
+    auto tex = this->material->program->tex;
+    if (tex) {
+      ImGui::InputText("Texture path", &material->texture_path[0], 100);
+    }
   }
 }
 std::string Engine::Graphics::ComponentRenderable::GetName() {

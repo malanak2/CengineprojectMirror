@@ -51,6 +51,7 @@ Material::Material(std::string path) {
   this->path = path;
   CHECK_GL_ERROR();
   uses_camera = m.uses_camera;
+  texture_path.reserve(100);
   texture_path = m.texture_path;
   try {
     std::vector<std::shared_ptr<Shader>> shaders = {};

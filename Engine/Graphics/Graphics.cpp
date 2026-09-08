@@ -202,6 +202,13 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
                      glDisable(GL_MULTISAMPLE);
                    }
                  });
+  IMGUI_CHECKBOX("Vsync", config->graphics->enableVsync, [](bool state) {
+    if (state) {
+      glfwSwapInterval(1);
+    } else {
+      glfwSwapInterval(0);
+    }
+  });
   if (ImGui::CollapsingHeader("Objects")) {
     ShowSceneObjectMenu(&scene->objects);
   }
