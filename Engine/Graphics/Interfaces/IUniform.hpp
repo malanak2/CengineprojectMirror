@@ -24,6 +24,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(UniformType, {
                                               {Vector, "vector"},
                                               {Sampler, "sampler"},
                                           })
+
+
 class IUniform {
 public:
   UniformType type;
@@ -31,7 +33,7 @@ public:
   IUniform(UniformType t, unsigned int id, unsigned int offset,
            std::shared_ptr<std::string> name);
   virtual ~IUniform() = default;
-  virtual void RenderImGui();
+  virtual std::string GetType();
 
   virtual void Use(unsigned int offset) = 0;
   virtual json ToJson() const;

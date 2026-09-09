@@ -5,9 +5,10 @@
 #include <memory>
 #include <string>
 using namespace Engine::Graphics;
-void IUniform::RenderImGui() {
+/*void IUniform::RenderImGui() {
   ImGui::Text("Please implement %s", __PRETTY_FUNCTION__);
-}
+}*/
+std::string IUniform::GetType() { return "IUniform"; }
 json Engine::Graphics::IUniform::ToJson() const {
   json j;
   j["type"] = type;

@@ -7,7 +7,7 @@ namespace Graphics {
 class UniformFloatVector : public IUniform {
 public:
   void Use(unsigned int offset) override;
-  void RenderImGui() override;
+  std::string GetType() override;
   UniformFloatVector(UniformType t, unsigned int id, unsigned int offset,
                      std::shared_ptr<std::string> name,
                      std::vector<float> data);

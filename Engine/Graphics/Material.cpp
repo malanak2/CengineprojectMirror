@@ -1,8 +1,8 @@
 #include "Material.hpp"
-#include "../../Util/FileUtil.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include "nlohmann/json.hpp" // IWYU pragma: keep

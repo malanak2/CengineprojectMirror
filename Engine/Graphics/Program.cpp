@@ -1,10 +1,7 @@
 #include "Program.hpp"
 #include "Graphics.hpp"
-#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Texture.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
-#include "Interfaces/IComponent.hpp"
-#include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
 #include <cpptrace/basic.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -71,7 +68,6 @@ Program::Program(std::vector<UniformJson> uniforms_json,
                        uniform.name, uniform.bind_point, uniform.size);
   }
   if (texpath != "") {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Texture path: {}", texpath);
     glActiveTexture(GL_TEXTURE1);
     tex = Texture::Create(texpath, Main::FallbackTexture->texture);
     glBindTexture(GL_TEXTURE_2D, tex->texture);

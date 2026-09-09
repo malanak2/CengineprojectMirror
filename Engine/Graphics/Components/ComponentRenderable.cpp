@@ -244,7 +244,8 @@ void Engine::Graphics::ComponentRenderable::RenderImGui() {
 
   if (ImGui::CollapsingHeader("Uniforms")) {
     for (auto &[key, val] : this->_uniforms) {
-      val->RenderImGui();
+      // TODO:
+      // val->RenderImGui();
     }
   }
 }

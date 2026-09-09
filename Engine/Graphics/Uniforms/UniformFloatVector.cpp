@@ -20,6 +20,7 @@ void UniformFloatVector::Use(unsigned int offset) {
   glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(data_), data_);
   CHECK_GL_ERROR();
 }
+/*
 void UniformFloatVector::RenderImGui() {
   std::string key = *info.name;
   switch (data.size()) {
@@ -49,7 +50,8 @@ void UniformFloatVector::RenderImGui() {
     break;
   }
   }
-}
+}*/
+std::string UniformFloatVector::GetType() { return "UniformFloatVector"; }
 Engine::Graphics::UniformFloatVector::UniformFloatVector(
     UniformType t, unsigned int id, unsigned int offset,
     std::shared_ptr<std::string> name, std::vector<float> data)
