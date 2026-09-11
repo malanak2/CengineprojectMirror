@@ -15,12 +15,15 @@
 #include <chrono>
 #include <memory>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <stdexcept>
 
 namespace Engine {
-int Main::width = 0;
-int Main::height = 0;
-std::shared_ptr<Engine::Main> Engine::Main::Create() {
-  std::shared_ptr<Main> e = std::make_shared<Main>();
+
+std::shared_ptr<Engine> Engine::instance = nullptr;
+int Engine::width = 0;
+int Engine::height = 0;
+void Engine::Engine::Init() {
+  std::shared_ptr<Engine> e = std::make_shared<Engine>();
   e->setupLogger();
   auto logger = spdlog::get("console");
 
@@ -36,10 +39,24 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");
     throw std::logic_error("Failed to initialize graphics!");
   }
+  instance = e;
+}
+void Engine::LoadScene() {
+  LoadScene(Config::inst->defaults->StartupScenePath);
+}
+void Engine::LoadScene(std::string path) {
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading scene");
+  auto e = Engine::instance;
+  auto config = Config::inst;
+  if (e == nullptr || config == nullptr) {
+    throw new std::logic_error("Engine or config is not initialized!");
+  }
   try {
-    e->current_scene = Scene::Load(config->defaults->StartupScenePath);
+    e->current_scene = Scene::Load(path);
   } catch (const std::exception &ex) {
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Failed to load scene at {} : {}",
+                       path, ex.what());
+    /*
     e->current_scene = std::make_shared<Scene>();
     auto camera_obj = std::make_shared<Object>(e->current_scene);
     auto camera_comp = std::make_shared<Graphics::CameraComponent>(camera_obj);
@@ -69,7 +86,6 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     };
     rdj.material_path = "materials/basic.json";
     std::vector<float> unis = {0, 1, 0, 1};
-    // TODO: Not properly saving these to the file - FIX, kinda critical!!!!!!
     rdj.uniforms = {
         {"color", std::make_shared<Graphics::UniformFloatVector>(
                       Graphics::Vector, 0, 0,
@@ -81,13 +97,13 @@ std::shared_ptr<Engine::Main> Engine::Main::Create() {
     object_default->fromParams("Test object", {com_render});
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
-    FileUtil::SaveFile("scenes/default.json", &scene_json);
+    FileUtil::SaveFile(path, &scene_json);
+    */
   }
   CHECK_GL_ERROR();
-  return e;
 }
 
-void Engine::Main::Run() {
+void Engine::Engine::Run() {
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
@@ -117,7 +133,7 @@ void Engine::Main::Run() {
   SPDLOG_LOGGER_INFO(logger, "Main stopping.");
 }
 
-void Engine::Main::setupLogger() {
+void Engine::Engine::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");
   console->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
   spdlog::set_level(spdlog::level::debug);
@@ -125,5 +141,5 @@ void Engine::Main::setupLogger() {
   SPDLOG_LOGGER_INFO(console, "Set up logger!");
 }
 
-void Engine::Main::Terminate() { graphics->Terminate(); }
+void Engine::Engine::Terminate() { graphics->Terminate(); }
 } // namespace Engine

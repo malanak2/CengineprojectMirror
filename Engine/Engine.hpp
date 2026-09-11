@@ -6,9 +6,14 @@
 #include "Scene.hpp"
 #include <memory>
 namespace Engine {
-class Main {
+class Engine {
 public:
-  static std::shared_ptr<Main> Create();
+  static void Init();
+  /// Loads the default scene
+  static void LoadScene();
+  /// Loads the scene at the specified path
+  static void LoadScene(std::string path);
+  static std::shared_ptr<Engine> instance;
   void Run();
   static int width, height;
 

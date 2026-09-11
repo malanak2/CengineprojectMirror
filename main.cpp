@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Engine/Engine.hpp"
+#include "ScriptSystem.hpp"
 #include "cpptrace/from_current.hpp"
 
 void sigsegvHandler(int sig) {
@@ -18,8 +19,14 @@ int main() {
   signal(SIGSEGV, sigsegvHandler);
   signal(SIGABRT, sigabrtHandler);
   CPPTRACE_TRY {
-    auto engine = Engine::Main::Create();
-    engine->Run();
+    /// First init engine
+    Engine::Engine::Init();
+    /// Register components
+    // REGISTER_SCRIPT(script);
+    /// Load scene
+    Engine::Engine::LoadScene();
+    /// Run
+    Engine::Engine::instance->Run();
   }
   CPPTRACE_CATCH(const std::exception &e) {
     cpptrace::from_current_exception().print();

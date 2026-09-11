@@ -28,8 +28,8 @@
 #endif
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
-  Engine::Main::width = width;
-  Engine::Main::height = height;
+  Engine::Engine::width = width;
+  Engine::Engine::height = height;
 }
 
 void glfw_error_callback(int error, const char *description) {
@@ -66,8 +66,8 @@ int Main::Init(std::shared_ptr<Config> config) {
                      config->window->title);
   window =
       glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
-  Engine::Main::width = 800;
-  Engine::Main::height = 600;
+  Engine::Engine::width = 800;
+  Engine::Engine::height = 600;
   if (window == NULL) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
     glfwTerminate();

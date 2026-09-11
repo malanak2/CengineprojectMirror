@@ -29,7 +29,7 @@ void CameraComponent::Update() {
   glm::vec3 frontnormal = glm::normalize(front);
   projmat = glm::perspective(
       glm::radians(45.0f),
-      (float)Engine::Main::width / (float)Engine::Main::height, near, far);
+      (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
   viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
                         glm::vec3(0, 1, 0));
 }

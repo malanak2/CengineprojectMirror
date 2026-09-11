@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.2)
-project(cengineengine)
+project(cengine)
 include(FetchContent)
 set(CMAKE_CXX_STANDARD 26)
 
@@ -20,7 +20,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 
-add_library(cengineengine SHARED Engine.hpp Engine.cpp
+add_library(cengine SHARED Engine.hpp Engine.cpp
         Object.cpp
         Object.hpp
         Interfaces/IJson.hpp
@@ -54,21 +54,23 @@ add_library(cengineengine SHARED Engine.hpp Engine.cpp
         Graphics/Interfaces/IUniform.cpp
         Graphics/Uniforms/UniformFloatVector.cpp
         Graphics/Uniforms/UniformFloatVector.hpp
+        ScriptSystem.hpp
+        ScriptSystem.cpp
 )
 
-target_include_directories(cengineengine PUBLIC External/glad/include)
-target_include_directories(cengineengine PUBLIC ..)
-target_include_directories(cengineengine PUBLIC .)
+target_include_directories(cengine PUBLIC External/glad/include)
+target_include_directories(cengine PUBLIC ..)
+target_include_directories(cengine PUBLIC .)
 add_subdirectory(Util)
 
-set_target_properties(cengineengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-target_link_libraries(cengineengine PUBLIC cengineutil spdlog::spdlog )
-target_link_libraries(cengineengine PRIVATE cpptrace::cpptrace glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm)
+set_target_properties(cengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+target_link_libraries(cengine PUBLIC cengineutil spdlog::spdlog )
+target_link_libraries(cengine PRIVATE cpptrace::cpptrace glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm)
 if(WIN32)
       add_custom_command(
-              TARGET cengineengine POST_BUILD
+              TARGET cengine POST_BUILD
               COMMAND ${CMAKE_COMMAND} -E copy_if_different
               $<TARGET_FILE:cpptrace::cpptrace>
-              $<TARGET_FILE_DIR:cengineengine>
+              $<TARGET_FILE_DIR:cengine>
       )
 endif()

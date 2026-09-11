@@ -33,7 +33,7 @@ if(EDITOR)
 endif()
 add_subdirectory(Engine)
 
-target_link_libraries(cengineeditor PRIVATE cengineengine cpptrace::cpptrace spdlog::spdlog imgui::imgui implot::implot)
+target_link_libraries(cengineeditor PRIVATE cengine cpptrace::cpptrace spdlog::spdlog imgui::imgui implot::implot)
 if(IMGUI)
   # Add imgui
 endif()

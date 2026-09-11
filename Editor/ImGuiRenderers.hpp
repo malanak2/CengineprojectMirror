@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Graphics/Interfaces/IUniform.hpp"
-#include "implot.h"
+#include "implot.h" // IWYU pragma: keep
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
