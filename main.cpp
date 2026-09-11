@@ -4,6 +4,7 @@
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
 
+#include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
 #include "ScriptSystem.hpp"
 #include "cpptrace/from_current.hpp"
@@ -21,6 +22,7 @@ int main() {
   CPPTRACE_TRY {
     /// First init engine
     Engine::Engine::Init();
+    Editor::ImGuiRenderer::ImGuiUniformRenderer::Init();
     /// Register components
     // REGISTER_SCRIPT(script);
     /// Load scene

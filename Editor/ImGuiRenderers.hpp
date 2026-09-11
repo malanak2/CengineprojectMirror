@@ -10,8 +10,14 @@
 #define IMGUI_SCALE 1
 namespace Editor {
 namespace ImGuiRenderer {
+#define IMGUI_REGISTER_UNIFORM(p1, p2)                                         \
+  {                                                                            \
+    instance->Register(std::type_index(typeid(p1)), [                          \
+    ](std::shared_ptr<Engine::Graphics::IUniform> uniform) p2);                \
+  }
 class ImGuiUniformRenderer {
 public:
+  static void Init();
   void Register(std::type_index type,
                 void (*func)(std::shared_ptr<Engine::Graphics::IUniform>));
   void Render(std::shared_ptr<Engine::Graphics::IUniform> uni);
