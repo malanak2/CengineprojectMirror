@@ -6,14 +6,11 @@
 #include "Material.hpp"
 #include "Object.hpp"
 #include "Program.hpp"
-#include "Scene.hpp"
 #include "Shader.hpp"
 #include "Util/LoggerUtil.hpp"
-#include <chrono>
-#ifdef IMGUI
-#endif
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>

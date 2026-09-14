@@ -1,3 +1,10 @@
-./compile_commands.json
-./out
-./Engine/External/glad
+compile_commands.json
+out/
+Engine/External
+Engine/Util/External
+.cache
+.git
+.cache/clangd/index/.gitignore
+.clocignore
+.gitignore
+

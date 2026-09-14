@@ -2,8 +2,8 @@
 // Created by malan on 20.04.2026.
 //
 #include "Engine.hpp"
-#include "Engine/Graphics/Graphics.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "Graphics/Graphics.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"

@@ -58,7 +58,6 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)
-target_include_directories(cengine PUBLIC ..)
 target_include_directories(cengine PUBLIC .)
 add_subdirectory(Util)
 

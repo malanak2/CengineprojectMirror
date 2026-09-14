@@ -2,4 +2,4 @@
 # Posted by Raman
 # Retrieved 2026-04-28, License - CC BY-SA 3.0
 
-cloc --exclude-list-file=./.clocignore .
+cloc --exclude-list-file=./.clocignore --vcs=git .
