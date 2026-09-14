@@ -34,12 +34,9 @@ class Main {
 public:
   static std::shared_ptr<Main> instance;
   static int Init(std::shared_ptr<Config> config);
-  static int Tick(
-#ifdef IMGUI
-      std::shared_ptr<Scene> scene,
-#endif
-      std::chrono::duration<float, std::chrono::seconds::period> dur_other,
-      std::chrono::duration<float, std::chrono::seconds::period> dur_graphics);
+  static int
+  Tick(std::chrono::duration<float, std::chrono::seconds::period> dur_other,
+       std::chrono::duration<float, std::chrono::seconds::period> dur_graphics);
   void Terminate();
 
   Shader GetShader(ShaderType type, std::string source);
@@ -65,30 +62,14 @@ public:
       std::make_shared<std::vector<void (*)()>>();
 
   GLFWwindow *window = nullptr;
-
-private:
-  std::unique_ptr<Engine::Object> camera = nullptr;
   std::vector<float> frameTimesGraphics = {};
   float dur_graphics_total = 0;
   std::vector<float> frameTimesOther = {};
   float dur_other_total = 0;
   float dur_largest = 0;
+
+private:
+  std::unique_ptr<Engine::Object> camera = nullptr;
   std::shared_ptr<Config> config = nullptr;
-
-#ifdef IMGUI
-  std::shared_ptr<SceneObject> sceneObject = nullptr;
-  void
-  ShowSceneObjectMenu(std::vector<std::shared_ptr<SceneObject>> *sceneObjects);
-  void RenderSceneView(std::shared_ptr<Scene> scene);
-  void RenderPerformanceGraph();
-
-  void RenderObjectInspector();
-  std::shared_ptr<SceneObject> newObjectParent = nullptr;
-  bool wasSavePressedThisFrame = false;
-  char namebuf[64] = "";
-  char matbuf[64] = "";
-  float coords[3] = {0, 0, 0};
-  float rotation[4] = {0, 0, 0, 0};
-#endif
 };
 }; // namespace Engine::Graphics

@@ -42,7 +42,6 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Graphics/Components/ComponentRenderable.cpp
         Config/Config.cpp
         Config/Config.hpp
-        ImGuiMacros.hpp
         External/glad/src/glad.c
         External/glad/include/KHR/khrplatform.h
         External/glad/include/glad/glad.h

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graphics/Interfaces/IUniform.hpp"
+#include "Scene.hpp"
 #include "implot.h" // IWYU pragma: keep
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -9,7 +10,7 @@
 #include <typeindex>
 #define IMGUI_SCALE 1
 namespace Editor {
-namespace ImGuiRenderer {
+namespace ImGuiRenderers {
 #define IMGUI_REGISTER_UNIFORM(p1, p2)                                         \
   {                                                                            \
     instance->Register(std::type_index(typeid(p1)), [                          \
@@ -29,5 +30,20 @@ private:
       funcs = std::map<std::type_index,
                        void (*)(std::shared_ptr<Engine::Graphics::IUniform>)>();
 };
-} // namespace ImGuiRenderer
+class ImGuiRenderer {
+public:
+  static std::shared_ptr<Engine::SceneObject> sceneObject;
+  static void ShowSceneObjectMenu(
+      std::vector<std::shared_ptr<Engine::SceneObject>> *sceneObjects);
+  static void RenderSceneView(std::shared_ptr<Engine::Scene> scene);
+  static void RenderPerformanceGraph();
+  static void RenderObjectInspector();
+  static std::shared_ptr<Engine::SceneObject> newObjectParent;
+  static bool wasSavePressedThisFrame;
+  static char namebuf[64];
+  static char matbuf[64];
+  static float coords[3];
+  static float rotation[4];
+};
+} // namespace ImGuiRenderers
 } // namespace Editor

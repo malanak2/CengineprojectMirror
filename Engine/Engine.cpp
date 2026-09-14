@@ -118,9 +118,6 @@ void Engine::Engine::Run() {
     auto dur_other = cur - current_time;
     last_tick_begin = cur;
     if (graphics->Tick(
-#ifdef IMGUI
-            this->current_scene,
-#endif
             std::chrono::duration_cast<std::chrono::duration<double>>(
                 dur_other),
             std::chrono::duration_cast<std::chrono::duration<double>>(

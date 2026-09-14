@@ -6,6 +6,7 @@
 
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
+#include "Graphics/Graphics.hpp"
 #include "Graphics/Texture.hpp"
 #include "ScriptSystem.hpp"
 #include "cpptrace/from_current.hpp"
@@ -58,13 +59,13 @@ int main() {
           //           ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
           //           ImGuiDockNodeFlags_PassthruCentralNode);
           // DEMO:
-          ImGui::ShowDemoWindow();
-          ImPlot::ShowDemoWindow();
-          /*
-      Engine::Graphics::Main::instance->RenderSceneView(scene);
-      Engine::Graphics::Main::instance->RenderPerformanceGraph();
-      Engine::Graphics::Main::instance->RenderObjectInspector();
-      */
+          //         ImGui::ShowDemoWindow();
+          //       ImPlot::ShowDemoWindow();
+
+          Editor::ImGuiRenderers::ImGuiRenderer::RenderSceneView(
+              Engine::Engine::instance->current_scene);
+          Editor::ImGuiRenderers::ImGuiRenderer::RenderPerformanceGraph();
+          Editor::ImGuiRenderers::ImGuiRenderer::RenderObjectInspector();
         });
     Engine::Graphics::Main::instance->postRender->insert(
         Engine::Graphics::Main::instance->postRender->end(), []() {
@@ -86,7 +87,7 @@ int main() {
           ImGui::DestroyContext();
         });
     Engine::Engine::Init();
-    Editor::ImGuiRenderer::ImGuiUniformRenderer::Init();
+    Editor::ImGuiRenderers::ImGuiUniformRenderer::Init();
     /// Register components
     // REGISTER_SCRIPT(script);
     /// Load scene

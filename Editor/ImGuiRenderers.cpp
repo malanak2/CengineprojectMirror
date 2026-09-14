@@ -1,12 +1,15 @@
 #include "ImGuiRenderers.hpp"
+#include "Graphics/Graphics.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
+#include "ImGuiMacros.hpp"
+#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <imgui.h>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <typeindex>
 
-namespace Editor::ImGuiRenderer {
+namespace Editor::ImGuiRenderers {
 
 std::shared_ptr<ImGuiUniformRenderer> ImGuiUniformRenderer::instance =
     std::make_shared<ImGuiUniformRenderer>();
@@ -65,4 +68,237 @@ void ImGuiUniformRenderer::Init() {
     }
   });
 }
-} // namespace Editor::ImGuiRenderer
+
+std::shared_ptr<Engine::SceneObject> ImGuiRenderer::sceneObject = nullptr;
+std::shared_ptr<Engine::SceneObject> ImGuiRenderer::newObjectParent = nullptr;
+bool ImGuiRenderer::wasSavePressedThisFrame = false;
+char ImGuiRenderer::namebuf[64] = "";
+char ImGuiRenderer::matbuf[64] = "";
+float ImGuiRenderer::coords[3] = {0, 0, 0};
+float ImGuiRenderer::rotation[4] = {0, 0, 0, 0};
+
+void ImGuiRenderer::ShowSceneObjectMenu(
+    std::vector<std::shared_ptr<Engine::SceneObject>> *sceneObjects) {
+  if (!sceneObjects)
+    return;
+  for (auto &obj : *sceneObjects) {
+    if (!obj || !obj->instance)
+      continue;
+    ImGui::PushID(obj.get());
+
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowOverlap;
+    if (obj->Children.empty()) {
+      flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    bool open = ImGui::TreeNodeEx(obj->instance->_name.c_str(), flags);
+
+    if (ImGui::BeginDragDropSource()) {
+      Engine::SceneObject *ptr = obj.get();
+      ImGui::SetDragDropPayload("OBJ_PARENT", &ptr,
+                                sizeof(Engine::SceneObject *));
+      ImGui::Text("%s", obj->instance->_name.c_str());
+      ImGui::EndDragDropSource();
+    }
+
+    if (sceneObject != obj) {
+      ImGui::SameLine(ImGui::GetContentRegionAvail().x - 50);
+      if (ImGui::Button("Select")) {
+        sceneObject = obj;
+      }
+    }
+
+    if (open) {
+      ShowSceneObjectMenu(&obj->Children);
+      ImGui::TreePop();
+    }
+
+    ImGui::PopID();
+  }
+}
+
+void ImGuiRenderer::RenderSceneView(std::shared_ptr<Engine::Scene> scene) {
+  ImGui::Begin("Scene");
+  ImGui::Text("Edit current scene");
+  IMGUI_CHECKBOX("Wireframe mode", false, [](bool state) {
+    if (state) {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+  });
+  IMGUI_CHECKBOX("AntiAliasing", Config::inst->graphics->enableAntiAliasing,
+                 [](bool state) {
+                   if (state) {
+                     glEnable(GL_MULTISAMPLE);
+                   } else {
+                     glDisable(GL_MULTISAMPLE);
+                   }
+                 });
+  IMGUI_CHECKBOX("Vsync", Config::inst->graphics->enableVsync, [](bool state) {
+    if (state) {
+      glfwSwapInterval(1);
+    } else {
+      glfwSwapInterval(0);
+    }
+  });
+  if (ImGui::CollapsingHeader("Objects")) {
+    ShowSceneObjectMenu(&scene->objects);
+  }
+  if (sceneObject != nullptr) {
+    ImGui::Text("Scene object %s", sceneObject->instance->_name.c_str());
+    if (ImGui::Button("Deselect"))
+      sceneObject = nullptr;
+    else {
+      ImGui::Text("Parent: %s",
+                  sceneObject->Parent.lock()
+                      ? sceneObject->Parent.lock()->instance->_name.c_str()
+                      : "nullptr");
+      if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload *payload =
+                ImGui::AcceptDragDropPayload("OBJ_PARENT")) {
+          Engine::SceneObject *draggedObj =
+              *(Engine::SceneObject **)payload->Data;
+          if (draggedObj->shared_from_this() != sceneObject) {
+            sceneObject->SetParent(draggedObj->shared_from_this());
+          }
+        }
+        ImGui::EndDragDropTarget();
+      }
+    }
+  } else {
+    ImGui::Text("New Scene Object");
+    ImGui::InputText("Name", namebuf, 64);
+    ImGui::InputText("Material path", matbuf, 64);
+    ImGui::InputFloat3("Position: ", coords);
+    ImGui::InputFloat4("Rotation: ", coords);
+    ImGui::Text("Parent: %s", newObjectParent
+                                  ? newObjectParent->instance->_name.c_str()
+                                  : "nullptr");
+    if (ImGui::BeginDragDropTarget()) {
+      if (const ImGuiPayload *payload =
+              ImGui::AcceptDragDropPayload("OBJ_PARENT")) {
+        Engine::SceneObject *draggedObj =
+            *(Engine::SceneObject **)payload->Data;
+        newObjectParent = draggedObj->shared_from_this();
+      }
+      ImGui::EndDragDropTarget();
+    }
+    if (newObjectParent != nullptr) {
+      ImGui::SameLine();
+      if (ImGui::Button("Remove")) {
+        newObjectParent = nullptr;
+      }
+    }
+    if (ImGui::Button("Create")) {
+      auto o = std::make_shared<Engine::Object>(scene);
+      std::vector<float> pos = {};
+      std::vector<float> rot = {};
+      pos.assign(coords, coords + sizeof(coords) / sizeof(float));
+      rot.assign(rotation, rotation + sizeof(rotation) / sizeof(float));
+      o->fromParams(namebuf, {}, pos, rot);
+      scene->Instantiate(o, newObjectParent);
+    }
+  }
+  ImGui::Text("File scene controls");
+  ImGui::InputText("Scene location", &scene->path[0], 100);
+
+  if (ImGui::Button("Save scene")) {
+    if (!wasSavePressedThisFrame) {
+      wasSavePressedThisFrame = true;
+      SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Saving scene to {}...",
+                         scene->path);
+      json scenejs = scene->ToJson();
+      auto st = scenejs.dump();
+      FileUtil::SaveFile(scene->path, &st);
+    }
+  } else {
+    wasSavePressedThisFrame = false;
+  }
+
+  ImGui::End();
+}
+void ImGuiRenderer::RenderPerformanceGraph() {
+  ImGui::Begin("Performance");
+  float dur_total = Engine::Graphics::Main::instance->dur_graphics_total +
+                    Engine::Graphics::Main::instance->dur_other_total;
+  ImGui::Text(
+      "Fps: %f (total: %f, count: %zu)",
+      Engine::Graphics::Main::instance->frameTimesGraphics.size() / dur_total,
+      dur_total, Engine::Graphics::Main::instance->frameTimesGraphics.size());
+  if (ImGui::CollapsingHeader("Graph")) {
+    const char *groups[] = {"Graphics", "Other"};
+    std::vector<float> total = {};
+    for (size_t i = 0;
+         i < Engine::Graphics::Main::instance->frameTimesGraphics.size(); ++i) {
+      total.push_back(Engine::Graphics::Main::instance->frameTimesGraphics[i] +
+                      Engine::Graphics::Main::instance->frameTimesOther[i]);
+    }
+    if (ImPlot::BeginPlot("Engine::Graphics::Main::instance->frame Times")) {
+      ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoTickLabels,
+                        ImPlotAxisFlags_NoTickLabels);
+      ImPlot::SetupAxisLimits(
+          ImAxis_X1, 0,
+          Engine::Graphics::Main::instance->frameTimesGraphics.size(),
+          ImGuiCond_Always);
+      ImPlot::SetupAxisLimits(
+          ImAxis_Y1, 0, Engine::Graphics::Main::instance->dur_largest * 1.5,
+          ImGuiCond_Always);
+      ImPlot::PlotLine("fps", &total[0], total.size());
+      ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot(
+            "Engine::Graphics::Main::instance->frame times distribution")) {
+      ImPlotPieChartFlags flags = 0 | ImPlotPieChartFlags_Normalize;
+      const char *titles[] = {"Graphics", "Other"};
+      ImPlot::PlotPieChart(
+          titles,
+          std::vector<float>{
+              Engine::Graphics::Main::instance->dur_graphics_total /
+                  Engine::Graphics::Main::instance->frameTimesGraphics.size(),
+              Engine::Graphics::Main::instance->dur_other_total /
+                  Engine::Graphics::Main::instance->frameTimesOther.size()}
+              .data(),
+          2, 0, 0, 10, "%.2f", 90, {ImPlotProp_Flags, flags});
+      ;
+      ImPlot::EndPlot();
+    }
+  }
+
+  ImGui::End();
+}
+
+void ImGuiRenderer::RenderObjectInspector() {
+  ImGui::Begin("Object inspetor");
+  if (sceneObject == nullptr) {
+    ImGui::Text("Please select an object");
+    ImGui::End();
+    return;
+  }
+  char buf[64] = {0};
+  strncpy(buf, sceneObject->instance->_name.c_str(), 63);
+
+  if (ImGui::InputText("Name:", buf, 64)) {
+    sceneObject->instance->_name = buf; // instance correctly updates the size
+  }
+  if (ImGui::CollapsingHeader("Values")) {
+    auto obj = sceneObject->instance;
+    if (obj) {
+      // Position:
+      ImGui::InputFloat3("XYZ", &obj->_position[0]);
+      // Rotation:
+      ImGui::SliderFloat3("Rotations:", &obj->_rotation[0], -360, 360);
+      ImGui::InputFloat3(": Rotation", &obj->_rotation[0]);
+    }
+  }
+  for (auto [type, comp] : sceneObject->instance->_components) {
+    if (comp != nullptr)
+      if (ImGui::CollapsingHeader(comp->GetName().c_str())) {
+        comp->RenderImGui();
+      }
+  }
+  ImGui::End();
+}
+} // namespace Editor::ImGuiRenderers

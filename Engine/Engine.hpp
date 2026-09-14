@@ -17,10 +17,11 @@ public:
   void Run();
   static int width, height;
 
+  std::shared_ptr<Scene> current_scene;
+
 private:
   void setupLogger();
   void Terminate();
   std::unique_ptr<Graphics::Main> graphics;
-  std::shared_ptr<Scene> current_scene;
 };
 } // namespace Engine
