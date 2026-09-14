@@ -32,8 +32,9 @@ class Texture;
 #endif
 class Main {
 public:
-  int Init(std::shared_ptr<Config> config);
-  int Tick(
+  static std::shared_ptr<Main> instance;
+  static int Init(std::shared_ptr<Config> config);
+  static int Tick(
 #ifdef IMGUI
       std::shared_ptr<Scene> scene,
 #endif
@@ -48,15 +49,24 @@ public:
       fragmentShaders;
   static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
   // Inputs
-  void SetKeyCallback(const int key,
-                      std::function<void(int action, int mods)> action);
-  void keyCallback(int key, int scancode, int action, int mods);
-  static void keyCallbackStatic(GLFWwindow *window, int key, int scancode,
-                                int action, int mods);
+  static void SetKeyCallback(const int key,
+                             std::function<void(int action, int mods)> action);
+  static void keyCallback(GLFWwindow *window, int key, int scancode, int action,
+                          int mods);
   static std::shared_ptr<Texture> FallbackTexture;
+  std::map<int, std::vector<std::function<void(int, int)>>> keyMap = {};
+  std::shared_ptr<std::vector<void (*)()>> init =
+      std::make_shared<std::vector<void (*)()>>();
+  std::shared_ptr<std::vector<void (*)()>> terminate =
+      std::make_shared<std::vector<void (*)()>>();
+  std::shared_ptr<std::vector<void (*)()>> preRender =
+      std::make_shared<std::vector<void (*)()>>();
+  std::shared_ptr<std::vector<void (*)()>> postRender =
+      std::make_shared<std::vector<void (*)()>>();
+
+  GLFWwindow *window = nullptr;
 
 private:
-  GLFWwindow *window = nullptr;
   std::unique_ptr<Engine::Object> camera = nullptr;
   std::vector<float> frameTimesGraphics = {};
   float dur_graphics_total = 0;
@@ -64,8 +74,6 @@ private:
   float dur_other_total = 0;
   float dur_largest = 0;
   std::shared_ptr<Config> config = nullptr;
-
-  std::map<int, std::vector<std::function<void(int, int)>>> keyMap = {};
 
 #ifdef IMGUI
   std::shared_ptr<SceneObject> sceneObject = nullptr;

@@ -23,7 +23,7 @@ find_package(spdlog CONFIG REQUIRED)
 
 find_package(imgui CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
-add_executable(cengineeditor main.cpp )
+add_executable(cengineeditor main.cpp Editor/ImGuiComponent.hpp Editor/ImGuiRenderers.cpp Editor/ImGuiRenderers.hpp)
 add_compile_definitions(DEBUG=1 )
 if(IMGUI)
   add_compile_definitions(IMGUI=1 )

@@ -19,13 +19,7 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <unordered_map>
-#ifdef IMGUI
-#include "implot.h"
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#define IMGUI_SCALE 1
-#endif
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
   Engine::Engine::width = width;
@@ -46,11 +40,12 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
     {};
 std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
+std::shared_ptr<Main> Main::instance = std::make_shared<Main>();
 
 int Main::Init(std::shared_ptr<Config> config) {
   auto logger = ENGINE_UTIL_LOGGER;
   glfwSetErrorCallback(glfw_error_callback);
-  this->config = config;
+  instance->config = config;
   SPDLOG_LOGGER_INFO(logger, "Initializing GLFW...");
   if (!glfwInit()) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize GLFW.");
@@ -64,52 +59,33 @@ int Main::Init(std::shared_ptr<Config> config) {
 
   SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (800x600, title: {})...",
                      config->window->title);
-  window =
+  instance->window =
       glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
   Engine::Engine::width = 800;
   Engine::Engine::height = 600;
-  if (window == NULL) {
+  if (instance->window == NULL) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
     glfwTerminate();
     return -1;
   }
   SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(instance->window);
   if (config->graphics->enableVsync) {
     glfwSwapInterval(1);
   } else {
     glfwSwapInterval(0);
   }
 
-#ifdef IMGUI
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "IMGUI initializing");
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImPlot::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-
-  ImGui::StyleColorsDark();
-
-  ImGuiStyle &style = ImGui::GetStyle();
-  style.ScaleAllSizes(IMGUI_SCALE);
-  style.FontScaleDpi = IMGUI_SCALE;
-  if (io.ConfigFlags) { // ImGuiConfigFlags_ViewportsEnable) {
-    style.WindowRounding = 0.0f;
-    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+  for (auto f : *instance->init) {
+    f();
   }
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 460");
-#endif
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     SPDLOG_LOGGER_ERROR(spdlog::get("console"), "Failed to initialize GLAD.");
     return -1;
   }
   glViewport(0, 0, 800, 600);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetFramebufferSizeCallback(instance->window, framebuffer_size_callback);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -128,23 +104,15 @@ int Main::Init(std::shared_ptr<Config> config) {
   }
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loaded fallback texture to {}",
                      FallbackTexture->texture);
-  auto func = &Main::keyCallbackStatic;
-  glfwSetKeyCallback(window, func);
+  auto func = &Main::keyCallback;
+  glfwSetKeyCallback(instance->window, func);
   // Load fallback Texture
   CHECK_GL_ERROR();
   // TODO: Remove
   return 0;
 }
-void Main::keyCallbackStatic(GLFWwindow *window, int key, int scancode,
-                             int action, int mods) {
-  // Retrieve the instance pointer we stored earlier
-  Main *instance = static_cast<Main *>(glfwGetWindowUserPointer(window));
-  if (instance) {
-    instance->keyCallback(key, scancode, action, mods);
-  }
-}
 
-#ifdef IMGUI
+/*
 void Main::ShowSceneObjectMenu(
     std::vector<std::shared_ptr<SceneObject>> *sceneObjects) {
   if (!sceneObjects)
@@ -170,10 +138,10 @@ void Main::ShowSceneObjectMenu(
       ImGui::EndDragDropSource();
     }
 
-    if (this->sceneObject != obj) {
+    if (instance->sceneObject != obj) {
       ImGui::SameLine(ImGui::GetContentRegionAvail().x - 50);
       if (ImGui::Button("Select")) {
-        this->sceneObject = obj;
+        instance->sceneObject = obj;
       }
     }
 
@@ -269,9 +237,10 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
   }
   ImGui::Text("File scene controls");
   ImGui::InputText("Scene location", &scene->path[0], 100);
+
   if (ImGui::Button("Save scene")) {
-    if (!wasSavePressedThisFrame) {
-      wasSavePressedThisFrame = true;
+    if (!wasSavePressedinstanceFrame) {
+      wasSavePressedinstanceFrame = true;
       SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Saving scene to {}...",
                          scene->path);
       json scenejs = scene->ToJson();
@@ -279,9 +248,11 @@ void Main::RenderSceneView(std::shared_ptr<Scene> scene) {
       FileUtil::SaveFile(scene->path, &st);
     }
   } else {
-    wasSavePressedThisFrame = false;
+    wasSavePressedinstanceFrame = false;
   }
+
   ImGui::End();
+
 }
 void Main::RenderPerformanceGraph() {
   ImGui::Begin("Performance");
@@ -324,7 +295,7 @@ void Main::RenderPerformanceGraph() {
 
 void Main::RenderObjectInspector() {
   ImGui::Begin("Object inspetor");
-  if (this->sceneObject == nullptr) {
+  if (instance->sceneObject == nullptr) {
     ImGui::Text("Please select an object");
     ImGui::End();
     return;
@@ -333,7 +304,7 @@ void Main::RenderObjectInspector() {
   strncpy(buf, sceneObject->instance->_name.c_str(), 63);
 
   if (ImGui::InputText("Name:", buf, 64)) {
-    sceneObject->instance->_name = buf; // This correctly updates the size
+    sceneObject->instance->_name = buf; // instance correctly updates the size
   }
   if (ImGui::CollapsingHeader("Values")) {
     auto obj = sceneObject->instance;
@@ -353,7 +324,7 @@ void Main::RenderObjectInspector() {
   }
   ImGui::End();
 }
-#endif
+*/
 
 int Main::Tick(
 #ifdef IMGUI
@@ -361,7 +332,7 @@ int Main::Tick(
 #endif
     std::chrono::duration<float, std::chrono::seconds::period> dur_other,
     std::chrono::duration<float, std::chrono::seconds::period> dur_graphics) {
-  if (glfwWindowShouldClose(window)) {
+  if (glfwWindowShouldClose(instance->window)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "GLFW Window should close.");
     return -1;
   }
@@ -369,44 +340,48 @@ int Main::Tick(
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   CHECK_GL_ERROR();
-  frameTimesGraphics.insert(frameTimesGraphics.end(), dur_graphics.count());
-  dur_graphics_total += dur_graphics.count();
-  if (dur_largest < dur_graphics.count())
-    dur_largest = dur_graphics.count();
-  if (frameTimesGraphics.size() > 1000) {
-    dur_graphics_total -= frameTimesGraphics[0];
-    if (dur_largest == frameTimesGraphics[0]) {
-      dur_largest = 0;
-      for (auto var : frameTimesGraphics) {
-        if (var > dur_largest)
-          dur_largest = var;
+  instance->frameTimesGraphics.insert(instance->frameTimesGraphics.end(),
+                                      dur_graphics.count());
+  instance->dur_graphics_total += dur_graphics.count();
+  if (instance->dur_largest < dur_graphics.count())
+    instance->dur_largest = dur_graphics.count();
+  if (instance->frameTimesGraphics.size() > 1000) {
+    instance->dur_graphics_total -= instance->frameTimesGraphics[0];
+    if (instance->dur_largest == instance->frameTimesGraphics[0]) {
+      instance->dur_largest = 0;
+      for (auto var : instance->frameTimesGraphics) {
+        if (var > instance->dur_largest)
+          instance->dur_largest = var;
       }
-      for (auto var : frameTimesOther) {
-        if (var > dur_largest)
-          dur_largest = var;
+      for (auto var : instance->frameTimesOther) {
+        if (var > instance->dur_largest)
+          instance->dur_largest = var;
       }
     }
-    frameTimesGraphics.erase(frameTimesGraphics.begin(),
-                             frameTimesGraphics.begin() + 1);
+    instance->frameTimesGraphics.erase(instance->frameTimesGraphics.begin(),
+                                       instance->frameTimesGraphics.begin() +
+                                           1);
   }
-  frameTimesOther.insert(frameTimesOther.end(), dur_other.count());
-  dur_other_total += dur_other.count();
-  if (dur_largest < dur_other.count())
-    dur_largest = dur_other.count();
-  if (frameTimesOther.size() > 2000) {
-    dur_other_total -= frameTimesOther[0];
-    if (dur_largest == frameTimesOther[0]) {
-      dur_largest = 0;
-      for (auto var : frameTimesGraphics) {
-        if (var > dur_largest)
-          dur_largest = var;
+  instance->frameTimesOther.insert(instance->frameTimesOther.end(),
+                                   dur_other.count());
+  instance->dur_other_total += dur_other.count();
+  if (instance->dur_largest < dur_other.count())
+    instance->dur_largest = dur_other.count();
+  if (instance->frameTimesOther.size() > 2000) {
+    instance->dur_other_total -= instance->frameTimesOther[0];
+    if (instance->dur_largest == instance->frameTimesOther[0]) {
+      instance->dur_largest = 0;
+      for (auto var : instance->frameTimesGraphics) {
+        if (var > instance->dur_largest)
+          instance->dur_largest = var;
       }
-      for (auto var : frameTimesOther) {
-        if (var > dur_largest)
-          dur_largest = var;
+      for (auto var : instance->frameTimesOther) {
+        if (var > instance->dur_largest)
+          instance->dur_largest = var;
       }
     }
-    frameTimesOther.erase(frameTimesOther.begin(), frameTimesOther.begin() + 1);
+    instance->frameTimesOther.erase(instance->frameTimesOther.begin(),
+                                    instance->frameTimesOther.begin() + 1);
   }
 
 #ifndef IMGUI
@@ -416,48 +391,19 @@ int Main::Tick(
   }
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Fps: {}", frameTimes.size() / total);
 #endif
-#ifdef IMGUI
-  // Calc frame times
-
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
-
-  ImGuiWindowFlags window_flags =
-      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
-  //           ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
-  //           ImGuiDockNodeFlags_PassthruCentralNode);
-  // DEMO:
-  // ImGui::ShowDemoWindow();
-  // ImPlot::ShowDemoWindow();
-  RenderSceneView(scene);
-  RenderPerformanceGraph();
-  RenderObjectInspector();
-
-#endif
-  /*
-  material->SetupMaterial();
-  material->program->SetUniform("color", 1, 0, 0, 1);
-  glBindVertexArray(vao);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
-  CHECK_GL_ERROR();
-  */
+  for (auto f : *instance->preRender) {
+    f();
+  }
   for (auto &[key, val] : materials) {
     val->SetupMaterial();
     val->RenderObjects();
   }
-#ifdef IMGUI
-  if (config->graphics->enableAntiAliasing) {
-    glDisable(GL_MULTISAMPLE);
+  for (auto f : *instance->postRender) {
+    f();
   }
-  ImGui::Render();
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-  if (config->graphics->enableAntiAliasing) {
-    glEnable(GL_MULTISAMPLE);
-  }
-#endif
+
   CHECK_GL_ERROR();
-  glfwSwapBuffers(window);
+  glfwSwapBuffers(instance->window);
   glfwPollEvents();
 
   return 0;
@@ -467,19 +413,17 @@ void Main::Terminate() {
   materials.clear();
   vertexShaders.clear();
   fragmentShaders.clear();
-#ifdef IMGUI
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImPlot::DestroyContext();
-  ImGui::DestroyContext();
-#endif
+  for (auto f : *instance->terminate) {
+    f();
+  }
   glfwDestroyWindow(window);
   glfwTerminate();
 }
 
-void Main::keyCallback(int key, int scancode, int action, int mods) {
-  if (keyMap.contains(scancode)) {
-    for (auto var : keyMap[scancode]) {
+void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
+                       int mods) {
+  if (instance->keyMap.contains(scancode)) {
+    for (auto var : instance->keyMap[scancode]) {
       var(action, mods);
     }
   }
@@ -487,9 +431,9 @@ void Main::keyCallback(int key, int scancode, int action, int mods) {
 
 void Main::SetKeyCallback(const int key, std::function<void(int, int)> action) {
   const int scancode = glfwGetKeyScancode(key);
-  if (!keyMap.contains(scancode)) {
-    keyMap[scancode] = std::vector<std::function<void(int, int)>>{};
+  if (!instance->keyMap.contains(scancode)) {
+    instance->keyMap[scancode] = std::vector<std::function<void(int, int)>>{};
   }
-  keyMap[scancode].insert(keyMap[scancode].end(), action);
+  instance->keyMap[scancode].insert(instance->keyMap[scancode].end(), action);
 }
 } // namespace Engine::Graphics
