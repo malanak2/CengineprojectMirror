@@ -16,8 +16,15 @@ namespace ImGuiRenderers {
     instance->Register(std::type_index(typeid(p1)), [                          \
     ](std::shared_ptr<Engine::Graphics::IUniform> uniform) p2);                \
   }
+//!
+//! @brief Class for registering imgui renderers for Uniform types
+//!
 class ImGuiUniformRenderer {
 public:
+  //!
+  //! @brief Initializes the ImGuiUniformRenderer
+  //!
+  //!
   static void Init();
   void Register(std::type_index type,
                 void (*func)(std::shared_ptr<Engine::Graphics::IUniform>));
@@ -30,14 +37,31 @@ private:
       funcs = std::map<std::type_index,
                        void (*)(std::shared_ptr<Engine::Graphics::IUniform>)>();
 };
+//!
+//! @brief Class for containing genreal imgui renderers
+//!
 class ImGuiRenderer {
 public:
   static std::shared_ptr<Engine::SceneObject> sceneObject;
   static void ShowSceneObjectMenu(
       std::vector<std::shared_ptr<Engine::SceneObject>> *sceneObjects);
+  //!
+  //! @brief Renderes the scene view using ImGui
+  //!
+  //! @param[in] scene scene ptr to render the view
+  //!
   static void RenderSceneView(std::shared_ptr<Engine::Scene> scene);
+  //!
+  //! @brief Renders the performance graph using ImGui
+  //!
+  //!
   static void RenderPerformanceGraph();
+  //!
+  //! @brief Renders the object inspector using ImGui
+  //!
+  //!
   static void RenderObjectInspector();
+
   static std::shared_ptr<Engine::SceneObject> newObjectParent;
   static bool wasSavePressedThisFrame;
   static char namebuf[64];

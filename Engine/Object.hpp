@@ -12,6 +12,9 @@ using json = nlohmann::json;
 
 namespace Engine {
 class Scene;
+//!
+//! struct ObjectJson - Json struct for saving objects
+//!
 struct ObjectJson {
   std::vector<float> position;
   std::vector<float> rotation;
@@ -20,8 +23,16 @@ struct ObjectJson {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, position, rotation, components,
                                    name)
+//!
+//! @brief Scene object. Basic building block
+//!
 class Object : public IJson, public std::enable_shared_from_this<Object> {
 public:
+  // TODO: Change enum to something like std::type_info
+  //!
+  //! @_components All components on the object. Since the object can only have
+  //! one of each.
+  //!
   std::map<ENGINE_COMPONENT_TYPE, std::shared_ptr<IComponent>> _components = {};
   glm::vec3 _position;
   glm::vec3 _rotation;

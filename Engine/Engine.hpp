@@ -6,14 +6,33 @@
 #include "Scene.hpp"
 #include <memory>
 namespace Engine {
+//!
+//! @brief The main engine class.
+//!
 class Engine {
 public:
+  //!
+  //! @brief Initializes the engine. Any setup / "Inject" calls should be before
+  //! this call
+  //!
+  //!
   static void Init();
-  /// Loads the default scene
+  //!
+  //! @brief Loads the default scene.
+  //!
+  //!
   static void LoadScene();
-  /// Loads the scene at the specified path
+  //!
+  //! @brief Loads a scene
+  //!
+  //! @param[in] path Path to the scene to load
+  //!
   static void LoadScene(std::string path);
   static std::shared_ptr<Engine> instance;
+  //!
+  //! @brief Pass control to the engine.
+  //!
+  //!
   void Run();
   static int width, height;
 

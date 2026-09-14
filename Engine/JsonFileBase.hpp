@@ -28,6 +28,10 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
                                  {ObjectType::Invalid, nullptr},
                              });
 
+//!
+//! struct JsonFileBase - Used for saving objects and ensuring their type is
+//! correct when loading
+//!
 struct JsonFileBase {
 public:
   ObjectType object_type;
