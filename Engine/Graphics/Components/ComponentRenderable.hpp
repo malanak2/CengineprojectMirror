@@ -56,7 +56,7 @@ public:
   unsigned int vbo = 0;
   unsigned int ebo = 0;
   std::shared_ptr<Material> material;
-  // TODO: Remove
+  // TODO: Move to model
   std::vector<float> vertices;
   std::vector<int> indices;
   std::string _material_path;

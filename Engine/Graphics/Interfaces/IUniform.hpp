@@ -25,9 +25,15 @@ NLOHMANN_JSON_SERIALIZE_ENUM(UniformType, {
                                               {Sampler, "sampler"},
                                           })
 
-
+//!
+//! @brief Interface for making uniforms
+//!
 class IUniform {
 public:
+  //!
+  //! @type Type of the uniform = used to control how it is initialized, and for
+  //! memory reasons
+  //!
   UniformType type;
   UniformInfo info;
   IUniform(UniformType t, unsigned int id, unsigned int offset,

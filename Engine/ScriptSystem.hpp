@@ -8,11 +8,18 @@ namespace Main {
  *     engineInstance->ReloadScene; \
  *   } \
  */
+//!
+//! @def REGISTER_SCRIPT(script) Registers the @script specified into the system
+//!
 #define REGISTER_SCRIPT(script)                                                \
   {                                                                            \
     auto engineInstance = Engine::Main::instance;                              \
+    (engineInstance->scriptSystem->RegisterScript(script))                     \
   }
 
+//!
+//! @brief System for registering user scripts. Uses the std::type_index
+//!
 class ScriptSystem {
 public:
   bool RegisterScript(std::shared_ptr<ComponentScript> script);

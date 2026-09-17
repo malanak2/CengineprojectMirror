@@ -27,15 +27,23 @@ public:
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TextureJson, filterType, wrapS, wrapT, path,
                                    translucent, mipmap);
 
+//!
+//! @brief Class used for managing textures
+//!
 class Texture : public IJson {
 public:
   json ToJson() override;
   void FromJson(json &js) override;
 
   Texture(std::string json_path, int fallback);
-  /// Texture::Create
-  /// Checks the cache to avoid loading one texture more than once, using its
-  /// path as the index
+  //!
+  //! @brief Cache implemented for textures
+  //!
+  //! @param[in] json_path path to the texture definition
+  //! @param[in] fallback Id of the texture to use if the texture fails to load
+  //! for any reason
+  //! @returns Texture pointer
+  //!
   static std::shared_ptr<Texture> Create(std::string json_path, int fallback);
   unsigned int texture = -1;
 

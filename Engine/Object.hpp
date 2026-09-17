@@ -34,13 +34,32 @@ public:
   //! one of each.
   //!
   std::map<ENGINE_COMPONENT_TYPE, std::shared_ptr<IComponent>> _components = {};
+  //!
+  //! @_position The position of the object
+  //!
   glm::vec3 _position;
+  // TODO:Quaternion support for La(e)rp
+  //!
+  //! @_rotation The rotation of the object
+  //!
   glm::vec3 _rotation;
   Object(std::string path, std::shared_ptr<Scene> scene);
   Object(std::shared_ptr<Scene> scene);
   std::string _name;
+  //!
+  //! @brief Calls setup on components
+  //!
+  //!
   void Setup();
+  //!
+  //! @brief Calls update on components
+  //!
+  //!
   void Update();
+  //!
+  //! @brief Calls fixedUpdate on components
+  //!
+  //!
   void FixedUpdate();
   void Save();
   void Load();

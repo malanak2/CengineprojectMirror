@@ -84,7 +84,7 @@ Config::Config(std::string file_path) {
     cfg["Graphics"]["EnableVsync"] = true;
     cfg["Graphics"]["MaterialPath"] = "materials";
     cfg["Graphics"]["TexturePath"] = "textures/metadata";
-    cfg["Graphics"]["ScenesPath"] = "scenes";
+    cfg["Graphics"]["ScenePath"] = "scenes";
     cfg.save(file_path);
   }
   window->title = cfg["Window"]["Title"].as<std::string>();
@@ -96,6 +96,6 @@ Config::Config(std::string file_path) {
       cfg["Defaults"]["StartupScenePath"].as<std::string>();
   graphics->materialPath = cfg["Graphics"]["MaterialPath"].as<std::string>();
   graphics->texturePath = cfg["Graphics"]["TexturePath"].as<std::string>();
-  graphics->scenesPath = cfg["Graphics"]["ScenesPath"].as<std::string>();
+  graphics->scenePath = cfg["Graphics"]["ScenePath"].as<std::string>();
   SPDLOG_LOGGER_INFO(logger, "Loaded config!");
 }

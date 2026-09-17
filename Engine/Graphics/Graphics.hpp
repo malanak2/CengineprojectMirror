@@ -27,6 +27,9 @@ class Texture;
 #else
 #define CHECK_GL_ERROR()
 #endif
+//!
+//! @brief Main Graphics
+//!
 class Main {
 public:
   static std::shared_ptr<Main> instance;
@@ -35,19 +38,20 @@ public:
   Tick(std::chrono::duration<float, std::chrono::seconds::period> dur_other,
        std::chrono::duration<float, std::chrono::seconds::period> dur_graphics);
   void Terminate();
-
-  Shader GetShader(ShaderType type, std::string source);
-  Program NewProgram(int count, ...);
+  // Caches
   static std::unordered_map<std::string, std::shared_ptr<Shader>> vertexShaders;
   static std::unordered_map<std::string, std::shared_ptr<Shader>>
       fragmentShaders;
   static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
+
   // Inputs
   static void SetKeyCallback(const int key,
                              std::function<void(int action, int mods)> action);
   static void keyCallback(GLFWwindow *window, int key, int scancode, int action,
                           int mods);
+
   static std::shared_ptr<Texture> FallbackTexture;
+
   std::map<int, std::vector<std::function<void(int, int)>>> keyMap = {};
   std::shared_ptr<std::vector<void (*)()>> init =
       std::make_shared<std::vector<void (*)()>>();

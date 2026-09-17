@@ -62,7 +62,11 @@ public:
   //!
   static void RenderObjectInspector();
 
+  //!
+  //! @newObjectParent Variable for changing hierarchy
+  //!
   static std::shared_ptr<Engine::SceneObject> newObjectParent;
+
   static bool wasSavePressedThisFrame;
   static char namebuf[64];
   static char matbuf[64];

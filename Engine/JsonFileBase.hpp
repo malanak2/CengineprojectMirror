@@ -17,6 +17,7 @@
 using json = nlohmann::json;
 
 namespace Engine {
+// TODO: No.
 enum class ObjectType { Component, Object, Material, Shader, Texture, Invalid };
 NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
                              {

@@ -4,6 +4,9 @@
 #include <nlohmann/detail/macro_scope.hpp>
 namespace Engine {
 namespace Graphics {
+//!
+//! @brief Class for handling vector float uniforms
+//!
 class UniformFloatVector : public IUniform {
 public:
   void Use(unsigned int offset) override;

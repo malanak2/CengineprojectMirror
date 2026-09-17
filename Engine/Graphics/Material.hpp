@@ -31,6 +31,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms,
                                    texture_path, uses_camera)
 class ComponentRenderable;
 
+//!
+//! @brief Class for handling materials + cache
+//!
 class Material {
 public:
   std::shared_ptr<Program> program;
@@ -43,6 +46,13 @@ public:
   void SetupMaterial();
   void RenderObjects();
   std::vector<std::shared_ptr<ComponentRenderable>> renderableObjects;
+  //!
+  //! @brief Cache implemented for materials
+  //!
+  //! @param[in] json_path path to the material definition
+  //! @returns Material pointer
+  //!
+
   static std::shared_ptr<Material> Create(std::string path);
   Material(std::string path);
   Material();

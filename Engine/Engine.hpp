@@ -34,12 +34,27 @@ public:
   //!
   //!
   void Run();
+  //!
+  //! @height Window height
+  //! @witdh Window width
+  //!
   static int width, height;
 
+  //!
+  //! @current_scene Pointer to the current root scene
+  //!
   std::shared_ptr<Scene> current_scene;
 
 private:
+  //!
+  //! @brief Function that sets up the logger
+  //!
+  //!
   void setupLogger();
+  //!
+  //! @brief Called on application close
+  //!
+  //!
   void Terminate();
 };
 } // namespace Engine

@@ -9,6 +9,9 @@ namespace Engine::Graphics {
 struct UniformJson;
 using json = nlohmann::json;
 
+//!
+//! @brief Class for handling opengl Programs
+//!
 class Program {
 public:
   unsigned int id = 0;
@@ -25,8 +28,9 @@ public:
 
   void BindTexture2D(Texture tex);
 
-  /// Map of name specified in material json, and the index also specified in
-  /// there
+  //!
+  //! @uniforms Maps the name of uniform to the uniform itself
+  //!
   std::map<std::string, std::shared_ptr<IUniform>> uniforms = {};
   std::map<int, std::string> uniforms_info = {};
   bool _uses_camera = false;
