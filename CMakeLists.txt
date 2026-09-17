@@ -13,12 +13,7 @@ set(EDITOR true)
 set(PROFILE true)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
-FetchContent_Declare(
-  cpptrace
-  GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-  GIT_TAG        v1.0.4 # <HASH or TAG>
-)
-FetchContent_MakeAvailable(cpptrace)
+
 find_package(spdlog CONFIG REQUIRED)
 
 find_package(imgui CONFIG REQUIRED)
@@ -33,15 +28,7 @@ if(EDITOR)
 endif()
 add_subdirectory(Engine)
 
-target_link_libraries(cengineeditor PRIVATE cengine cpptrace::cpptrace spdlog::spdlog imgui::imgui implot::implot)
+target_link_libraries(cengineeditor PRIVATE cengine spdlog::spdlog imgui::imgui implot::implot)
 if(IMGUI)
   # Add imgui
-endif()
-if(WIN32)
-  add_custom_command(
-    TARGET cengineeditor POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    $<TARGET_FILE:cpptrace::cpptrace>
-    $<TARGET_FILE_DIR:cengineproject>
-  )
 endif()

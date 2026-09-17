@@ -3,9 +3,8 @@
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
-#include <cpptrace/basic.hpp>
 #include <memory>
-
+#include <stacktrace>
 namespace Engine::Graphics {
 Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
@@ -41,7 +40,8 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                           infoLog);
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Shader: {}", path);
       glDeleteShader(vertexShader);
-      cpptrace::generate_trace().print();
+      SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER, "Stacktrace: {}",
+                             std::to_string(std::stacktrace::current()));
       isValid = false;
       CHECK_GL_ERROR();
       break;
@@ -70,7 +70,8 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                           "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED {}",
                           infoLog);
       glDeleteShader(fragShader);
-      cpptrace::generate_trace().print();
+      SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER, "Stacktrace: {}",
+                             std::to_string(std::stacktrace::current()));
       isValid = false;
       CHECK_GL_ERROR();
       return;

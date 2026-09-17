@@ -1,18 +1,20 @@
-#include <cpptrace/basic.hpp>
 #include <csignal>
 #include <exception>
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
+#include <stacktrace>
 
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Graphics/Texture.hpp"
 #include "ScriptSystem.hpp"
-#include "cpptrace/from_current.hpp"
+#include "Util/LoggerUtil.hpp"
 
 void sigsegvHandler(int sig) {
-  cpptrace::generate_trace().print();
+  SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER,
+                         "Program has crashed. Stacktrace: {}",
+                         std::to_string(std::stacktrace::current()));
   exit(sig);
 }
 
@@ -21,7 +23,7 @@ void sigabrtHandler(int sig) { sigsegvHandler(sig); }
 int main() {
   signal(SIGSEGV, sigsegvHandler);
   signal(SIGABRT, sigabrtHandler);
-  CPPTRACE_TRY {
+  try {
     /// Inject functions
     /// Init engine
     Engine::Graphics::Main::instance->init->insert(
@@ -94,10 +96,10 @@ int main() {
     Engine::Engine::LoadScene();
     /// Run
     Engine::Engine::instance->Run();
-  }
-  CPPTRACE_CATCH(const std::exception &e) {
-    cpptrace::from_current_exception().print();
-    return -1;
+  } catch (const std::exception &e) {
+    SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER,
+                           "Program has crashed. Stacktrace: {}",
+                           std::to_string(std::stacktrace::current()));
   }
   return 0;
 }

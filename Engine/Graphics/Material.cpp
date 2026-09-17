@@ -7,7 +7,6 @@
 #include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
-#include <cpptrace/basic.hpp>
 #include <exception>
 #include <glm/trigonometric.hpp>
 #include <memory>
@@ -18,6 +17,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <stacktrace>
 namespace Engine::Graphics {
 
 using json = nlohmann::json;
@@ -85,7 +85,9 @@ Material::Material(std::string path) {
   } catch (const std::exception &e) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to parse material at {}. ({})", path,
                         e.what());
-    cpptrace::generate_trace().print();
+    SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER, "Stacktrace: {}",
+                           std::to_string(std::stacktrace::current()));
+
     return;
   }
   CHECK_GL_ERROR();

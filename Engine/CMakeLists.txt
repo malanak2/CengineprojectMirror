@@ -13,13 +13,6 @@ find_package(glm CONFIG REQUIRED)
 FetchContent_Declare(inipp GIT_REPOSITORY https://github.com/Rookfighter/inifile-cpp.git)
 FetchContent_MakeAvailable(inipp)
 
-FetchContent_Declare(
-  cpptrace
-  GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-  GIT_TAG        v1.0.4 # <HASH or TAG>
-)
-FetchContent_MakeAvailable(cpptrace)
-
 add_library(cengine SHARED Engine.hpp Engine.cpp
         Object.cpp
         Object.hpp
@@ -63,12 +56,4 @@ add_subdirectory(Util)
 
 set_target_properties(cengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengine PUBLIC cengineutil spdlog::spdlog )
-target_link_libraries(cengine PRIVATE cpptrace::cpptrace glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm)
-if(WIN32)
-      add_custom_command(
-              TARGET cengine POST_BUILD
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              $<TARGET_FILE:cpptrace::cpptrace>
-              $<TARGET_FILE_DIR:cengine>
-      )
-endif()
+target_link_libraries(cengine PRIVATE  glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm stdc++exp)

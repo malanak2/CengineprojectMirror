@@ -3,7 +3,6 @@
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IJson.hpp"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
-#include <cpptrace/basic.hpp>
 #include <glm/detail/qualifier.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
 

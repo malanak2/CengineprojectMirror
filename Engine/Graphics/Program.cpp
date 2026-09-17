@@ -3,9 +3,9 @@
 #include "Graphics/Texture.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "spdlog/spdlog.h"
-#include <cpptrace/basic.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <stacktrace>
 #include <vector>
 using namespace Engine::Graphics;
 using json = nlohmann::json;
@@ -33,7 +33,10 @@ Program::Program(std::vector<UniformJson> uniforms_json,
   if (!success) {
     glGetProgramInfoLog(program, 512, NULL, infoLog);
     SPDLOG_LOGGER_ERROR(logger, "ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
-    cpptrace::generate_trace().print();
+    SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER,
+                           "Program has crashed. Stacktrace: {}",
+                           std::to_string(std::stacktrace::current()));
+
     isValid = false;
     return;
   }
