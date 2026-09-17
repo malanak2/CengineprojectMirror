@@ -30,14 +30,15 @@ void Engine::Engine::Init() {
   if (!Config::inst) {
     SPDLOG_LOGGER_INFO(logger, "Loading config...");
     Config::inst = std::make_shared<Config>("Engine.ini");
-    SPDLOG_LOGGER_INFO(logger, "Loading graphics...");
+    SPDLOG_LOGGER_INFO(logger, "Loading Graphics::Main::instance...");
   }
   auto config = Config::inst;
-  e->graphics = std::make_unique<Graphics::Main>();
+  //  Graphics::Main::instance = std::make_unique<Graphics::Main>();
 
-  if (e->graphics->Init(config) != 0) {
-    SPDLOG_LOGGER_ERROR(logger, "Failed to initialize graphics!");
-    throw std::logic_error("Failed to initialize graphics!");
+  if (Graphics::Main::instance->Init(config) != 0) {
+    SPDLOG_LOGGER_ERROR(logger,
+                        "Failed to initialize Graphics::Main::instance!");
+    throw std::logic_error("Failed to initialize Graphics::Main::instance!");
   }
   instance = e;
 }
@@ -59,7 +60,8 @@ void Engine::LoadScene(std::string path) {
     /*
     e->current_scene = std::make_shared<Scene>();
     auto camera_obj = std::make_shared<Object>(e->current_scene);
-    auto camera_comp = std::make_shared<Graphics::CameraComponent>(camera_obj);
+    auto camera_comp =
+    std::make_shared<Graphics::Main::instance::CameraComponent>(camera_obj);
     camera_obj->fromParams("Main Camera", {camera_comp}, {0.0f, 0.0f, 5.0f},
                            {0.0f, -90.0f, 0.0f});
     e->current_scene->Instantiate(camera_obj);
@@ -68,7 +70,7 @@ void Engine::LoadScene(std::string path) {
     auto object_default = std::make_shared<Object>(e->current_scene);
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
-    Graphics::RenderableDataJson rdj;
+    Graphics::Main::instance::RenderableDataJson rdj;
     rdj.indices = {
         0, 1, 2, // Bottom 1
         0, 2, 3, // Bottom 2
@@ -87,14 +89,15 @@ void Engine::LoadScene(std::string path) {
     rdj.material_path = "materials/basic.json";
     std::vector<float> unis = {0, 1, 0, 1};
     rdj.uniforms = {
-        {"color", std::make_shared<Graphics::UniformFloatVector>(
-                      Graphics::Vector, 0, 0,
+        {"color",
+    std::make_shared<Graphics::Main::instance::UniformFloatVector>(
+                      Graphics::Main::instance::Vector, 0, 0,
                       std::make_shared<std::string>("color"), unis)}};
     jsbase.data = rdj;
     json jsbase_js = jsbase;
     auto com_render =
-        Graphics::ComponentRenderable::Create(jsbase_js, object_default);
-    object_default->fromParams("Test object", {com_render});
+        Graphics::Main::instance::ComponentRenderable::Create(jsbase_js,
+    object_default); object_default->fromParams("Test object", {com_render});
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
     FileUtil::SaveFile(path, &scene_json);
@@ -117,7 +120,7 @@ void Engine::Engine::Run() {
     auto cur = std::chrono::steady_clock::now();
     auto dur_other = cur - current_time;
     last_tick_begin = cur;
-    if (graphics->Tick(
+    if (Graphics::Main::instance->Tick(
             std::chrono::duration_cast<std::chrono::duration<double>>(
                 dur_other),
             std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -138,5 +141,5 @@ void Engine::Engine::setupLogger() {
   SPDLOG_LOGGER_INFO(console, "Set up logger!");
 }
 
-void Engine::Engine::Terminate() { graphics->Terminate(); }
+void Engine::Engine::Terminate() { Graphics::Main::instance->Terminate(); }
 } // namespace Engine

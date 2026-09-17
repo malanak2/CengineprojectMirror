@@ -41,6 +41,5 @@ public:
 private:
   void setupLogger();
   void Terminate();
-  std::unique_ptr<Graphics::Main> graphics;
 };
 } // namespace Engine

@@ -1,6 +1,7 @@
 #include "Material.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
+#include "Scene.hpp"
 #include "Shader.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
