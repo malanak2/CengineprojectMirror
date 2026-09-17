@@ -17,6 +17,7 @@
 #include <ctime>
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <tracy/Tracy.hpp>
 #include <unordered_map>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
@@ -42,6 +43,7 @@ std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 std::shared_ptr<Main> Main::instance = std::make_shared<Main>();
 
 int Main::Init(std::shared_ptr<Config> config) {
+  ZoneScoped;
   auto logger = ENGINE_UTIL_LOGGER;
   glfwSetErrorCallback(glfw_error_callback);
   instance->config = config;
@@ -115,6 +117,7 @@ int Main::Tick(
 
     std::chrono::duration<float, std::chrono::seconds::period> dur_other,
     std::chrono::duration<float, std::chrono::seconds::period> dur_graphics) {
+  ZoneScoped;
   if (glfwWindowShouldClose(instance->window)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "GLFW Window should close.");
     return -1;
@@ -123,50 +126,6 @@ int Main::Tick(
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   CHECK_GL_ERROR();
-  instance->frameTimesGraphics.insert(instance->frameTimesGraphics.end(),
-                                      dur_graphics.count());
-  instance->dur_graphics_total += dur_graphics.count();
-  if (instance->dur_largest < dur_graphics.count())
-    instance->dur_largest = dur_graphics.count();
-  if (instance->frameTimesGraphics.size() > 1000) {
-    instance->dur_graphics_total -= instance->frameTimesGraphics[0];
-    if (instance->dur_largest == instance->frameTimesGraphics[0]) {
-      instance->dur_largest = 0;
-      for (auto var : instance->frameTimesGraphics) {
-        if (var > instance->dur_largest)
-          instance->dur_largest = var;
-      }
-      for (auto var : instance->frameTimesOther) {
-        if (var > instance->dur_largest)
-          instance->dur_largest = var;
-      }
-    }
-    instance->frameTimesGraphics.erase(instance->frameTimesGraphics.begin(),
-                                       instance->frameTimesGraphics.begin() +
-                                           1);
-  }
-  instance->frameTimesOther.insert(instance->frameTimesOther.end(),
-                                   dur_other.count());
-  instance->dur_other_total += dur_other.count();
-  if (instance->dur_largest < dur_other.count())
-    instance->dur_largest = dur_other.count();
-  if (instance->frameTimesOther.size() > 2000) {
-    instance->dur_other_total -= instance->frameTimesOther[0];
-    if (instance->dur_largest == instance->frameTimesOther[0]) {
-      instance->dur_largest = 0;
-      for (auto var : instance->frameTimesGraphics) {
-        if (var > instance->dur_largest)
-          instance->dur_largest = var;
-      }
-      for (auto var : instance->frameTimesOther) {
-        if (var > instance->dur_largest)
-          instance->dur_largest = var;
-      }
-    }
-    instance->frameTimesOther.erase(instance->frameTimesOther.begin(),
-                                    instance->frameTimesOther.begin() + 1);
-  }
-
 #ifndef IMGUI
   float total = 0;
   for (auto var : frameTimes) {
@@ -177,16 +136,24 @@ int Main::Tick(
   for (auto f : *instance->preRender) {
     f();
   }
-  for (auto &[key, val] : materials) {
-    val->SetupMaterial();
-    val->RenderObjects();
+  {
+    ZoneScopedN("Rendering objects");
+    for (auto &[key, val] : materials) {
+      ZoneScopedN("Material");
+      ZoneText(key.c_str(), strlen(key.c_str()));
+      val->SetupMaterial();
+      val->RenderObjects();
+    }
   }
   for (auto f : *instance->postRender) {
     f();
   }
 
   CHECK_GL_ERROR();
-  glfwSwapBuffers(instance->window);
+  {
+    ZoneScopedNC("VSync", 0x111111);
+    glfwSwapBuffers(instance->window);
+  }
   glfwPollEvents();
 
   return 0;
@@ -205,6 +172,7 @@ void Main::Terminate() {
 
 void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
+  ZoneScoped;
   if (instance->keyMap.contains(scancode)) {
     for (auto var : instance->keyMap[scancode]) {
       var(action, mods);

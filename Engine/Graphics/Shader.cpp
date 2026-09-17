@@ -5,9 +5,12 @@
 #include "spdlog/spdlog.h"
 #include <memory>
 #include <stacktrace>
+#include <tracy/Tracy.hpp>
 namespace Engine::Graphics {
 Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
+
+  ZoneScoped;
   if (!GLAD_GL_VERSION_4_6) {
     SPDLOG_LOGGER_ERROR(
         ENGINE_UTIL_LOGGER,
@@ -97,6 +100,8 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
 
 std::shared_ptr<Shader> Shader::Create(ShaderType type, std::string path,
                                        std::string entrypoint, bool reusable) {
+
+  ZoneScoped;
   if (type == ShaderType::Vertex) {
     if (Main::vertexShaders.contains(path)) {
       SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for {}", path);
@@ -124,6 +129,8 @@ std::shared_ptr<Shader> Shader::Create(ShaderType type, std::string path,
   }
 }
 void Shader::Delete() {
+
+  ZoneScoped;
   glDeleteShader(id);
   id = 0;
   if (type == ShaderType::Vertex) {

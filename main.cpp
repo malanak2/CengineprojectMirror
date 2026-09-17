@@ -3,6 +3,7 @@
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
 #include <stacktrace>
+#include <tracy/Tracy.hpp>
 
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
@@ -63,11 +64,12 @@ int main() {
           // DEMO:
           //         ImGui::ShowDemoWindow();
           //       ImPlot::ShowDemoWindow();
-
-          Editor::ImGuiRenderers::ImGuiRenderer::RenderSceneView(
-              Engine::Engine::instance->current_scene);
-          Editor::ImGuiRenderers::ImGuiRenderer::RenderPerformanceGraph();
-          Editor::ImGuiRenderers::ImGuiRenderer::RenderObjectInspector();
+          {
+            ZoneScopedN("ImGui");
+            Editor::ImGuiRenderers::ImGuiRenderer::RenderSceneView(
+                Engine::Engine::instance->current_scene);
+            Editor::ImGuiRenderers::ImGuiRenderer::RenderObjectInspector();
+          }
         });
     Engine::Graphics::Main::instance->postRender->insert(
         Engine::Graphics::Main::instance->postRender->end(), []() {

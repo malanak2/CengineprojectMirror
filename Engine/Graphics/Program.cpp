@@ -6,12 +6,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <stacktrace>
+#include <tracy/Tracy.hpp>
 #include <vector>
 using namespace Engine::Graphics;
 using json = nlohmann::json;
 Program::Program(std::vector<UniformJson> uniforms_json,
                  std::vector<std::shared_ptr<Shader>> shaders,
                  std::string texpath, bool uses_camera) {
+
+  ZoneScoped;
   _uses_camera = uses_camera;
   auto logger = spdlog::get("console");
   unsigned int program;
@@ -119,6 +122,7 @@ for (int i = 0; i < numUniforms; i++) {
 */
 
 Program::~Program() {
+  ZoneScoped;
   glDeleteProgram(id);
   id = 0;
   for (auto [name, uniform] : uniforms) {
@@ -131,6 +135,7 @@ Program::~Program() {
 /// Assumes program is used
 void Program::SetUniform(std::string uniform, float value, bool camera) {
 
+  ZoneScoped;
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
                        uniform);
@@ -145,6 +150,7 @@ void Program::SetUniform(std::string uniform, float value, bool camera) {
 /// Assumes program is used
 void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
                          float v4, bool camera) {
+  ZoneScoped;
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
                        uniform);
@@ -162,6 +168,7 @@ void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
 
 void Program::SetUniform(std::string key, std::vector<float> values,
                          bool camera) {
+  ZoneScoped;
   switch (values.size()) {
   case 1: {
     SetUniform(key, values[0], camera);
@@ -180,6 +187,7 @@ void Program::SetUniform(std::string key, std::vector<float> values,
 }
 
 void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
+  ZoneScoped;
   CHECK_GL_ERROR();
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
@@ -194,10 +202,12 @@ void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
   CHECK_GL_ERROR();
 }
 void Engine::Graphics::Program::BindTexture2D(Texture tex) {
+  ZoneScoped;
   glBindTexture(GL_TEXTURE_2D, tex.texture);
 }
 
 unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
+  ZoneScoped;
   unsigned int offset = 0;
   if (camera)
     offset = 128;
@@ -209,6 +219,7 @@ unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
   return -1;
 }
 void Engine::Graphics::Program::Setup() {
+  ZoneScoped;
   glUseProgram(id);
   glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
   if (tex) {

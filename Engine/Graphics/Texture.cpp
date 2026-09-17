@@ -3,6 +3,7 @@
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <memory>
+#include <tracy/Tracy.hpp>
 
 json Engine::Graphics::Texture::ToJson() {
   JsonFileBase ret = JsonFileBase();
@@ -36,6 +37,8 @@ void Engine::Graphics::Texture::FromJson(json &js) {
 }
 
 Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
+
+  ZoneScoped;
   this->path = json_path;
   std::string js;
   FileUtil::ReadFile(json_path, &js);

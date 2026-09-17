@@ -51,11 +51,7 @@ public:
   //! @param[in] scene scene ptr to render the view
   //!
   static void RenderSceneView(std::shared_ptr<Engine::Scene> scene);
-  //!
-  //! @brief Renders the performance graph using ImGui
-  //!
-  //!
-  static void RenderPerformanceGraph();
+
   //!
   //! @brief Renders the object inspector using ImGui
   //!

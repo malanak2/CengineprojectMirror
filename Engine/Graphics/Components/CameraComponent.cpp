@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/trigonometric.hpp>
 #include <memory>
+#include <tracy/Tracy.hpp>
 namespace Engine {
 namespace Graphics {
 
@@ -16,6 +17,7 @@ using json = nlohmann::json;
 void CameraComponent::Setup() { Update(); }
 
 void CameraComponent::Update() {
+  ZoneScoped;
   auto obj = object.lock();
   if (!obj)
     return;
@@ -41,6 +43,7 @@ void CameraComponent::Save() {}
 void CameraComponent::Load() {}
 
 CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
+  ZoneScoped;
   this->object = object;
   this->near = 0.5f;
   this->far = 100.0f;

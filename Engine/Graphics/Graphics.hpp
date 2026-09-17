@@ -63,11 +63,6 @@ public:
       std::make_shared<std::vector<void (*)()>>();
 
   GLFWwindow *window = nullptr;
-  std::vector<float> frameTimesGraphics = {};
-  float dur_graphics_total = 0;
-  std::vector<float> frameTimesOther = {};
-  float dur_other_total = 0;
-  float dur_largest = 0;
 
 private:
   std::unique_ptr<Engine::Object> camera = nullptr;

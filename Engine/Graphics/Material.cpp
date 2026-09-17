@@ -12,6 +12,7 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <tracy/Tracy.hpp>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -25,6 +26,7 @@ using json = nlohmann::json;
 Material::Material() { throw std::logic_error("Function not implemented"); }
 bool Material::ran_from_create = false;
 Material::Material(std::string path) {
+  ZoneScoped;
   if (!ran_from_create) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "DO NOT CALL THIS CONSTRUCTOR FROM OUTSIDE OF "
@@ -96,10 +98,15 @@ Material::Material(std::string path) {
 void Material::SetupMaterial() { program->Setup(); }
 
 void Material::RenderObjects() {
+  ZoneScoped;
   for (auto element : this->renderableObjects) {
+    ZoneScopedN("Object");
     glBindVertexArray(element->vao);
     if (uses_camera) {
       auto obj = element->object.lock();
+      if (obj->_name.length() != 0 && obj->_name.length() < 64000) {
+        ZoneText(obj->_name.c_str(), strlen(obj->_name.c_str()));
+      }
       if (obj) {
         auto scene = obj->scene.lock();
         if (scene && scene->camera) {
@@ -153,6 +160,7 @@ void Material::RenderObjects() {
 }
 
 std::shared_ptr<Material> Material::Create(std::string path) {
+  ZoneScoped;
   if (Main::materials.contains(path)) {
     SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for material {}", path);
     return Main::materials[path];

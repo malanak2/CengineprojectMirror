@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <tracy/Tracy.hpp>
 #include <typeindex>
 
 namespace Editor::ImGuiRenderers {
@@ -25,6 +26,7 @@ void ImGuiUniformRenderer::Register(
 }
 void ImGuiUniformRenderer::Render(
     std::shared_ptr<Engine::Graphics::IUniform> uni) {
+  ZoneScoped;
   auto t = std::type_index(typeid(*uni));
   if (funcs.contains(t)) {
     funcs[t](uni);
@@ -35,6 +37,7 @@ void ImGuiUniformRenderer::Render(
 }
 
 void ImGuiUniformRenderer::Init() {
+  ZoneScoped;
   IMGUI_REGISTER_UNIFORM(Engine::Graphics::UniformFloatVector, {
     auto uniformCast =
         std::static_pointer_cast<Engine::Graphics::UniformFloatVector>(uniform);
@@ -79,6 +82,7 @@ float ImGuiRenderer::rotation[4] = {0, 0, 0, 0};
 
 void ImGuiRenderer::ShowSceneObjectMenu(
     std::vector<std::shared_ptr<Engine::SceneObject>> *sceneObjects) {
+  ZoneScoped;
   if (!sceneObjects)
     return;
   for (auto &obj : *sceneObjects) {
@@ -120,6 +124,7 @@ void ImGuiRenderer::ShowSceneObjectMenu(
 }
 
 void ImGuiRenderer::RenderSceneView(std::shared_ptr<Engine::Scene> scene) {
+  ZoneScoped;
   ImGui::Begin("Scene");
   ImGui::Text("Edit current scene");
   IMGUI_CHECKBOX("Wireframe mode", false, [](bool state) {
@@ -220,57 +225,9 @@ void ImGuiRenderer::RenderSceneView(std::shared_ptr<Engine::Scene> scene) {
 
   ImGui::End();
 }
-void ImGuiRenderer::RenderPerformanceGraph() {
-  ImGui::Begin("Performance");
-  float dur_total = Engine::Graphics::Main::instance->dur_graphics_total +
-                    Engine::Graphics::Main::instance->dur_other_total;
-  ImGui::Text(
-      "Fps: %f (total: %f, count: %zu)",
-      Engine::Graphics::Main::instance->frameTimesGraphics.size() / dur_total,
-      dur_total, Engine::Graphics::Main::instance->frameTimesGraphics.size());
-  if (ImGui::CollapsingHeader("Graph")) {
-    const char *groups[] = {"Graphics", "Other"};
-    std::vector<float> total = {};
-    for (size_t i = 0;
-         i < Engine::Graphics::Main::instance->frameTimesGraphics.size(); ++i) {
-      total.push_back(Engine::Graphics::Main::instance->frameTimesGraphics[i] +
-                      Engine::Graphics::Main::instance->frameTimesOther[i]);
-    }
-    if (ImPlot::BeginPlot("Engine::Graphics::Main::instance->frame Times")) {
-      ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoTickLabels,
-                        ImPlotAxisFlags_NoTickLabels);
-      ImPlot::SetupAxisLimits(
-          ImAxis_X1, 0,
-          Engine::Graphics::Main::instance->frameTimesGraphics.size(),
-          ImGuiCond_Always);
-      ImPlot::SetupAxisLimits(
-          ImAxis_Y1, 0, Engine::Graphics::Main::instance->dur_largest * 1.5,
-          ImGuiCond_Always);
-      ImPlot::PlotLine("fps", &total[0], total.size());
-      ImPlot::EndPlot();
-    }
-    if (ImPlot::BeginPlot(
-            "Engine::Graphics::Main::instance->frame times distribution")) {
-      ImPlotPieChartFlags flags = 0 | ImPlotPieChartFlags_Normalize;
-      const char *titles[] = {"Graphics", "Other"};
-      ImPlot::PlotPieChart(
-          titles,
-          std::vector<float>{
-              Engine::Graphics::Main::instance->dur_graphics_total /
-                  Engine::Graphics::Main::instance->frameTimesGraphics.size(),
-              Engine::Graphics::Main::instance->dur_other_total /
-                  Engine::Graphics::Main::instance->frameTimesOther.size()}
-              .data(),
-          2, 0, 0, 10, "%.2f", 90, {ImPlotProp_Flags, flags});
-      ;
-      ImPlot::EndPlot();
-    }
-  }
-
-  ImGui::End();
-}
 
 void ImGuiRenderer::RenderObjectInspector() {
+  ZoneScoped;
   ImGui::Begin("Object inspetor");
   if (sceneObject == nullptr) {
     ImGui::Text("Please select an object");

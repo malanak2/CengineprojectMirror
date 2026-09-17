@@ -13,9 +13,11 @@
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
 #include <chrono>
+#include <exception>
 #include <memory>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <stdexcept>
+#include <tracy/Tracy.hpp>
 
 namespace Engine {
 
@@ -23,6 +25,7 @@ std::shared_ptr<Engine> Engine::instance = nullptr;
 int Engine::width = 0;
 int Engine::height = 0;
 void Engine::Engine::Init() {
+  ZoneScoped;
   std::shared_ptr<Engine> e = std::make_shared<Engine>();
   e->setupLogger();
   auto logger = spdlog::get("console");
@@ -46,6 +49,7 @@ void Engine::LoadScene() {
   LoadScene(Config::inst->defaults->StartupScenePath);
 }
 void Engine::LoadScene(std::string path) {
+  ZoneScoped;
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading scene");
   auto e = Engine::instance;
   auto config = Config::inst;
@@ -107,6 +111,7 @@ void Engine::LoadScene(std::string path) {
 }
 
 void Engine::Engine::Run() {
+  ZoneScoped;
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Running...");
   // Handle
@@ -116,19 +121,26 @@ void Engine::Engine::Run() {
     // break;
     auto current_time = std::chrono::steady_clock::now();
     auto dur_graphics = current_time - last_tick_begin;
-    current_scene->Update();
+    {
+      ZoneScopedN("Update");
+      current_scene->Update();
+    }
     auto cur = std::chrono::steady_clock::now();
     auto dur_other = cur - current_time;
     last_tick_begin = cur;
-    if (Graphics::Main::instance->Tick(
-            std::chrono::duration_cast<std::chrono::duration<double>>(
-                dur_other),
-            std::chrono::duration_cast<std::chrono::duration<double>>(
-                dur_graphics)) != 0) {
-      Terminate();
-      break;
+    {
+      ZoneScopedN("Graphics");
+      if (Graphics::Main::instance->Tick(
+              std::chrono::duration_cast<std::chrono::duration<double>>(
+                  dur_other),
+              std::chrono::duration_cast<std::chrono::duration<double>>(
+                  dur_graphics)) != 0) {
+        Terminate();
+        break;
+      }
     }
     CHECK_GL_ERROR();
+    FrameMark;
   }
   SPDLOG_LOGGER_INFO(logger, "Main stopping.");
 }
