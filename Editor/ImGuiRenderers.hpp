@@ -8,13 +8,14 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <memory>
+#include <string_view>
 #include <typeindex>
 #define IMGUI_SCALE 1
 namespace Editor {
 namespace ImGuiR {
 #define IMGUI_REGISTER_UNIFORM(p1, p2)                                         \
   {                                                                            \
-    instance->Register(std::type_index(typeid(p1)), [                          \
+    instance->Register(p1::GetNameS(), [                                       \
     ](std::shared_ptr<Engine::Graphics::IUniform> uniform) p2);                \
   }
 //!
@@ -27,21 +28,21 @@ public:
   //!
   //!
   static void Init();
-  void Register(std::type_index type,
+  void Register(std::string_view type,
                 void (*func)(std::shared_ptr<Engine::Graphics::IUniform>));
   void Render(std::shared_ptr<Engine::Graphics::IUniform> uni);
 
   static std::shared_ptr<ImGuiUniformRenderer> instance;
 
 private:
-  std::map<std::type_index,
+  std::map<std::string_view,
            void (*)(std::shared_ptr<Engine::Graphics::IUniform>)>
-      funcs = std::map<std::type_index,
+      funcs = std::map<std::string_view,
                        void (*)(std::shared_ptr<Engine::Graphics::IUniform>)>();
 };
 #define IMGUI_REGISTER_COMPONENT(p1, p2)                                       \
   {                                                                            \
-    instance->Register(std::type_index(typeid(p1)),                            \
+    instance->Register(p1::GetNameS(),                                         \
                        [](std::shared_ptr<Engine::IComponent> component) p2);  \
   }
 //!
@@ -54,15 +55,15 @@ public:
   //!
   //!
   static void Init();
-  void Register(std::type_index type,
+  void Register(std::string_view type,
                 void (*func)(std::shared_ptr<Engine::IComponent>));
   void Render(std::shared_ptr<Engine::IComponent> uni);
 
   static std::shared_ptr<ImGuiComponentRenderer> instance;
 
 private:
-  std::map<std::type_index, void (*)(std::shared_ptr<Engine::IComponent>)>
-      funcs = std::map<std::type_index,
+  std::map<std::string_view, void (*)(std::shared_ptr<Engine::IComponent>)>
+      funcs = std::map<std::string_view,
                        void (*)(std::shared_ptr<Engine::IComponent>)>();
 };
 //!

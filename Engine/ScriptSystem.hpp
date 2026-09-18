@@ -23,10 +23,10 @@ namespace Main {
 class ScriptSystem {
 public:
   bool RegisterScript(std::shared_ptr<ComponentScript> script);
-  std::shared_ptr<ComponentScript> GetScript(std::string key);
+  std::shared_ptr<ComponentScript> GetScript(std::string_view key);
 
 private:
-  std::map<std::string, std::shared_ptr<ComponentScript>> map_comp;
+  std::map<std::string_view, std::shared_ptr<ComponentScript>> map_comp;
 };
 
 } // namespace Main

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Interfaces/IComponent.hpp"
+#include "Interfaces/IIdentifiable.hpp"
 #include "Interfaces/IJson.hpp"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <glm/detail/qualifier.hpp>
@@ -20,7 +21,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson, near, far);
 
 class CameraComponent : public IComponent {
 public:
-  std::string GetName() override;
+  REGISTER_CLASS(CameraComponent);
 
   ~CameraComponent() override;
 

@@ -13,7 +13,3 @@ void Engine::ComponentScriptControllable::Load() {}
 json Engine::ComponentScriptControllable::ToJson() {}
 
 void Engine::ComponentScriptControllable::FromJson(json &js) {}
-
-std::string Engine::ComponentScriptControllable::GetName() {
-  return "Controllable";
-}

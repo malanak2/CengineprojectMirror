@@ -237,10 +237,6 @@ void ComponentRenderable::FromJson(json &js) {
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
 
-std::string Engine::Graphics::ComponentRenderable::GetName() {
-  return "Component Renderable";
-}
-
 ComponentRenderable::ComponentRenderable(std::shared_ptr<Object> object) {
   this->object = object;
 }

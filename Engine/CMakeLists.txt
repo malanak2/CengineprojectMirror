@@ -48,6 +48,7 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Graphics/Uniforms/UniformFloatVector.hpp
         ScriptSystem.hpp
         ScriptSystem.cpp
+        Interfaces/IIdentifiable.hpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)

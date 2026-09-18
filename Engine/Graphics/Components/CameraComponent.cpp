@@ -63,8 +63,6 @@ CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
 /*
 CameraComponent::CameraComponent*/
 
-std::string CameraComponent::GetName() { return "Camera component"; }
-
 CameraComponent::~CameraComponent() {}
 /*
 json CameraComponent::ToJson() {

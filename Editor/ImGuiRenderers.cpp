@@ -20,7 +20,7 @@ std::shared_ptr<ImGuiComponentRenderer> ImGuiComponentRenderer::instance =
     std::make_shared<ImGuiComponentRenderer>();
 
 void ImGuiUniformRenderer::Register(
-    std::type_index type,
+    std::string_view type,
     void (*func)(std::shared_ptr<Engine::Graphics::IUniform>)) {
   if (funcs.contains(type)) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to re-register type");
@@ -31,12 +31,11 @@ void ImGuiUniformRenderer::Register(
 void ImGuiUniformRenderer::Render(
     std::shared_ptr<Engine::Graphics::IUniform> uni) {
   ZoneScoped;
-  auto t = std::type_index(typeid(*uni));
+  auto t = uni->GetName();
   if (funcs.contains(t)) {
     funcs[t](uni);
   } else {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Typeid {} not registered",
-                        t.name());
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Typeid {} not registered", t);
   }
 }
 
@@ -77,7 +76,7 @@ void ImGuiUniformRenderer::Init() {
 }
 
 void ImGuiComponentRenderer::Register(
-    std::type_index type, void (*func)(std::shared_ptr<Engine::IComponent>)) {
+    std::string_view type, void (*func)(std::shared_ptr<Engine::IComponent>)) {
   if (funcs.contains(type)) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to re-register Component");
     return;
@@ -86,12 +85,11 @@ void ImGuiComponentRenderer::Register(
 }
 void ImGuiComponentRenderer::Render(std::shared_ptr<Engine::IComponent> uni) {
   ZoneScoped;
-  auto t = std::type_index(typeid(*uni));
+  auto t = uni->GetName();
   if (funcs.contains(t)) {
     funcs[t](uni);
   } else {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Typeid {} not registered",
-                        t.name());
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Typeid {} not registered", t);
   }
 }
 
@@ -297,7 +295,7 @@ void ImGuiRenderer::RenderObjectInspector() {
   }
   for (auto [type, comp] : sceneObject->instance->_components) {
     if (comp != nullptr)
-      if (ImGui::CollapsingHeader(comp->GetName().c_str())) {
+      if (ImGui::CollapsingHeader(comp->GetName().data())) {
         ImGuiComponentRenderer::instance->Render(comp);
       }
   }

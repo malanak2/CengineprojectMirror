@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IJson.hpp"
+#include "Interfaces/IIdentifiable.hpp"
 #include "JsonFileBase.hpp"
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
@@ -23,7 +24,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentJson, object_type, type, data);
 //!
 //! @brief Default interface for components
 //!
-class IComponent : public IJson {
+class IComponent : public IJson, public IIdentifiable {
 public:
   virtual ~IComponent() = default;
   //!
@@ -46,12 +47,6 @@ public:
   virtual void Load() = 0;
 
   virtual ENGINE_COMPONENT_TYPE GetType() = 0;
-  //!
-  //! @brief Name of the component
-  //!
-  //!
-  virtual std::string GetName() = 0;
-
   //!
   //! @object Pointer to the object this is assigned to
   //!

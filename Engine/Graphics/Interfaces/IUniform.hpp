@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Interfaces/IIdentifiable.hpp"
 #include <memory>
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
@@ -28,7 +29,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(UniformType, {
 //!
 //! @brief Interface for making uniforms
 //!
-class IUniform {
+class IUniform : public IIdentifiable {
 public:
   //!
   //! @type Type of the uniform = used to control how it is initialized, and for
