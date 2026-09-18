@@ -9,7 +9,6 @@
 #include <imgui_impl_opengl3.h>
 #include <memory>
 #include <string_view>
-#include <typeindex>
 #define IMGUI_SCALE 1
 namespace Editor {
 namespace ImGuiR {

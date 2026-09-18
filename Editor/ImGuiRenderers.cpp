@@ -1,7 +1,7 @@
 #include "ImGuiRenderers.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
-#include "Graphics/Graphics.hpp"
+#include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "ImGuiMacros.hpp"
 #include "Util/FileUtil.hpp"
@@ -10,7 +10,6 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
-#include <typeindex>
 
 namespace Editor::ImGuiR {
 

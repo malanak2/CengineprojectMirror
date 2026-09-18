@@ -5,7 +5,6 @@
 #include "../Config/Config.hpp"
 #include "Material.hpp"
 #include "Object.hpp"
-#include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
