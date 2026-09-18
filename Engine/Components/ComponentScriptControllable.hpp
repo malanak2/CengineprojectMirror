@@ -18,7 +18,6 @@ public:
 
   void FromJson(json &js) override;
 
-  void RenderImGui() override;
   std::string GetName() override;
 
 private:

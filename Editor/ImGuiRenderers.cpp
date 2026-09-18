@@ -1,4 +1,6 @@
 #include "ImGuiRenderers.hpp"
+#include "Graphics/Components/CameraComponent.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "ImGuiMacros.hpp"
@@ -10,10 +12,12 @@
 #include <tracy/Tracy.hpp>
 #include <typeindex>
 
-namespace Editor::ImGuiRenderers {
+namespace Editor::ImGuiR {
 
 std::shared_ptr<ImGuiUniformRenderer> ImGuiUniformRenderer::instance =
     std::make_shared<ImGuiUniformRenderer>();
+std::shared_ptr<ImGuiComponentRenderer> ImGuiComponentRenderer::instance =
+    std::make_shared<ImGuiComponentRenderer>();
 
 void ImGuiUniformRenderer::Register(
     std::type_index type,
@@ -69,6 +73,47 @@ void ImGuiUniformRenderer::Init() {
       break;
     }
     }
+  });
+}
+
+void ImGuiComponentRenderer::Register(
+    std::type_index type, void (*func)(std::shared_ptr<Engine::IComponent>)) {
+  if (funcs.contains(type)) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to re-register Component");
+    return;
+  }
+  funcs.insert({type, func});
+}
+void ImGuiComponentRenderer::Render(std::shared_ptr<Engine::IComponent> uni) {
+  ZoneScoped;
+  auto t = std::type_index(typeid(*uni));
+  if (funcs.contains(t)) {
+    funcs[t](uni);
+  } else {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Typeid {} not registered",
+                        t.name());
+  }
+}
+
+void ImGuiComponentRenderer::Init() {
+  ZoneScoped;
+  IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
+    auto comp = std::static_pointer_cast<Engine::Graphics::ComponentRenderable>(
+        component);
+    ImGui::InputText("Material path", &comp->_material_path[0], 100);
+
+    if (ImGui::CollapsingHeader("Uniforms")) {
+      for (auto &[key, val] : comp->_uniforms) {
+        ImGuiUniformRenderer::instance->Render(val);
+      }
+    }
+  });
+
+  IMGUI_REGISTER_COMPONENT(Engine::Graphics::CameraComponent, {
+    auto comp =
+        std::static_pointer_cast<Engine::Graphics::CameraComponent>(component);
+    ImGui::InputFloat("Near", &comp->near);
+    ImGui::InputFloat("Far", &comp->far);
   });
 }
 
@@ -253,9 +298,9 @@ void ImGuiRenderer::RenderObjectInspector() {
   for (auto [type, comp] : sceneObject->instance->_components) {
     if (comp != nullptr)
       if (ImGui::CollapsingHeader(comp->GetName().c_str())) {
-        comp->RenderImGui();
+        ImGuiComponentRenderer::instance->Render(comp);
       }
   }
   ImGui::End();
 }
-} // namespace Editor::ImGuiRenderers
+} // namespace Editor::ImGuiR

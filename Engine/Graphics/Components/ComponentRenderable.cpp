@@ -3,7 +3,6 @@
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
-#include "imgui.h"
 #include <memory>
 #include <spdlog/spdlog.h>
 using namespace Engine::Graphics;
@@ -238,17 +237,6 @@ void ComponentRenderable::FromJson(json &js) {
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }
 
-void Engine::Graphics::ComponentRenderable::RenderImGui() {
-  // Render uniforms
-  ImGui::InputText("Material path", &this->_material_path[0], 100);
-
-  if (ImGui::CollapsingHeader("Uniforms")) {
-    for (auto &[key, val] : this->_uniforms) {
-      // TODO:
-      // val->RenderImGui();
-    }
-  }
-}
 std::string Engine::Graphics::ComponentRenderable::GetName() {
   return "Component Renderable";
 }

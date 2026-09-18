@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graphics/Interfaces/IUniform.hpp"
+#include "Interfaces/IComponent.hpp"
 #include "Scene.hpp"
 #include "implot.h" // IWYU pragma: keep
 #include <imgui.h>
@@ -10,7 +11,7 @@
 #include <typeindex>
 #define IMGUI_SCALE 1
 namespace Editor {
-namespace ImGuiRenderers {
+namespace ImGuiR {
 #define IMGUI_REGISTER_UNIFORM(p1, p2)                                         \
   {                                                                            \
     instance->Register(std::type_index(typeid(p1)), [                          \
@@ -30,12 +31,39 @@ public:
                 void (*func)(std::shared_ptr<Engine::Graphics::IUniform>));
   void Render(std::shared_ptr<Engine::Graphics::IUniform> uni);
 
-private:
   static std::shared_ptr<ImGuiUniformRenderer> instance;
+
+private:
   std::map<std::type_index,
            void (*)(std::shared_ptr<Engine::Graphics::IUniform>)>
       funcs = std::map<std::type_index,
                        void (*)(std::shared_ptr<Engine::Graphics::IUniform>)>();
+};
+#define IMGUI_REGISTER_COMPONENT(p1, p2)                                       \
+  {                                                                            \
+    instance->Register(std::type_index(typeid(p1)),                            \
+                       [](std::shared_ptr<Engine::IComponent> component) p2);  \
+  }
+//!
+//! @brief Class for registering imgui renderers for Component types
+//!
+class ImGuiComponentRenderer {
+public:
+  //!
+  //! @brief Initializes the ImGuiUniformRenderer
+  //!
+  //!
+  static void Init();
+  void Register(std::type_index type,
+                void (*func)(std::shared_ptr<Engine::IComponent>));
+  void Render(std::shared_ptr<Engine::IComponent> uni);
+
+  static std::shared_ptr<ImGuiComponentRenderer> instance;
+
+private:
+  std::map<std::type_index, void (*)(std::shared_ptr<Engine::IComponent>)>
+      funcs = std::map<std::type_index,
+                       void (*)(std::shared_ptr<Engine::IComponent>)>();
 };
 //!
 //! @brief Class for containing genreal imgui renderers
@@ -69,5 +97,5 @@ public:
   static float coords[3];
   static float rotation[4];
 };
-} // namespace ImGuiRenderers
+} // namespace ImGuiR
 } // namespace Editor

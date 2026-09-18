@@ -1,7 +1,6 @@
 #include "CameraComponent.hpp"
 #include "Engine.hpp"
 #include "Interfaces/IComponent.hpp"
-#include "imgui.h"
 #include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -64,10 +63,6 @@ CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
 /*
 CameraComponent::CameraComponent*/
 
-void CameraComponent::RenderImGui() {
-  ImGui::InputFloat("Near", &near);
-  ImGui::InputFloat("Far", &far);
-}
 std::string CameraComponent::GetName() { return "Camera component"; }
 
 CameraComponent::~CameraComponent() {}

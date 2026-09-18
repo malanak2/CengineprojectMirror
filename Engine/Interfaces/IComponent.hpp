@@ -46,8 +46,6 @@ public:
   virtual void Load() = 0;
 
   virtual ENGINE_COMPONENT_TYPE GetType() = 0;
-  // TODO: Remove
-  virtual void RenderImGui() = 0;
   //!
   //! @brief Name of the component
   //!

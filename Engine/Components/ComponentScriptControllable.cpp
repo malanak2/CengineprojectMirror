@@ -14,8 +14,6 @@ json Engine::ComponentScriptControllable::ToJson() {}
 
 void Engine::ComponentScriptControllable::FromJson(json &js) {}
 
-void Engine::ComponentScriptControllable::RenderImGui() {}
-
 std::string Engine::ComponentScriptControllable::GetName() {
   return "Controllable";
 }

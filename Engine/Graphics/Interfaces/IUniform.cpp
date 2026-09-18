@@ -1,13 +1,8 @@
 #include "IUniform.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "Util/LoggerUtil.hpp"
-#include <imgui.h>
-#include <memory>
 #include <string>
 using namespace Engine::Graphics;
-/*void IUniform::RenderImGui() {
-  ImGui::Text("Please implement %s", __PRETTY_FUNCTION__);
-}*/
 std::string IUniform::GetType() { return "IUniform"; }
 json Engine::Graphics::IUniform::ToJson() const {
   json j;

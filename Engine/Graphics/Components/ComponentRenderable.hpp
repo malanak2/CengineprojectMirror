@@ -26,8 +26,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
 
 class ComponentRenderable : public IComponent {
 public:
-  void RenderImGui() override;
-
   std::string GetName() override;
 
   /// Only call if you call FromJson right after

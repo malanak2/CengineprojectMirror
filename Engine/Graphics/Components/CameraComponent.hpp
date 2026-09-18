@@ -20,8 +20,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson, near, far);
 
 class CameraComponent : public IComponent {
 public:
-  void RenderImGui() override;
-
   std::string GetName() override;
 
   ~CameraComponent() override;
@@ -52,7 +50,6 @@ public:
   glm::mat4 GetProjMatrix();
   glm::mat4 GetViewMatrix();
 
-private:
   glm::mat4 projmat;
   glm::mat4 viewmat;
   float near, far;
