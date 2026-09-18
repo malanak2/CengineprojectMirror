@@ -8,3 +8,4 @@ Engine/glad
 /Engine/External/glad
 /Util/External/stb/stb_image.h
 /doxygen/html
+*.tracy

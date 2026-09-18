@@ -45,3 +45,6 @@ scripts/generate_shaders.sh
 ```
 
 #### Setup symlink out/.../bin/resources pointing to resources
+---
+### Profiling
+The program uses [Tracy](https://github.com/wolfpld/tracy) for profiling

@@ -12,6 +12,7 @@
 #include "Texture.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
+#include "tracy/TracyOpenGL.hpp"
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <ctime>
@@ -19,7 +20,6 @@
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
-
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
   Engine::Engine::width = width;
@@ -43,6 +43,7 @@ std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 std::shared_ptr<Main> Main::instance = std::make_shared<Main>();
 
 int Main::Init(std::shared_ptr<Config> config) {
+
   ZoneScoped;
   auto logger = ENGINE_UTIL_LOGGER;
   glfwSetErrorCallback(glfw_error_callback);
@@ -71,6 +72,7 @@ int Main::Init(std::shared_ptr<Config> config) {
   }
   SPDLOG_LOGGER_INFO(logger, "GLFW window created successfully.");
   glfwMakeContextCurrent(instance->window);
+
   if (config->graphics->enableVsync) {
     glfwSwapInterval(1);
   } else {
@@ -85,6 +87,8 @@ int Main::Init(std::shared_ptr<Config> config) {
     SPDLOG_LOGGER_ERROR(spdlog::get("console"), "Failed to initialize GLAD.");
     return -1;
   }
+
+  TracyGpuContext;
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(instance->window, framebuffer_size_callback);
   glEnable(GL_DEPTH_TEST);
@@ -137,6 +141,7 @@ int Main::Tick(
     f();
   }
   {
+    TracyGpuZone("Rendering");
     ZoneScopedN("Rendering objects");
     for (auto &[key, val] : materials) {
       ZoneScopedN("Material");
@@ -154,6 +159,8 @@ int Main::Tick(
     ZoneScopedNC("VSync", 0x111111);
     glfwSwapBuffers(instance->window);
   }
+  TracyGpuCollect;
+  FrameMark;
   glfwPollEvents();
 
   return 0;

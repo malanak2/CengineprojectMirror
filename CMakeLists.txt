@@ -15,6 +15,7 @@ set(PROFILE true)
 if(PROFILE)
       set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
       set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE) # Only captures when GUI is connected
+      set(TRACY_CALLSTACK 16)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
       FetchContent_Declare(
         tracy        GIT_REPOSITORY https://github.com/wolfpld/tracy.git

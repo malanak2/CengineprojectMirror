@@ -140,7 +140,6 @@ void Engine::Engine::Run() {
       }
     }
     CHECK_GL_ERROR();
-    FrameMark;
   }
   SPDLOG_LOGGER_INFO(logger, "Main stopping.");
 }

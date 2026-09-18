@@ -20,7 +20,18 @@ void sigsegvHandler(int sig) {
 }
 
 void sigabrtHandler(int sig) { sigsegvHandler(sig); }
-
+std ::mutex memoryLock;
+void *operator new(std ::size_t count) {
+  std ::lock_guard lock(memoryLock);
+  auto ptr = malloc(count);
+  TracyAlloc(ptr, count);
+  return ptr;
+}
+void operator delete(void *ptr) noexcept {
+  std ::lock_guard lock(memoryLock);
+  TracyFree(ptr);
+  free(ptr);
+}
 int main() {
   signal(SIGSEGV, sigsegvHandler);
   signal(SIGABRT, sigabrtHandler);
