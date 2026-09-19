@@ -1,6 +1,6 @@
 #include "RegisterComponents.hpp"
 #include "Components/TestComponent.hpp"
-#include "Engine.hpp"
+#include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 void Engine::ScriptRegistrar::RegisterCommonComponents() {
   REGISTER_SCRIPT(TestComponent);
