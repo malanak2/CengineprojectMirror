@@ -20,13 +20,12 @@ public:
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson, near, far);
 
 class CameraComponent : public IComponent {
-public:
   REGISTER_CLASS(CameraComponent);
 
+public:
   ~CameraComponent() override;
 
-  ENGINE_COMPONENT_TYPE GetType() override;
-
+  CameraComponent() {}
   CameraComponent(std::shared_ptr<Object> object);
 
   CameraComponent(std::string path);
@@ -36,12 +35,6 @@ public:
   void Setup() override;
 
   void Update() override;
-
-  void FixedUpdate() override;
-
-  void Save() override;
-
-  void Load() override;
 
   // IJson
   json ToJson() override;

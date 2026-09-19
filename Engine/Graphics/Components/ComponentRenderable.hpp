@@ -24,11 +24,14 @@ public:
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
                                    vertices, indices);
 
-class ComponentRenderable : public IComponent {
-public:
+class ComponentRenderable
+    : public IComponent,
+      public std::enable_shared_from_this<ComponentRenderable> {
   REGISTER_CLASS(ComponentRenderable);
+
+public:
   /// Only call if you call FromJson right after
-  ComponentRenderable(std::shared_ptr<Object> object);
+  ComponentRenderable();
   ComponentRenderable(std::string path, std::shared_ptr<Object> object);
   /*  static std::shared_ptr<ComponentRenderable>
     Create(std::string material_path,
@@ -39,16 +42,12 @@ public:
   void Setup() override;
   void Update() override;
   void FixedUpdate() override;
-
-  void Save() override;
-  void Load() override;
-
+  void SetObject(std::shared_ptr<Object> object);
   void FromJson(json &js) override;
 
   json ToJson() override;
 
   ComponentRenderable(json &js);
-  ENGINE_COMPONENT_TYPE GetType() override;
   unsigned int vao = 0;
   unsigned int vbo = 0;
   unsigned int ebo = 0;

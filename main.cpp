@@ -13,14 +13,6 @@
 #include "ScriptSystem.hpp"
 #include "Util/LoggerUtil.hpp"
 
-void sigsegvHandler(int sig) {
-  SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER,
-                         "Program has crashed. Stacktrace: {}",
-                         std::to_string(std::stacktrace::current()));
-  exit(sig);
-}
-
-void sigabrtHandler(int sig) { sigsegvHandler(sig); }
 std ::mutex memoryLock;
 void *operator new(std ::size_t count) {
   std ::lock_guard lock(memoryLock);
@@ -34,25 +26,18 @@ void operator delete(void *ptr) noexcept {
   free(ptr);
 }
 int main() {
-  signal(SIGSEGV, sigsegvHandler);
-  signal(SIGABRT, sigabrtHandler);
-  try {
-    /// Inject functions
-    /// Init engine
-    Editor::ImGuiR::Register();
-    Engine::Engine::Init();
-    Editor::ImGuiR::ImGuiUniformRenderer::Init();
-    Editor::ImGuiR::ImGuiComponentRenderer::Init();
-    /// Register components
-    // REGISTER_SCRIPT(script);
-    /// Load scene
-    Engine::Engine::LoadScene();
-    /// Run
-    Engine::Engine::instance->Run();
-  } catch (const std::exception &e) {
-    SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER,
-                           "Program has crashed. Stacktrace: {}",
-                           std::to_string(std::stacktrace::current()));
-  }
+  ZoneScopedNS("main", 64);
+  /// Inject functions
+  /// Init engine
+  Editor::ImGuiR::Register();
+  Engine::Engine::Init();
+  Editor::ImGuiR::ImGuiUniformRenderer::Init();
+  Editor::ImGuiR::ImGuiComponentRenderer::Init();
+  /// Register components
+  // REGISTER_SCRIPT(script);
+  /// Load scene
+  Engine::Engine::LoadScene();
+  /// Run
+  Engine::Engine::instance->Run();
   return 0;
 }

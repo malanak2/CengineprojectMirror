@@ -35,12 +35,6 @@ void CameraComponent::Update() {
                         glm::vec3(0, 1, 0));
 }
 
-void CameraComponent::FixedUpdate() {}
-
-void CameraComponent::Save() {}
-
-void CameraComponent::Load() {}
-
 CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
   ZoneScoped;
   this->object = object;
@@ -87,10 +81,6 @@ json CameraComponent::ToJson() {
     return r;
 }
 */
-
-ENGINE_COMPONENT_TYPE CameraComponent::GetType() {
-  return ENGINE_COMPONENT_TYPE::camera;
-}
 
 // TODO:
 void CameraComponent::FromJson(json &js) {

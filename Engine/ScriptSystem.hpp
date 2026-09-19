@@ -1,5 +1,5 @@
 #pragma once
-#include "Components/ComponentScript.hpp"
+#include "Interfaces/IComponent.hpp"
 #include <map>
 #include <memory>
 namespace Engine {
@@ -13,8 +13,7 @@ namespace Main {
 //!
 #define REGISTER_SCRIPT(script)                                                \
   {                                                                            \
-    auto engineInstance = Engine::Main::instance;                              \
-    (engineInstance->scriptSystem->RegisterScript(script))                     \
+    (Main::ScriptSystem::instance->RegisterScript<script>());                  \
   }
 
 //!
@@ -22,11 +21,20 @@ namespace Main {
 //!
 class ScriptSystem {
 public:
-  bool RegisterScript(std::shared_ptr<ComponentScript> script);
-  std::shared_ptr<ComponentScript> GetScript(std::string_view key);
+  static std::shared_ptr<ScriptSystem> instance;
+  template <typename T> void RegisterScript() {
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Registering script {}",
+                       T::GetNameS());
+    map_comp[std::string(T::GetNameS())] = []() -> std::shared_ptr<IComponent> {
+      return std::make_shared<T>();
+    };
+  }
+  std::shared_ptr<IComponent> GetScript(std::string_view key);
 
 private:
-  std::map<std::string_view, std::shared_ptr<ComponentScript>> map_comp;
+  std::map<std::string, std::function<std::shared_ptr<IComponent>()>,
+           std::less<>>
+      map_comp;
 };
 
 } // namespace Main

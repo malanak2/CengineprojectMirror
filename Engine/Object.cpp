@@ -3,6 +3,7 @@
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
+#include "ScriptSystem.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
@@ -40,9 +41,8 @@ json Object::ToJson() {
   for (const auto &[key, val] : this->_components) {
     ComponentJson j;
     auto val_js = std::static_pointer_cast<IJson>(val);
-    j.object_type = ObjectType::Component;
     j.data = val_js->ToJson();
-    j.type = val->GetType();
+    j.name = val->GetName();
     cmps.insert(cmps.end(), static_cast<ComponentJson>(j));
   }
   js.components = cmps;
@@ -79,33 +79,13 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
   jsobj = jsbase.data;
   std::vector<std::shared_ptr<IComponent>> cmps;
   for (auto c : jsobj.components) {
-    if (c.object_type != ObjectType::Component) {
-      SPDLOG_LOGGER_ERROR(
-          ENGINE_UTIL_LOGGER,
-          "Object at {} contains a 'component' with the obj type {}, ingoring",
-          path, (int)c.object_type);
-      continue;
-    }
-    switch (c.type) {
-    case renderable: {
-      std::shared_ptr<Graphics::ComponentRenderable> r =
-          Graphics::ComponentRenderable::Create(c.data,
-                                                this->shared_from_this());
-      cmps.insert(cmps.begin(), r);
-      break;
-    }
-    case camera: {
-      std::shared_ptr<Engine::Graphics::CameraComponent> r =
-          std::make_shared<Engine::Graphics::CameraComponent>(
-              c.data, shared_from_this());
-      cmps.insert(cmps.begin(), r);
-      cc = r;
-      break;
-    }
-    default:
-      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Component not implemented in {}",
-                          path);
-      break;
+    auto a = Main::ScriptSystem::instance->GetScript(c.name);
+    auto script = Main::ScriptSystem::instance->GetScript(c.name);
+    script->FromJson(c.data);
+    script->SetObject(this->shared_from_this());
+    cmps.insert(cmps.begin(), script);
+    if (c.name == "CameraComponent") {
+      cc = std::static_pointer_cast<Graphics::CameraComponent>(script);
     }
   }
   fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation);
@@ -119,7 +99,7 @@ void Object::fromParams(std::string name,
   _name = name;
   _name.reserve(50);
   for (auto cmp : comps) {
-    _components[cmp->GetType()] = cmp;
+    _components[std::string(cmp->GetName())] = cmp;
   }
   if (position.size() != 3) {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Bad position passed to Object : {}",

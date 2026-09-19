@@ -1,0 +1,119 @@
+{
+  "objects": [
+    {
+      "data": {
+        "children": [],
+        "data": {
+          "data": {
+            "components": [
+              {
+                "data": {
+                  "far": 100.0,
+                  "near": 0.5
+                },
+                "name": "CameraComponent"
+              }
+            ],
+            "name": "Main Camera",
+            "position": [
+              0.0,
+              0.0,
+              5.0
+            ],
+            "rotation": [
+              0.0,
+              -90.0,
+              0.0
+            ]
+          },
+          "object_type": "object"
+        }
+      },
+      "object_type": "object"
+    },
+    {
+      "data": {
+        "children": [],
+        "data": {
+          "data": {
+            "components": [
+              {
+                "data": {
+                  "data": {
+                    "indices": [
+                      0,
+                      1,
+                      2,
+                      0,
+                      2,
+                      3,
+                      0,
+                      4,
+                      1,
+                      1,
+                      4,
+                      2,
+                      2,
+                      4,
+                      3,
+                      3,
+                      4,
+                      0
+                    ],
+                    "material_path": "materials/basic.json",
+                    "uniforms": {
+                      "color": {
+                        "data": [
+                          0.0,
+                          1.0,
+                          0.0,
+                          1.0
+                        ],
+                        "id": 1,
+                        "name": "color",
+                        "offset": 16,
+                        "type": "vector"
+                      }
+                    },
+                    "vertices": [
+                      -1.0,
+                      -1.0,
+                      -1.0,
+                      1.0,
+                      -1.0,
+                      -1.0,
+                      1.0,
+                      -1.0,
+                      1.0,
+                      -1.0,
+                      -1.0,
+                      1.0,
+                      0.0,
+                      1.0,
+                      0.0
+                    ]
+                  },
+                  "object_type": "component"
+                },
+                "name": "ComponentRenderable"
+              }
+            ],
+            "name": "Test object",
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "object_type": "object"
+        }
+      },
+      "object_type": "object"
+    }
+  ]
+}

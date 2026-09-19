@@ -1,4 +1,5 @@
 #include "ImGuiRenderers.hpp"
+#include "Components/InvalidComponent.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
@@ -105,6 +106,8 @@ void ImGuiComponentRenderer::Init() {
       }
     }
   });
+  IMGUI_REGISTER_COMPONENT(Engine::InvalidComponent,
+                           { ImGui::Text("Invalid Component"); })
 
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::CameraComponent, {
     auto comp =

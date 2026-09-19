@@ -2,6 +2,7 @@
 // Created by malan on 20.04.2026.
 //
 #include "Engine.hpp"
+#include "Components/RegisterComponents.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
@@ -18,7 +19,6 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <stdexcept>
 #include <tracy/Tracy.hpp>
-
 namespace Engine {
 
 std::shared_ptr<Engine> Engine::instance = nullptr;
@@ -28,6 +28,7 @@ void Engine::Engine::Init() {
   ZoneScoped;
   std::shared_ptr<Engine> e = std::make_shared<Engine>();
   e->setupLogger();
+  ScriptRegistrar::RegisterComponents();
   auto logger = spdlog::get("console");
 
   if (!Config::inst) {
@@ -61,11 +62,10 @@ void Engine::LoadScene(std::string path) {
   } catch (const std::exception &ex) {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Failed to load scene at {} : {}",
                        path, ex.what());
-    /*
+#ifdef DEBUG
     e->current_scene = std::make_shared<Scene>();
     auto camera_obj = std::make_shared<Object>(e->current_scene);
-    auto camera_comp =
-    std::make_shared<Graphics::Main::instance::CameraComponent>(camera_obj);
+    auto camera_comp = std::make_shared<Graphics::CameraComponent>(camera_obj);
     camera_obj->fromParams("Main Camera", {camera_comp}, {0.0f, 0.0f, 5.0f},
                            {0.0f, -90.0f, 0.0f});
     e->current_scene->Instantiate(camera_obj);
@@ -74,7 +74,7 @@ void Engine::LoadScene(std::string path) {
     auto object_default = std::make_shared<Object>(e->current_scene);
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
-    Graphics::Main::instance::RenderableDataJson rdj;
+    Graphics::RenderableDataJson rdj;
     rdj.indices = {
         0, 1, 2, // Bottom 1
         0, 2, 3, // Bottom 2
@@ -93,19 +93,18 @@ void Engine::LoadScene(std::string path) {
     rdj.material_path = "materials/basic.json";
     std::vector<float> unis = {0, 1, 0, 1};
     rdj.uniforms = {
-        {"color",
-    std::make_shared<Graphics::Main::instance::UniformFloatVector>(
-                      Graphics::Main::instance::Vector, 0, 0,
+        {"color", std::make_shared<Graphics::UniformFloatVector>(
+                      Graphics::Vector, 0, 0,
                       std::make_shared<std::string>("color"), unis)}};
     jsbase.data = rdj;
     json jsbase_js = jsbase;
     auto com_render =
-        Graphics::Main::instance::ComponentRenderable::Create(jsbase_js,
-    object_default); object_default->fromParams("Test object", {com_render});
+        Graphics::ComponentRenderable::Create(jsbase_js, object_default);
+    object_default->fromParams("Test object", {com_render});
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
     FileUtil::SaveFile(path, &scene_json);
-    */
+#endif
   }
   CHECK_GL_ERROR();
 }

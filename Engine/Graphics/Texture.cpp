@@ -37,11 +37,18 @@ void Engine::Graphics::Texture::FromJson(json &js) {
 }
 
 Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
-
   ZoneScoped;
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading texture at {}", json_path);
   this->path = json_path;
   std::string js;
-  FileUtil::ReadFile(json_path, &js);
+  auto r = FileUtil::ReadFile(json_path, &js);
+  if (r != 0) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Failed to open file at {}, falling back to {}",
+                        json_path, fallback);
+    texture = fallback;
+    return;
+  }
   json parsed = json::parse(js);
   FromJson(parsed);
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,

@@ -9,8 +9,9 @@ namespace Graphics {
 //! @brief Class for handling vector float uniforms
 //!
 class UniformFloatVector : public IUniform {
-public:
   REGISTER_CLASS(UniformFloatVector);
+
+public:
   void Use(unsigned int offset) override;
   std::string GetType() override;
   UniformFloatVector(UniformType t, unsigned int id, unsigned int offset,

@@ -28,12 +28,11 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, position, rotation, components,
 //!
 class Object : public IJson, public std::enable_shared_from_this<Object> {
 public:
-  // TODO: Change enum to something like std::type_info
   //!
   //! @_components All components on the object. Since the object can only have
   //! one of each.
   //!
-  std::map<ENGINE_COMPONENT_TYPE, std::shared_ptr<IComponent>> _components = {};
+  std::map<std::string, std::shared_ptr<IComponent>> _components = {};
   //!
   //! @_position The position of the object
   //!

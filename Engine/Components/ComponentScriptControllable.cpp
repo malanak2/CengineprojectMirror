@@ -6,10 +6,6 @@ void Engine::ComponentScriptControllable::Update() {}
 
 void Engine::ComponentScriptControllable::FixedUpdate() {}
 
-void Engine::ComponentScriptControllable::Save() {}
-
-void Engine::ComponentScriptControllable::Load() {}
-
 json Engine::ComponentScriptControllable::ToJson() { return {}; }
 
 void Engine::ComponentScriptControllable::FromJson(json &js) {}

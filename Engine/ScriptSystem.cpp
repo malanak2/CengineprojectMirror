@@ -1,14 +1,17 @@
 #include "ScriptSystem.hpp"
+#include "Components/InvalidComponent.hpp"
+#include "Util/LoggerUtil.hpp"
+#include <memory>
 namespace Engine::Main {
-bool Engine::Main::ScriptSystem::RegisterScript(
-    std::shared_ptr<ComponentScript> script) {
-  bool ret = map_comp.contains(script->GetName());
-  map_comp[script->GetName()] = script;
-  return ret;
-}
-std::shared_ptr<ComponentScript> ScriptSystem::GetScript(std::string_view key) {
-  if (!map_comp.contains(key))
-    return nullptr;
-  return this->map_comp[key];
+std::shared_ptr<ScriptSystem> ScriptSystem::instance =
+    std::make_shared<ScriptSystem>();
+std::shared_ptr<IComponent> ScriptSystem::GetScript(std::string_view key) {
+  auto it = map_comp.find(std::string(key));
+  if (it != map_comp.end()) {
+    return it->second(); // Executes lambda -> fresh instance
+  }
+  SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Unregistered key found in scene: {}",
+                      std::string(key));
+  return std::make_shared<InvalidComponent>();
 }
 } // namespace Engine::Main

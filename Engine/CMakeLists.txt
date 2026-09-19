@@ -33,13 +33,17 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Graphics/Texture.hpp
         Graphics/Components/ComponentRenderable.hpp
         Graphics/Components/ComponentRenderable.cpp
+        Components/InvalidComponent.cpp
+        Components/InvalidComponent.cpp
         Config/Config.cpp
         Config/Config.hpp
         External/glad/src/glad.c
         External/glad/include/KHR/khrplatform.h
         External/glad/include/glad/glad.h
-        Components/ComponentScript.cpp
-        Components/ComponentScript.hpp
+        Components/TestComponent.cpp
+        Components/TestComponent.hpp
+        Components/RegisterComponents.hpp
+        Components/RegisterComponents.cpp
         Scene.cpp
         Scene.hpp
         Graphics/Interfaces/IUniform.hpp

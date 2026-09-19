@@ -9,18 +9,12 @@
 using json = nlohmann::json;
 namespace Engine {
 class Object;
-enum ENGINE_COMPONENT_TYPE {
-  renderable,
-  camera,
-  script,
-};
 struct ComponentJson {
 public:
-  ObjectType object_type;
-  ENGINE_COMPONENT_TYPE type;
+  std::string name;
   json data;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentJson, object_type, type, data);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentJson, name, data);
 //!
 //! @brief Default interface for components
 //!
@@ -31,22 +25,20 @@ public:
   //! @brief Called on setup
   //!
   //!
-  virtual void Setup() = 0;
+  virtual void Setup();
   //!
   //! @brief Called every frame
   //!
   //!
-  virtual void Update() = 0;
+  virtual void Update();
   //!
   //! @brief Called every fixedUpdate
   //!
   //!
-  virtual void FixedUpdate() = 0;
-  // TODO: I dont think save and load should be void... What was I doing here?
-  virtual void Save() = 0;
-  virtual void Load() = 0;
+  virtual void FixedUpdate();
 
-  virtual ENGINE_COMPONENT_TYPE GetType() = 0;
+  void SetObject(std::shared_ptr<Object> object);
+
   //!
   //! @object Pointer to the object this is assigned to
   //!
