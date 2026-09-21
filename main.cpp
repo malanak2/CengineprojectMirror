@@ -1,18 +1,13 @@
-#include <csignal>
-#include <exception>
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
-#include <stacktrace>
 #include <tracy/Tracy.hpp>
 
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
-#include "Graphics/Graphics.hpp"
-#include "Graphics/Texture.hpp"
-#include "ScriptSystem.hpp"
-#include "Util/LoggerUtil.hpp"
 
+// No need to make allocations synchronous without Tracy enabled
+#ifdef TRACY_ENABLE
 std ::mutex memoryLock;
 void *operator new(std ::size_t count) {
   std ::lock_guard lock(memoryLock);
@@ -25,12 +20,15 @@ void operator delete(void *ptr) noexcept {
   TracyFree(ptr);
   free(ptr);
 }
+#endif
+
 int main() {
   ZoneScopedNS("main", 64);
   /// Inject functions
-  /// Init engine
   Editor::ImGuiR::Register();
+  /// Init engine
   Engine::Engine::Init();
+  // Init editor ImGui
   Editor::ImGuiR::ImGuiUniformRenderer::Init();
   Editor::ImGuiR::ImGuiComponentRenderer::Init();
   /// Register components

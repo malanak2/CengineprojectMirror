@@ -1,8 +1,11 @@
 #pragma once
 #include "Engine.hpp"
 #include "ImGuiRenderers.hpp"
+#include <cmath>
+#include <exception>
 #include <imgui.h>
 #include <implot.h>
+#include <stdexcept>
 #include <tracy/Tracy.hpp>
 namespace Editor {
 namespace ImGuiR {
@@ -61,6 +64,7 @@ inline void Register() {
         if (Config::inst->graphics->enableAntiAliasing) {
           glEnable(GL_MULTISAMPLE);
         }
+        throw std::logic_error("Test");
       });
 
   Engine::Graphics::Main::instance->terminate->insert(

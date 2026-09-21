@@ -4,10 +4,7 @@
 #include <memory>
 namespace Engine {
 namespace Main {
-/*     if (engineInstance->scriptSystem->RegisterScript(script)) { \
- *     engineInstance->ReloadScene; \
- *   } \
- */
+
 //!
 //! @def REGISTER_SCRIPT(script) Registers the @script specified into the system
 //!
