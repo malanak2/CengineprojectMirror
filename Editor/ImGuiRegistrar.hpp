@@ -64,7 +64,6 @@ inline void Register() {
         if (Config::inst->graphics->enableAntiAliasing) {
           glEnable(GL_MULTISAMPLE);
         }
-        throw std::logic_error("Test");
       });
 
   Engine::Graphics::Main::instance->terminate->insert(
