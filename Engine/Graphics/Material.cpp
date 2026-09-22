@@ -14,6 +14,7 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <tracy/Tracy.hpp>
+#include "tracy/TracyOpenGL.hpp"
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -96,12 +97,19 @@ Material::Material(std::string path) {
   CHECK_GL_ERROR();
 }
 
-void Material::SetupMaterial() { program->Setup(); }
+void Material::SetupMaterial() {
+  ZoneScopedN("Material::Setup");
+  TracyGpuZone("Material::Setup");
+  program->Setup();
+}
 
 void Material::RenderObjects() {
-  ZoneScoped;
+  ZoneScopedN("Material::RenderObjects");
+  TracyGpuZone("Material::RenderObjects");
 
   if (uses_camera) {
+    ZoneScopedN("UploadCamera");
+    TracyGpuZone("UploadCamera");
     auto scene = Engine::Engine::instance
                      ? Engine::Engine::instance->current_scene
                      : nullptr;
@@ -123,15 +131,20 @@ void Material::RenderObjects() {
   std::map<std::shared_ptr<Model>,
            std::vector<std::shared_ptr<ComponentRenderable>>>
       batches;
-  for (auto element : this->renderableObjects) {
-    if (element && element->model) {
-      batches[element->model].push_back(element);
+  {
+    ZoneScopedN("BatchingObjects");
+    for (auto element : this->renderableObjects) {
+      if (element && element->model) {
+        batches[element->model].push_back(element);
+      }
     }
   }
 
   // 3. Render each model batch in an instanced draw call
   for (auto &[model, instances] : batches) {
     ZoneScopedN("ModelBatch");
+    ZoneText(model->path.c_str(), model->path.size());
+    TracyGpuZoneTransient(__gpu_batch_zone, model->path.c_str(), true);
     if (instances.empty())
       continue;
 
@@ -155,30 +168,42 @@ void Material::RenderObjects() {
     }
 
     // Upload custom uniforms from the first instance in the batch
-    for (auto &[key, val] : instances[0]->_uniforms) {
-      if (key == "camera" || key == "translate")
-        continue;
-      if (program->uniforms.contains(key)) {
-        val->Use(program->GetUniformOffset(key, this->uses_camera));
+    {
+      ZoneScopedN("UploadUniforms");
+      TracyGpuZone("UploadUniforms");
+      for (auto &[key, val] : instances[0]->_uniforms) {
+        if (key == "camera" || key == "translate")
+          continue;
+        if (program->uniforms.contains(key)) {
+          val->Use(program->GetUniformOffset(key, this->uses_camera));
+        }
       }
     }
 
     // Upload instance transforms to SSBO at binding point 2
-    if (instanceSSBO == 0) {
-      glGenBuffers(1, &instanceSSBO);
+    {
+      ZoneScopedN("UploadInstanceSSBO");
+      TracyGpuZone("UploadInstanceSSBO");
+      if (instanceSSBO == 0) {
+        glGenBuffers(1, &instanceSSBO);
+      }
+      glBindBuffer(GL_SHADER_STORAGE_BUFFER, instanceSSBO);
+      glBufferData(GL_SHADER_STORAGE_BUFFER,
+                   transforms.size() * sizeof(glm::mat4), transforms.data(),
+                   GL_DYNAMIC_DRAW);
+      glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, instanceSSBO);
+      glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+      CHECK_GL_ERROR();
     }
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, instanceSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER,
-                 transforms.size() * sizeof(glm::mat4), transforms.data(),
-                 GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, instanceSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    CHECK_GL_ERROR();
 
     // Draw all sub-meshes of this model instanced
-    model->DrawInstanced(*program,
-                         static_cast<unsigned int>(transforms.size()));
-    CHECK_GL_ERROR();
+    {
+      ZoneScopedN("DrawModel");
+      TracyGpuZone("DrawModel");
+      model->DrawInstanced(*program,
+                           static_cast<unsigned int>(transforms.size()));
+      CHECK_GL_ERROR();
+    }
   }
 }
 

@@ -127,9 +127,13 @@ int Main::Tick(
     return -1;
   }
 
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  CHECK_GL_ERROR();
+  {
+    ZoneScopedN("Clear");
+    TracyGpuZone("Clear");
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    CHECK_GL_ERROR();
+  }
 #ifndef IMGUI
   float total = 0;
   for (auto var : frameTimes) {
@@ -137,8 +141,11 @@ int Main::Tick(
   }
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Fps: {}", frameTimes.size() / total);
 #endif
-  for (auto f : *instance->preRender) {
-    f();
+  {
+    ZoneScopedN("PreRender");
+    for (auto f : *instance->preRender) {
+      f();
+    }
   }
   {
     TracyGpuZone("Rendering");
@@ -146,17 +153,22 @@ int Main::Tick(
     for (auto &[key, val] : materials) {
       ZoneScopedN("Material");
       ZoneText(key.c_str(), strlen(key.c_str()));
+      TracyGpuZoneTransient(__gpu_mat_zone, key.c_str(), true);
       val->SetupMaterial();
       val->RenderObjects();
     }
   }
-  for (auto f : *instance->postRender) {
-    f();
+  {
+    ZoneScopedN("PostRender");
+    for (auto f : *instance->postRender) {
+      f();
+    }
   }
 
   CHECK_GL_ERROR();
   {
     ZoneScopedNC("VSync", 0x111111);
+    TracyGpuZone("SwapBuffers");
     glfwSwapBuffers(instance->window);
   }
   TracyGpuCollect;

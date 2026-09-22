@@ -6,11 +6,13 @@
 #include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <tracy/Tracy.hpp>
 using namespace Engine::Graphics;
 
 ComponentRenderable::ComponentRenderable(std::string model_path,
                                          std::string material_path,
                                          std::shared_ptr<Object> object) {
+  ZoneScoped;
   this->object = object;
   FromData(model_path, material_path, {});
   if (material) {
@@ -21,6 +23,7 @@ ComponentRenderable::ComponentRenderable(std::string model_path,
 void ComponentRenderable::FromData(
     std::string model_path, std::string material_path,
     std::map<std::string, std::shared_ptr<IUniform>> uniforms) {
+  ZoneScoped;
   _model_path = model_path;
   _model_path.reserve(100);
   model = Model::Create(model_path);

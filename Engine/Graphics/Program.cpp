@@ -7,6 +7,7 @@
 #include <memory>
 #include <stacktrace>
 #include <tracy/Tracy.hpp>
+#include "tracy/TracyOpenGL.hpp"
 #include <vector>
 using namespace Engine::Graphics;
 using json = nlohmann::json;
@@ -230,7 +231,8 @@ unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
   return -1;
 }
 void Engine::Graphics::Program::Setup() {
-  ZoneScoped;
+  ZoneScopedN("Program::Setup");
+  TracyGpuZone("Program::Setup");
   glUseProgram(id);
   glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
   if (tex) {

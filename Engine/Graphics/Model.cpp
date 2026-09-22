@@ -1,13 +1,18 @@
 #include "Model.hpp"
 #include "Graphics/Program.hpp"
 #include "Util/LoggerUtil.hpp"
+#include "glad/glad.h"
 #include <filesystem>
+#include <tracy/Tracy.hpp>
+#include "tracy/TracyOpenGL.hpp"
 
 using namespace Engine::Graphics;
 
 std::unordered_map<std::string, std::shared_ptr<Model>> Model::models = {};
 
 std::shared_ptr<Model> Model::Create(const std::string &path) {
+  ZoneScoped;
+  ZoneText(path.c_str(), path.size());
   if (models.contains(path)) {
     return models[path];
   }
@@ -19,6 +24,7 @@ std::shared_ptr<Model> Model::Create(const std::string &path) {
 Engine::Graphics::Mesh::Mesh(std::vector<MVertex> vertices,
                              std::vector<unsigned int> indices,
                              std::vector<MTexture> textures) {
+  ZoneScoped;
   this->vertices = vertices;
   this->indices = indices;
   this->textures = textures;
@@ -27,26 +33,37 @@ Engine::Graphics::Mesh::Mesh(std::vector<MVertex> vertices,
 }
 
 void Engine::Graphics::Mesh::Draw(Engine::Graphics::Program &program) {
+  ZoneScopedN("Mesh::Draw");
+  TracyGpuZone("Mesh::Draw");
   DrawInstanced(program, 1);
 }
 
 void Engine::Graphics::Mesh::DrawInstanced(Engine::Graphics::Program &program,
                                            unsigned int instanceCount) {
+  ZoneScopedN("Mesh::DrawInstanced");
+  TracyGpuZone("Mesh::DrawInstanced");
   if (instanceCount == 0)
     return;
   if (!textures.empty() && textures[0].texture &&
       textures[0].texture->texture != (unsigned int)-1) {
+    ZoneScopedN("BindTexture");
+    TracyGpuZone("BindTexture");
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textures[0].texture->texture);
   }
 
-  glBindVertexArray(VAO);
-  glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0,
-                          instanceCount);
-  glBindVertexArray(0);
+  {
+    ZoneScopedN("glDrawElementsInstanced");
+    TracyGpuZone("glDrawElementsInstanced");
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0,
+                            instanceCount);
+    glBindVertexArray(0);
+  }
 }
 
 void Engine::Graphics::Mesh::setupMesh() {
+  ZoneScoped;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
@@ -77,22 +94,30 @@ void Engine::Graphics::Mesh::setupMesh() {
 }
 
 Engine::Graphics::Model::Model(const std::string &path) {
+  ZoneScoped;
+  ZoneText(path.c_str(), path.size());
   this->path = path;
   loadModel(path);
 }
 
 void Engine::Graphics::Model::Draw(Engine::Graphics::Program &program) {
+  ZoneScopedN("Model::Draw");
+  TracyGpuZone("Model::Draw");
   DrawInstanced(program, 1);
 }
 
 void Engine::Graphics::Model::DrawInstanced(Engine::Graphics::Program &program,
                                            unsigned int instanceCount) {
+  ZoneScopedN("Model::DrawInstanced");
+  TracyGpuZone("Model::DrawInstanced");
   for (auto &mesh : meshes) {
     mesh.DrawInstanced(program, instanceCount);
   }
 }
 
 void Engine::Graphics::Model::loadModel(std::string path) {
+  ZoneScoped;
+  ZoneText(path.c_str(), path.size());
   Assimp::Importer import;
   std::string sanitized_path =
       (path.rfind("resources/", 0) == 0) ? path : ("resources/" + path);
@@ -115,6 +140,7 @@ void Engine::Graphics::Model::loadModel(std::string path) {
 }
 
 void Engine::Graphics::Model::processNode(aiNode *node, const aiScene *scene) {
+  ZoneScoped;
   // process all the node's meshes (if any)
   for (unsigned int i = 0; i < node->mNumMeshes; i++) {
     aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
@@ -128,6 +154,7 @@ void Engine::Graphics::Model::processNode(aiNode *node, const aiScene *scene) {
 
 Engine::Graphics::Mesh
 Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
+  ZoneScoped;
   std::vector<MVertex> vertices;
   std::vector<unsigned int> indices;
   std::vector<MTexture> textures;
@@ -183,6 +210,7 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
 std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
     aiMaterial *mat, aiTextureType type, std::string typeName) {
+  ZoneScoped;
   std::vector<MTexture> textures;
   for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
     aiString str;
