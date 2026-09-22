@@ -13,3 +13,9 @@
       }                                                                        \
     }                                                                          \
   }
+#define IMGUI_TEXT_INPUT(title, deftext)                                       \
+  [] {                                                                         \
+    static std::string text = deftext;                                         \
+    ImGui::InputText(title, &text[0], 255);                                    \
+    return text;                                                               \
+  }()

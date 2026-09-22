@@ -8,13 +8,13 @@
 #include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include "nlohmann/json.hpp" // IWYU pragma: keep
+#include "tracy/TracyOpenGL.hpp"
 #include <exception>
 #include <glm/trigonometric.hpp>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <tracy/Tracy.hpp>
-#include "tracy/TracyOpenGL.hpp"
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -127,7 +127,6 @@ void Material::RenderObjects() {
     }
   }
 
-  // 2. Batch renderable objects by their model
   std::map<std::shared_ptr<Model>,
            std::vector<std::shared_ptr<ComponentRenderable>>>
       batches;
@@ -140,7 +139,6 @@ void Material::RenderObjects() {
     }
   }
 
-  // 3. Render each model batch in an instanced draw call
   for (auto &[model, instances] : batches) {
     ZoneScopedN("ModelBatch");
     ZoneText(model->path.c_str(), model->path.size());
@@ -148,7 +146,6 @@ void Material::RenderObjects() {
     if (instances.empty())
       continue;
 
-    // Collect all instance transformation matrices
     std::vector<glm::mat4> transforms;
     transforms.reserve(instances.size());
     for (auto &inst : instances) {
@@ -167,7 +164,6 @@ void Material::RenderObjects() {
       transforms.push_back(transform);
     }
 
-    // Upload custom uniforms from the first instance in the batch
     {
       ZoneScopedN("UploadUniforms");
       TracyGpuZone("UploadUniforms");
@@ -180,7 +176,6 @@ void Material::RenderObjects() {
       }
     }
 
-    // Upload instance transforms to SSBO at binding point 2
     {
       ZoneScopedN("UploadInstanceSSBO");
       TracyGpuZone("UploadInstanceSSBO");
@@ -196,7 +191,6 @@ void Material::RenderObjects() {
       CHECK_GL_ERROR();
     }
 
-    // Draw all sub-meshes of this model instanced
     {
       ZoneScopedN("DrawModel");
       TracyGpuZone("DrawModel");

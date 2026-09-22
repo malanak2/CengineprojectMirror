@@ -28,7 +28,6 @@ public:
   }
   std::shared_ptr<IComponent> GetScript(std::string_view key);
 
-private:
   std::map<std::string, std::function<std::shared_ptr<IComponent>()>,
            std::less<>>
       map_comp;

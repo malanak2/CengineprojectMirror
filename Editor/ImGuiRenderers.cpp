@@ -5,6 +5,7 @@
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "ImGuiMacros.hpp"
+#include "ScriptSystem.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <imgui.h>
@@ -271,7 +272,12 @@ void ImGuiRenderer::RenderSceneView(std::shared_ptr<Engine::Scene> scene) {
 
   ImGui::End();
 }
-
+// https://en.cppreference.com/cpp/string/byte/tolower
+std::string str_tolower(std::string s) {
+  std::transform(s.begin(), s.end(), s.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+  return s;
+}
 void ImGuiRenderer::RenderObjectInspector() {
   ZoneScoped;
   ImGui::Begin("Object inspetor");
@@ -296,11 +302,31 @@ void ImGuiRenderer::RenderObjectInspector() {
       ImGui::InputFloat3(": Rotation", &obj->_rotation[0]);
     }
   }
+  std::vector<std::string> names = std::vector<std::string>();
   for (auto [type, comp] : sceneObject->instance->_components) {
     if (comp != nullptr)
       if (ImGui::CollapsingHeader(comp->GetName().data())) {
         ImGuiComponentRenderer::instance->Render(comp);
+        names.insert(names.end(), std::string(comp->GetName()));
       }
+  }
+  ImGui::Text("Add components");
+  static char search[256] = "";
+  ImGui::InputText("Title", search, sizeof(search));
+  for (const auto &[name, factory] :
+       Engine::Main::ScriptSystem::instance->map_comp) {
+    auto it = find(names.begin(), names.end(), name);
+
+    if (it != names.end()) {
+      continue;
+    }
+    if (search[0] != '\0') {
+
+      if (str_tolower(name).find(str_tolower(search)) == std::string::npos) {
+        continue;
+      }
+    }
+    ImGui::Text("%s", name.c_str());
   }
   ImGui::End();
 }
