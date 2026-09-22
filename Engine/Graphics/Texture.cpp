@@ -3,9 +3,10 @@
 #include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
+#include "sys/stat.h"
 #include <memory>
 #include <tracy/Tracy.hpp>
-
+using namespace Engine::Graphics;
 json Engine::Graphics::Texture::ToJson() {
   JsonFileBase ret = JsonFileBase();
   ret.object_type = ObjectType::Texture;
@@ -140,4 +141,32 @@ Engine::Graphics::Texture::Texture(std::string json_path) {
 std::shared_ptr<Engine::Graphics::Texture>
 Engine::Graphics::Texture::Create(std::string json_path) {
   return std::make_shared<Texture>(json_path);
+}
+std::shared_ptr<Texture>
+Engine::Graphics::Texture::CreateModel(std::string textureName) {
+  std::string modelTexMetaPath =
+      Config::inst->graphics->texturePath + "/models";
+
+  size_t lastindex = textureName.find_last_of(".");
+  std::string rawname = textureName.substr(0, lastindex);
+  struct stat sb;
+  std::string jsonPath = modelTexMetaPath + "/" + rawname + ".json";
+  if (stat(jsonPath.c_str(), &sb) != 0) {
+    TextureJson tj;
+    tj.path = "textures/" + textureName; // path to the actual .png / .jpg
+    tj.filterType = TexFiltering::linear;
+    tj.wrapS = TexWrap::repeat;
+    tj.wrapT = TexWrap::repeat;
+    tj.mipmap = true;
+    tj.translucent = false;
+
+    JsonFileBase fb;
+    fb.object_type = ObjectType::Texture;
+    fb.data = tj;
+    json j = fb;
+
+    std::string data = j.dump(2);
+    FileUtil::SaveFile(jsonPath, &data);
+  }
+  return Texture::Create(jsonPath);
 }

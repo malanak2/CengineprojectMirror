@@ -154,7 +154,7 @@ std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
     aiString str;
     mat->GetTexture(type, i, &str);
     MTexture texture;
-    texture.texture = Texture::Create(str.data);
+    texture.texture = Texture::CreateModel(str.data);
     texture.type = typeName;
     textures.push_back(texture);
   }

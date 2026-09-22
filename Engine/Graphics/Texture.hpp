@@ -45,6 +45,7 @@ public:
   //! @returns Texture pointer
   //!
   static std::shared_ptr<Texture> Create(std::string json_path);
+  static std::shared_ptr<Texture> CreateModel(std::string json_path);
   unsigned int texture = -1;
 
 private:
