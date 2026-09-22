@@ -21,7 +21,7 @@ public:
 
   void FromJson(json &js) override;
 
-  int amount = 0;
+  float amount = 0;
 
 private:
 };

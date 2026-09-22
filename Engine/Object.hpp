@@ -3,9 +3,12 @@
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
+#include "ScriptSystem.hpp"
+#include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 using json = nlohmann::json;
@@ -72,5 +75,86 @@ public:
                   std::vector<std::shared_ptr<IComponent>> comps = {},
                   std::vector<float> position = {0, 0, 0},
                   std::vector<float> rotation = {0, 0, 0, 0});
+  //!
+  //! @brief Adds component to object unless already present
+  //!
+  //!
+  template <typename T = IComponent> void AddComponent() {
+    std::string key = T::GetNameS();
+    if (_components.contains(key)) {
+      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                         "Tried adding already present component");
+      return;
+    }
+    auto component = Main::ScriptSystem::instance->GetScript(key);
+    component->SetObject(shared_from_this());
+    component->Setup();
+    _components[key] = component;
+  }
+  //!
+  //! @brief Adds component to object unless already present
+  //!
+  //! @param[in] key key
+  //!
+  void AddComponent(std::string key) {
+    if (_components.contains(key)) {
+      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                         "Tried adding already present component");
+      return;
+    }
+    auto component = Main::ScriptSystem::instance->GetScript(key);
+    component->SetObject(shared_from_this());
+    component->Setup();
+    _components[key] = component;
+  }
+  //!
+  //! @brief Removes component from object unless not present
+  //!
+  //!
+  template <typename T = IComponent> void RemoveComponent() {
+    std::string key = T::GetNameS();
+    if (!_components.contains(key)) {
+      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                         "Tried to remomve component not present");
+      return;
+    }
+    auto component = GetComponent<T>();
+    component->End();
+    _components.erase(key);
+  }
+  //!
+  //! @brief Removes component from object unless not present
+  //!
+  //! @param[in] key key
+  //!
+  void RemoveComponent(std::string key) {
+    if (!_components.contains(key)) {
+      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                         "Tried to remomve component not present");
+      return;
+    }
+    auto component = GetComponent(key);
+    component->End();
+    _components.erase(key);
+  }
+  //!
+  //! @brief Return the component specified if present, otherwise nullptr
+  //!
+  //!
+  template <typename T = IComponent> std::shared_ptr<T> GetComponent() {
+    if (!_components.contains(T::GetNameS()))
+      return nullptr;
+    return _components[T::GetnameS()];
+  }
+  //!
+  //! @brief Return the component specified if present, otherwise nullptr
+  //!
+  //! @param[in] key key
+  //!
+  std::shared_ptr<IComponent> GetComponent(std::string key) {
+    if (!_components.contains(key))
+      return nullptr;
+    return _components[key];
+  }
 };
 } // namespace Engine

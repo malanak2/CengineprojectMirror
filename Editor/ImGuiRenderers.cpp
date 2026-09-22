@@ -1,5 +1,6 @@
 #include "ImGuiRenderers.hpp"
 #include "Components/InvalidComponent.hpp"
+#include "Components/TestComponent.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
@@ -97,13 +98,11 @@ void ImGuiComponentRenderer::Render(std::shared_ptr<Engine::IComponent> uni) {
 void ImGuiComponentRenderer::Init() {
   ZoneScoped;
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
-    auto comp = std::static_pointer_cast<Engine::Graphics::ComponentRenderable>(
-        component);
-    ImGui::InputText("Model path", &comp->_model_path[0], 100);
-    ImGui::InputText("Material path", &comp->_material_path[0], 100);
+    ImGui::InputText("Model path", &component->_model_path[0], 100);
+    ImGui::InputText("Material path", &component->_material_path[0], 100);
 
     if (ImGui::CollapsingHeader("Uniforms")) {
-      for (auto &[key, val] : comp->_uniforms) {
+      for (auto &[key, val] : component->_uniforms) {
         ImGuiUniformRenderer::instance->Render(val);
       }
     }
@@ -112,10 +111,12 @@ void ImGuiComponentRenderer::Init() {
                            { ImGui::Text("Invalid Component"); })
 
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::CameraComponent, {
-    auto comp =
-        std::static_pointer_cast<Engine::Graphics::CameraComponent>(component);
-    ImGui::InputFloat("Near", &comp->near);
-    ImGui::InputFloat("Far", &comp->far);
+    ImGui::InputFloat("Near", &component->near);
+    ImGui::InputFloat("Far", &component->far);
+  });
+
+  IMGUI_REGISTER_COMPONENT(Engine::TestComponent, {
+    ImGui::InputFloat("Amount", &component->amount);
   });
 }
 
@@ -307,8 +308,8 @@ void ImGuiRenderer::RenderObjectInspector() {
     if (comp != nullptr)
       if (ImGui::CollapsingHeader(comp->GetName().data())) {
         ImGuiComponentRenderer::instance->Render(comp);
-        names.insert(names.end(), std::string(comp->GetName()));
       }
+    names.insert(names.end(), std::string(comp->GetName()));
   }
   ImGui::Text("Add components");
   static char search[256] = "";
@@ -326,7 +327,9 @@ void ImGuiRenderer::RenderObjectInspector() {
         continue;
       }
     }
-    ImGui::Text("%s", name.c_str());
+    if (ImGui::Button(name.c_str())) {
+      sceneObject->instance->AddComponent(name);
+    }
   }
   ImGui::End();
 }

@@ -16,6 +16,9 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <ctime>
+#ifdef IMGUI
+#include <imgui_impl_glfw.h>
+#endif
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
@@ -192,6 +195,9 @@ void Main::Terminate() {
 void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
   ZoneScoped;
+#ifdef IMGUI
+  ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+#endif
   if (instance->keyMap.contains(scancode)) {
     for (auto var : instance->keyMap[scancode]) {
       var(action, mods);

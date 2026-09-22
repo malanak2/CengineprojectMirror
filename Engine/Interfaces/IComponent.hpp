@@ -36,6 +36,11 @@ public:
   //!
   //!
   virtual void FixedUpdate();
+  //!
+  //! @brief Called when component is removed / on program end
+  //!
+  //!
+  virtual void End();
 
   void SetObject(std::shared_ptr<Object> object);
 

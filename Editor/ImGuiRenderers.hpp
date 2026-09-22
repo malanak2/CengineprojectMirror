@@ -42,7 +42,10 @@ private:
 #define IMGUI_REGISTER_COMPONENT(p1, p2)                                       \
   {                                                                            \
     instance->Register(p1::GetNameS(),                                         \
-                       [](std::shared_ptr<Engine::IComponent> component) p2);  \
+                       [](std::shared_ptr<Engine::IComponent> c) {             \
+                         auto component = std::static_pointer_cast<p1>(c);     \
+                         p2                                                    \
+                       });                                                     \
   }
 //!
 //! @brief Class for registering imgui renderers for Component types

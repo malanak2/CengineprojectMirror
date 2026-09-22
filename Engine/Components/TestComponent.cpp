@@ -4,7 +4,7 @@
 #include "Object.hpp"
 void Engine::TestComponent::Update() {
   auto o = object.lock();
-  o->_position = {o->_position[0], o->_position[1] + amount, o->_position[2]};
+  o->_position = o->_position + glm::vec3{0, amount, 0};
 }
 json Engine::TestComponent::ToJson() {
   TestComponentJson t;
