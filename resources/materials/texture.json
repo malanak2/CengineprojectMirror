@@ -2,7 +2,7 @@
   "object_type": "material",
   "name": "Texture Material",
   "uses_camera": true,
-  "uses_translate": true,
+  "uses_translate": false,
   "texture_path": "testTexTransparent.json",
   "shaders": [
     {
@@ -17,11 +17,6 @@
     }
   ],
   "uniforms": [
-    {
-      "name": "translate",
-      "bind_point": 1,
-      "size": 64
-    },
     {
       "name": "camera",
       "bind_point": 0,

@@ -75,21 +75,7 @@ void Engine::LoadScene(std::string path) {
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
     Graphics::RenderableDataJson rdj;
-    rdj.indices = {
-        0, 1, 2, // Bottom 1
-        0, 2, 3, // Bottom 2
-        0, 4, 1, // Front
-        1, 4, 2, // Right
-        2, 4, 3, // Back
-        3, 4, 0  // Left
-    };
-    rdj.vertices = {
-        -1.0, -1.0, -1.0, // Front left
-        1.0,  -1.0, -1.0, // Front right
-        1.0,  -1.0, 1.0,  // Back right
-        -1.0, -1.0, 1.0,  // Back left
-        0.0,  1.0,  0.0   // Top
-    };
+    rdj.model_path = "models/pyramid.obj";
     rdj.material_path = "materials/basic.json";
     std::vector<float> unis = {0, 1, 0, 1};
     rdj.uniforms = {

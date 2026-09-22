@@ -8,6 +8,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 namespace Engine {
 namespace Graphics {
 struct MVertex {
@@ -29,17 +34,29 @@ public:
   Mesh(std::vector<MVertex> vertices, std::vector<unsigned int> indices,
        std::vector<MTexture> textures);
   void Draw(Engine::Graphics::Program &program);
+  void DrawInstanced(Engine::Graphics::Program &program, unsigned int instanceCount);
+
+  unsigned int GetVAO() const { return VAO; }
+  unsigned int GetIndexCount() const { return static_cast<unsigned int>(indices.size()); }
 
 private:
   //  render data
-  unsigned int VAO, VBO, EBO;
+  unsigned int VAO = 0, VBO = 0, EBO = 0;
 
   void setupMesh();
 };
 class Model {
 public:
-  Model(char *path) { loadModel(path); }
-  void Draw(Shader &shader);
+  static std::shared_ptr<Model> Create(const std::string &path);
+  static std::unordered_map<std::string, std::shared_ptr<Model>> models;
+
+  Model(const std::string &path);
+  Model() = default;
+  void Draw(Engine::Graphics::Program &program);
+  void DrawInstanced(Engine::Graphics::Program &program, unsigned int instanceCount);
+
+  const std::vector<Mesh> &GetMeshes() const { return meshes; }
+  std::string path;
 
 private:
   // model data
@@ -55,3 +72,4 @@ private:
 };
 } // namespace Graphics
 } // namespace Engine
+

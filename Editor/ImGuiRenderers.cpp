@@ -98,6 +98,7 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
     auto comp = std::static_pointer_cast<Engine::Graphics::ComponentRenderable>(
         component);
+    ImGui::InputText("Model path", &comp->_model_path[0], 100);
     ImGui::InputText("Material path", &comp->_material_path[0], 100);
 
     if (ImGui::CollapsingHeader("Uniforms")) {

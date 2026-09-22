@@ -1,4 +1,5 @@
 #include "Material.hpp"
+#include "Engine.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
 #include "Scene.hpp"
@@ -99,62 +100,84 @@ void Material::SetupMaterial() { program->Setup(); }
 
 void Material::RenderObjects() {
   ZoneScoped;
-  for (auto element : this->renderableObjects) {
-    ZoneScopedN("Object");
-    glBindVertexArray(element->vao);
-    if (uses_camera) {
-      auto obj = element->object.lock();
-      if (obj->_name.length() != 0 && obj->_name.length() < 64000) {
-        ZoneText(obj->_name.c_str(), strlen(obj->_name.c_str()));
-      }
-      if (obj) {
-        auto scene = obj->scene.lock();
-        if (scene && scene->camera) {
-          auto proj = scene->camera->GetProjMatrix();
-          auto view = scene->camera->GetViewMatrix();
-          glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"]->info.id);
-          CHECK_GL_ERROR();
 
-          glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
-                          glm::value_ptr(proj));
-          glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
-                          glm::value_ptr(view));
-          CHECK_GL_ERROR();
-        }
+  if (uses_camera) {
+    auto scene = Engine::Engine::instance
+                     ? Engine::Engine::instance->current_scene
+                     : nullptr;
+    if (scene && scene->camera && program->uniforms.contains("camera")) {
+      auto proj = scene->camera->GetProjMatrix();
+      auto view = scene->camera->GetViewMatrix();
+      glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"]->info.id);
+      CHECK_GL_ERROR();
+
+      glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                      glm::value_ptr(proj));
+      glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
+                      glm::value_ptr(view));
+      CHECK_GL_ERROR();
+    }
+  }
+
+  // 2. Batch renderable objects by their model
+  std::map<std::shared_ptr<Model>,
+           std::vector<std::shared_ptr<ComponentRenderable>>>
+      batches;
+  for (auto element : this->renderableObjects) {
+    if (element && element->model) {
+      batches[element->model].push_back(element);
+    }
+  }
+
+  // 3. Render each model batch in an instanced draw call
+  for (auto &[model, instances] : batches) {
+    ZoneScopedN("ModelBatch");
+    if (instances.empty())
+      continue;
+
+    // Collect all instance transformation matrices
+    std::vector<glm::mat4> transforms;
+    transforms.reserve(instances.size());
+    for (auto &inst : instances) {
+      glm::mat4 transform = glm::mat4(1.0f);
+      auto obj = inst->object.lock();
+      if (obj) {
+        transform =
+            glm::translate(transform, glm::make_vec3(&(obj->_position[0])));
+        transform = glm::rotate(transform, glm::radians(obj->_rotation[0]),
+                                glm::vec3(1, 0, 0));
+        transform = glm::rotate(transform, glm::radians(obj->_rotation[1]),
+                                glm::vec3(0, 1, 0));
+        transform = glm::rotate(transform, glm::radians(obj->_rotation[2]),
+                                glm::vec3(0, 0, 1));
+      }
+      transforms.push_back(transform);
+    }
+
+    // Upload custom uniforms from the first instance in the batch
+    for (auto &[key, val] : instances[0]->_uniforms) {
+      if (key == "camera" || key == "translate")
+        continue;
+      if (program->uniforms.contains(key)) {
+        val->Use(program->GetUniformOffset(key, this->uses_camera));
       }
     }
-    for (auto [key, val] : program->uniforms) {
-      if (key == "camera")
-        continue;
-      if (key == "translate") {
-        glm::mat4 transform = glm::mat4(1);
-        auto obj = element->object.lock();
-        if (obj) {
-          transform =
-              glm::translate(transform, glm::make_vec3(&(obj->_position[0])));
-          transform = glm::rotate(transform, glm::radians(obj->_rotation[0]),
-                                  glm::vec3(1, 0, 0));
-          transform = glm::rotate(transform, glm::radians(obj->_rotation[1]),
-                                  glm::vec3(0, 1, 0));
-          transform = glm::rotate(transform, glm::radians(obj->_rotation[2]),
-                                  glm::vec3(0, 0, 1));
-          program->SetUniform("translate", transform, uses_camera);
-        }
-        continue;
-      }
-      if (!element->_uniforms.contains(key)) {
-        SPDLOG_LOGGER_INFO(spdlog::get("console"),
-                           "Uniform {} not found for object {}", key,
-                           element->object.lock()->_name);
-        continue;
-      }
-      element->_uniforms[key]->Use(
-          program->GetUniformOffset(key, this->uses_camera));
-      /*program->SetUniform(
-          key, *std::static_pointer_cast<float>(element->_uniforms[key].Data),
-          uses_camera);*/
+
+    // Upload instance transforms to SSBO at binding point 2
+    if (instanceSSBO == 0) {
+      glGenBuffers(1, &instanceSSBO);
     }
-    glDrawElements(GL_TRIANGLES, element->indices.size(), GL_UNSIGNED_INT, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, instanceSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER,
+                 transforms.size() * sizeof(glm::mat4), transforms.data(),
+                 GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, instanceSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    CHECK_GL_ERROR();
+
+    // Draw all sub-meshes of this model instanced
+    model->DrawInstanced(*program,
+                         static_cast<unsigned int>(transforms.size()));
     CHECK_GL_ERROR();
   }
 }
@@ -177,5 +200,10 @@ std::shared_ptr<Material> Material::Create(std::string path) {
   return material;
 }
 
-Material::~Material() {}
+Material::~Material() {
+  if (instanceSSBO != 0) {
+    glDeleteBuffers(1, &instanceSSBO);
+    instanceSSBO = 0;
+  }
+}
 } // namespace Engine::Graphics

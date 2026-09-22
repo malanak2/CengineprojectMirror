@@ -15,15 +15,12 @@ namespace Graphics {
 class Material;
 struct RenderableDataJson {
 public:
-  std::string path;
+  std::string model_path;
   std::string material_path;
   std::map<std::string, std::shared_ptr<IUniform>> uniforms;
-  // TODO: Move to model file
-  std::vector<float> vertices;
-  std::vector<int> indices;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, material_path, uniforms,
-                                   vertices, indices);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, model_path,
+                                   material_path, uniforms);
 
 class ComponentRenderable
     : public IComponent,
@@ -31,12 +28,9 @@ class ComponentRenderable
   REGISTER_CLASS(ComponentRenderable);
 
 public:
-  /// Only call if you call FromJson right after
   ComponentRenderable();
-  ComponentRenderable(std::string path, std::shared_ptr<Object> object);
-  /*  static std::shared_ptr<ComponentRenderable>
-    Create(std::string material_path,
-           std::map<std::string, std::vector<float>> uniforms);*/
+  ComponentRenderable(std::string model_path, std::string material_path,
+                      std::shared_ptr<Object> object);
 
   static std::shared_ptr<ComponentRenderable>
   Create(json &js, std::shared_ptr<Object> object);
@@ -49,22 +43,15 @@ public:
   json ToJson() override;
 
   ComponentRenderable(json &js);
-  unsigned int vao = 0;
-  unsigned int vbo = 0;
-  unsigned int ebo = 0;
   std::shared_ptr<Material> material;
   std::shared_ptr<Model> model;
-  // TODO: Move to model
-  std::vector<float> vertices;
-  std::vector<int> indices;
   std::string _material_path;
+  std::string _model_path;
   // Value storing the values of uniforms
   std::map<std::string, std::shared_ptr<IUniform>> _uniforms;
 
 private:
-  std::string path;
-  /// Material, but...
-  void FromData(std::string material_path,
+  void FromData(std::string model_path, std::string material_path,
                 std::map<std::string, std::shared_ptr<IUniform>> uniforms);
 };
 } // namespace Graphics
