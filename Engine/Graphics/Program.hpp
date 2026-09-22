@@ -21,6 +21,7 @@ public:
           bool uses_camera = false);
   ~Program();
   void SetUniform(std::string uniform, float value, bool camera);
+  void SetUniform(std::string uniform, int value);
   void SetUniform(std::string uniform, float v1, float v2, float v3, float v4,
                   bool camera);
   void SetUniform(std::string uniform, std::vector<float> values, bool camera);

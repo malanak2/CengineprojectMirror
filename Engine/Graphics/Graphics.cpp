@@ -101,7 +101,7 @@ int Main::Init(std::shared_ptr<Config> config) {
 
   // Load fallback texture
   FallbackTexture = std::make_shared<Texture>(
-      Config::inst->graphics->texturePath + "/fallback.json", -1);
+      Config::inst->graphics->texturePath + "/fallback.json");
   if (FallbackTexture->texture == -1) {
     CHECK_GL_ERROR();
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to load fallback texture.");

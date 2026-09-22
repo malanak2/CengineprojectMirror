@@ -1,4 +1,5 @@
 #include "Texture.hpp"
+#include "Graphics.hpp"
 #include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -36,17 +37,22 @@ void Engine::Graphics::Texture::FromJson(json &js) {
   this->wrapT = tj.wrapT;
 }
 
-Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
+Engine::Graphics::Texture::Texture(std::string json_path) {
   ZoneScoped;
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading texture at {}", json_path);
   this->path = json_path;
   std::string js;
   auto r = FileUtil::ReadFile(json_path, &js);
   if (r != 0) {
+    auto a = Graphics::Main::FallbackTexture;
+    if (a == nullptr) {
+      texture = -1;
+    } else {
+      texture = a->texture;
+    }
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Failed to open file at {}, falling back to {}",
-                        json_path, fallback);
-    texture = fallback;
+                        json_path, -1);
     return;
   }
   json parsed = json::parse(js);
@@ -56,10 +62,15 @@ Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
                      this->texture_path);
   auto tex = FileUtil::LoadImage(this->texture_path);
   if (!tex->data) {
+    auto a = Graphics::Main::FallbackTexture;
+    if (a == nullptr) {
+      texture = -1;
+    } else {
+      texture = a->texture;
+    }
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Failed to load image at {}, using backup...",
                         this->texture_path);
-    texture = fallback;
     return;
   }
   glGenTextures(1, &texture);
@@ -127,6 +138,6 @@ Engine::Graphics::Texture::Texture(std::string json_path, int fallback) {
 }
 // TODO: Have a cache
 std::shared_ptr<Engine::Graphics::Texture>
-Engine::Graphics::Texture::Create(std::string json_path, int fallback) {
-  return std::make_shared<Texture>(json_path, fallback);
+Engine::Graphics::Texture::Create(std::string json_path) {
+  return std::make_shared<Texture>(json_path);
 }

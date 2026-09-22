@@ -75,7 +75,7 @@ Program::Program(std::vector<UniformJson> uniforms_json,
   }
   if (texpath != "") {
     glActiveTexture(GL_TEXTURE1);
-    tex = Texture::Create(texpath, Main::FallbackTexture->texture);
+    tex = Texture::Create(texpath);
     glBindTexture(GL_TEXTURE_2D, tex->texture);
   }
 
@@ -145,6 +145,17 @@ void Program::SetUniform(std::string uniform, float value, bool camera) {
   glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
                   sizeof(float), &value);
   CHECK_GL_ERROR();
+}
+void Engine::Graphics::Program::SetUniform(std::string uniform, int value) {
+  ZoneScoped;
+  if (!uniforms.contains(uniform)) {
+    SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
+                       uniform);
+    return;
+  }
+  glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]->info.id);
+  glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, true),
+                  sizeof(float), &value);
 }
 
 /// Assumes program is used

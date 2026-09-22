@@ -35,7 +35,7 @@ public:
   json ToJson() override;
   void FromJson(json &js) override;
 
-  Texture(std::string json_path, int fallback);
+  Texture(std::string json_path);
   //!
   //! @brief Cache implemented for textures
   //!
@@ -44,7 +44,7 @@ public:
   //! for any reason
   //! @returns Texture pointer
   //!
-  static std::shared_ptr<Texture> Create(std::string json_path, int fallback);
+  static std::shared_ptr<Texture> Create(std::string json_path);
   unsigned int texture = -1;
 
 private:

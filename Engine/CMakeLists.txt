@@ -9,6 +9,7 @@ find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(assimp REQUIRED)
 
 FetchContent_Declare(inipp GIT_REPOSITORY https://github.com/Rookfighter/inifile-cpp.git)
 FetchContent_MakeAvailable(inipp)
@@ -53,6 +54,8 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         ScriptSystem.hpp
         ScriptSystem.cpp
         Interfaces/IIdentifiable.hpp
+        Graphics/Model.hpp
+        Graphics/Model.cpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)
@@ -61,7 +64,7 @@ add_subdirectory(Util)
 
 set_target_properties(cengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengine PUBLIC cengineutil spdlog::spdlog )
-target_link_libraries(cengine PRIVATE  glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm stdc++exp)
+target_link_libraries(cengine PRIVATE  glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm stdc++exp assimp::assimp)
 if (PROFILE)
   target_link_libraries(cengine PUBLIC Tracy::TracyClient)
 endif()

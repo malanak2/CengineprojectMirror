@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Graphics/Model.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
@@ -52,6 +53,7 @@ public:
   unsigned int vbo = 0;
   unsigned int ebo = 0;
   std::shared_ptr<Material> material;
+  std::shared_ptr<Model> model;
   // TODO: Move to model
   std::vector<float> vertices;
   std::vector<int> indices;

@@ -36,26 +36,27 @@ inline void Register() {
       });
   Engine::Graphics::Main::instance->preRender->insert(
       Engine::Graphics::Main::instance->preRender->end(), []() {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        {
+          ZoneScopedN("ImGui Setup");
+          ImGui_ImplOpenGL3_NewFrame();
+          ImGui_ImplGlfw_NewFrame();
+          ImGui::NewFrame();
 
-        ImGuiWindowFlags window_flags =
-            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+          ImGuiWindowFlags window_flags =
+              ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+        }
         //           ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
         //           ImGuiDockNodeFlags_PassthruCentralNode);
         // DEMO:
         //         ImGui::ShowDemoWindow();
         //       ImPlot::ShowDemoWindow();
-        {
-          ZoneScopedN("ImGui");
-          Editor::ImGuiR::ImGuiRenderer::RenderSceneView(
-              Engine::Engine::instance->current_scene);
-          Editor::ImGuiR::ImGuiRenderer::RenderObjectInspector();
-        }
+        Editor::ImGuiR::ImGuiRenderer::RenderSceneView(
+            Engine::Engine::instance->current_scene);
+        Editor::ImGuiR::ImGuiRenderer::RenderObjectInspector();
       });
   Engine::Graphics::Main::instance->postRender->insert(
       Engine::Graphics::Main::instance->postRender->end(), []() {
+        ZoneScopedN("ImGui Render");
         if (Config::inst->graphics->enableAntiAliasing) {
           glDisable(GL_MULTISAMPLE);
         }
