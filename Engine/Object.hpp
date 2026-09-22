@@ -81,15 +81,7 @@ public:
   //!
   template <typename T = IComponent> void AddComponent() {
     std::string key = T::GetNameS();
-    if (_components.contains(key)) {
-      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
-                         "Tried adding already present component");
-      return;
-    }
-    auto component = Main::ScriptSystem::instance->GetScript(key);
-    component->SetObject(shared_from_this());
-    component->Setup();
-    _components[key] = component;
+    AddComponent(key);
   }
   //!
   //! @brief Adds component to object unless already present
@@ -113,14 +105,7 @@ public:
   //!
   template <typename T = IComponent> void RemoveComponent() {
     std::string key = T::GetNameS();
-    if (!_components.contains(key)) {
-      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
-                         "Tried to remomve component not present");
-      return;
-    }
-    auto component = GetComponent<T>();
-    component->End();
-    _components.erase(key);
+    RemoveComponent(key);
   }
   //!
   //! @brief Removes component from object unless not present
