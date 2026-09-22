@@ -53,6 +53,7 @@ int FileUtil::LoadBinary(std::string path, std::vector<unsigned char> *res) {
 std::shared_ptr<FileUtil::ImageFile> FileUtil::LoadImage(std::string path) {
   path = sanitizePath(path);
   auto ret = std::make_shared<ImageFile>();
+  stbi_set_flip_vertically_on_load(1);
   ret->data =
       stbi_load(path.c_str(), &ret->width, &ret->height, &ret->nrChannels, 0);
   return ret;

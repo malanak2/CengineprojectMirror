@@ -2,9 +2,9 @@
 #include "Graphics/Program.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
+#include "tracy/TracyOpenGL.hpp"
 #include <filesystem>
 #include <tracy/Tracy.hpp>
-#include "tracy/TracyOpenGL.hpp"
 
 using namespace Engine::Graphics;
 
@@ -107,7 +107,7 @@ void Engine::Graphics::Model::Draw(Engine::Graphics::Program &program) {
 }
 
 void Engine::Graphics::Model::DrawInstanced(Engine::Graphics::Program &program,
-                                           unsigned int instanceCount) {
+                                            unsigned int instanceCount) {
   ZoneScopedN("Model::DrawInstanced");
   TracyGpuZone("Model::DrawInstanced");
   for (auto &mesh : meshes) {
@@ -122,9 +122,9 @@ void Engine::Graphics::Model::loadModel(std::string path) {
   std::string sanitized_path =
       (path.rfind("resources/", 0) == 0) ? path : ("resources/" + path);
 
-  const aiScene *scene =
-      import.ReadFile(sanitized_path, aiProcess_Triangulate | aiProcess_FlipUVs |
-                                         aiProcess_GenSmoothNormals);
+  const aiScene *scene = import.ReadFile(
+      sanitized_path, aiProcess_Triangulate | aiProcess_GenSmoothNormals |
+                          aiProcess_PreTransformVertices);
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
       !scene->mRootNode) {
@@ -197,8 +197,8 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   // process material
   if (mesh->mMaterialIndex >= 0) {
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-    std::vector<MTexture> diffuseMaps =
-        loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    std::vector<MTexture> diffuseMaps = loadMaterialTextures(
+        material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     std::vector<MTexture> specularMaps = loadMaterialTextures(
         material, aiTextureType_SPECULAR, "texture_specular");
@@ -222,4 +222,3 @@ std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
   }
   return textures;
 }
-

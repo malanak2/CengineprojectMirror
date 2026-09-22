@@ -7,6 +7,8 @@ namespace Engine {
    {ENGINE_COMPONENT_TYPE::camera, Graphics::CameraComponent::FromJson}};*/
 void IComponent::Setup() {}
 void IComponent::Update() {}
+void IComponent::End() {}
+
 void IComponent::FixedUpdate() {}
 void IComponent::SetObject(std::shared_ptr<Object> object) {
   this->object = object;
