@@ -2,7 +2,6 @@
 #include "Engine.hpp"
 #include "Graphics.hpp"
 #include "Program.hpp"
-#include "Scene.hpp"
 #include "Shader.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -152,14 +151,11 @@ void Material::RenderObjects() {
       glm::mat4 transform = glm::mat4(1.0f);
       auto obj = inst->object.lock();
       if (obj) {
-        transform =
-            glm::translate(transform, glm::make_vec3(&(obj->_position[0])));
-        transform = glm::rotate(transform, glm::radians(obj->_rotation[0]),
-                                glm::vec3(1, 0, 0));
-        transform = glm::rotate(transform, glm::radians(obj->_rotation[1]),
-                                glm::vec3(0, 1, 0));
-        transform = glm::rotate(transform, glm::radians(obj->_rotation[2]),
-                                glm::vec3(0, 0, 1));
+        glm::mat4 translationMatrix =
+            glm::translate(glm::mat4(1.0f), obj->_position);
+        glm::mat4 rotationMatrix = glm::mat4_cast(obj->_rotation);
+
+        transform = translationMatrix * rotationMatrix;
       }
       transforms.push_back(transform);
     }

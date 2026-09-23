@@ -296,11 +296,34 @@ void ImGuiRenderer::RenderObjectInspector() {
   if (ImGui::CollapsingHeader("Values")) {
     auto obj = sceneObject->instance;
     if (obj) {
-      // Position:
       ImGui::InputFloat3("XYZ", &obj->_position[0]);
-      // Rotation:
-      ImGui::SliderFloat3("Rotations:", &obj->_rotation[0], -360, 360);
-      ImGui::InputFloat3(": Rotation", &obj->_rotation[0]);
+
+      static glm::vec3 currentAngles =
+          glm::degrees(glm::eulerAngles(obj->_rotation));
+      glm::vec3 newAngles = currentAngles;
+
+      if (ImGui::DragFloat3("Rotation", &newAngles[0], 1.0f)) {
+        glm::vec3 delta = newAngles - currentAngles;
+
+        if (delta.x != 0.0f) {
+          obj->_rotation =
+              glm::angleAxis(glm::radians(delta.x), glm::vec3(1, 0, 0)) *
+              obj->_rotation;
+        }
+        if (delta.y != 0.0f) {
+          obj->_rotation =
+              glm::angleAxis(glm::radians(delta.y), glm::vec3(0, 1, 0)) *
+              obj->_rotation;
+        }
+        if (delta.z != 0.0f) {
+          obj->_rotation =
+              glm::angleAxis(glm::radians(delta.z), glm::vec3(0, 0, 1)) *
+              obj->_rotation;
+        }
+
+        obj->_rotation = glm::normalize(obj->_rotation);
+        currentAngles = newAngles;
+      }
     }
   }
   std::vector<std::string> names = std::vector<std::string>();

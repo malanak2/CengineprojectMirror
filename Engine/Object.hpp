@@ -5,6 +5,7 @@
 #include "Interfaces/IComponent.hpp"
 #include "ScriptSystem.hpp"
 #include "Util/LoggerUtil.hpp"
+#include <glm/gtc/quaternion.hpp>
 #include <memory>
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
@@ -44,7 +45,7 @@ public:
   //!
   //! @_rotation The rotation of the object
   //!
-  glm::vec3 _rotation;
+  glm::quat _rotation;
   Object(std::string path, std::shared_ptr<Scene> scene);
   Object(std::shared_ptr<Scene> scene);
   std::string _name;

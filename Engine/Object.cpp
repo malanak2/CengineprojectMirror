@@ -7,6 +7,7 @@
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
+#include <glm/ext/matrix_transform.hpp>
 #include <memory>
 
 namespace Engine {
@@ -47,7 +48,7 @@ json Object::ToJson() {
   }
   js.components = cmps;
   js.position = {_position[0], _position[1], _position[2]};
-  js.rotation = {_rotation[0], _rotation[1], _rotation[2]};
+  js.rotation = {_rotation.w, _rotation.x, _rotation.y, _rotation.z};
   js.name = _name;
   ret.data = js;
   json r = ret;
@@ -107,11 +108,17 @@ void Object::fromParams(std::string name,
   } else {
     this->_position = glm::vec3(position[0], position[1], position[2]);
   }
-  if (rotation.size() != 3) {
+  if (rotation.size() == 4) {
+    this->_rotation =
+        glm::quat(rotation[0], rotation[1], rotation[2], rotation[3]);
+
+  } else if (rotation.size() == 3) {
+    this->_rotation = glm::quat(
+        glm::radians(glm::vec3(rotation[0], rotation[1], rotation[2])));
+  } else {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Bad rotation passed to Object : {}",
                        rotation.size());
-  } else {
-    this->_rotation = glm::vec3(rotation[0], rotation[1], rotation[2]);
+    this->_rotation = glm::identity<glm::quat>();
   }
 }
 Object::Object(std::shared_ptr<Scene> scene) {
