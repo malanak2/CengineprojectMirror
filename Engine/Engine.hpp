@@ -44,6 +44,9 @@ public:
   //! @current_scene Pointer to the current root scene
   //!
   std::shared_ptr<Scene> current_scene;
+  static float GetDeltaTime();
+  float deltaTime = 0;
+  float lastTime = 0;
 
 private:
   //!

@@ -25,10 +25,11 @@ public:
   std::vector<UniformJson> uniforms;
   std::string texture_path;
   bool uses_camera;
+  bool uses_animations;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MaterialJson, name, shaders, uniforms,
-                                   texture_path, uses_camera)
+                                   texture_path, uses_camera, uses_animations)
 class ComponentRenderable;
 
 //!
@@ -39,6 +40,7 @@ public:
   std::shared_ptr<Program> program;
   unsigned int vao = 0;
   unsigned int instanceSSBO = 0;
+  unsigned int boneSSBO = 0;
   std::string path = "";
   std::string name = "";
   bool usable = false;
@@ -58,6 +60,8 @@ public:
   Material(std::string path);
   Material();
   ~Material();
+
+  bool uses_animations;
 
 private:
   static bool ran_from_create;

@@ -128,9 +128,10 @@ public:
   //!
   //!
   template <typename T = IComponent> std::shared_ptr<T> GetComponent() {
-    if (!_components.contains(T::GetNameS()))
+    std::string key(T::GetNameS());
+    if (!_components.contains(key))
       return nullptr;
-    return _components[T::GetnameS()];
+    return std::static_pointer_cast<T>(_components[key]);
   }
   //!
   //! @brief Return the component specified if present, otherwise nullptr

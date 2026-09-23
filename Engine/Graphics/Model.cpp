@@ -4,6 +4,7 @@
 #include "glad/glad.h"
 #include "tracy/TracyOpenGL.hpp"
 #include <filesystem>
+#include <memory>
 #include <tracy/Tracy.hpp>
 
 using namespace Engine::Graphics;
@@ -89,6 +90,16 @@ void Engine::Graphics::Mesh::setupMesh() {
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MVertex),
                         (void *)offsetof(MVertex, TexCoords));
+  glEnableVertexAttribArray(3);
+  // ids
+  glEnableVertexAttribArray(3);
+  glVertexAttribIPointer(3, 4, GL_INT, sizeof(MVertex),
+                         (void *)offsetof(MVertex, m_BoneIDs));
+
+  // weights
+  glEnableVertexAttribArray(4);
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(MVertex),
+                        (void *)offsetof(MVertex, m_Weights));
 
   glBindVertexArray(0);
 }
@@ -123,8 +134,7 @@ void Engine::Graphics::Model::loadModel(std::string path) {
       (path.rfind("resources/", 0) == 0) ? path : ("resources/" + path);
 
   const aiScene *scene = import.ReadFile(
-      sanitized_path, aiProcess_Triangulate | aiProcess_GenSmoothNormals |
-                          aiProcess_PreTransformVertices);
+      sanitized_path, aiProcess_Triangulate | aiProcess_GenSmoothNormals);
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
       !scene->mRootNode) {
@@ -161,6 +171,7 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
   for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
     MVertex vertex;
+    SetVertexBoneDataToDefault(vertex);
     glm::vec3 vector;
     vector.x = mesh->mVertices[i].x;
     vector.y = mesh->mVertices[i].y;
@@ -204,6 +215,7 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         material, aiTextureType_SPECULAR, "texture_specular");
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
   }
+  ExtractBoneWeightForVertices(vertices, mesh, scene);
 
   return Mesh(vertices, indices, textures);
 }
@@ -221,4 +233,304 @@ std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
     textures.push_back(texture);
   }
   return textures;
+}
+void Engine::Graphics::Model::SetVertexBoneDataToDefault(MVertex &vertex) {
+  for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+    vertex.m_BoneIDs[i] = -1;
+    vertex.m_Weights[i] = 0.0f;
+  }
+}
+void Engine::Graphics::Model::SetVertexBoneData(MVertex &vertex, int boneID,
+                                                float weight) {
+  for (int i = 0; i < MAX_BONE_INFLUENCE; ++i) {
+    if (vertex.m_BoneIDs[i] < 0) {
+      vertex.m_Weights[i] = weight;
+      vertex.m_BoneIDs[i] = boneID;
+      break;
+    }
+  }
+}
+void Engine::Graphics::Model::ExtractBoneWeightForVertices(
+    std::vector<MVertex> &vertices, aiMesh *mesh, const aiScene *scene) {
+  for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+    int boneID = -1;
+    std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+    if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()) {
+      BoneInfo newBoneInfo;
+      newBoneInfo.id = m_BoneCounter;
+      glm::mat4 mat;
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          mat[j][i] = mesh->mBones[boneIndex]->mOffsetMatrix[i][j];
+        }
+      }
+      newBoneInfo.offset = mat;
+      m_BoneInfoMap[boneName] = newBoneInfo;
+      boneID = m_BoneCounter;
+      m_BoneCounter++;
+    } else {
+      boneID = m_BoneInfoMap[boneName].id;
+    }
+    assert(boneID != -1);
+    auto weights = mesh->mBones[boneIndex]->mWeights;
+    int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+    for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
+      int vertexId = weights[weightIndex].mVertexId;
+      float weight = weights[weightIndex].mWeight;
+      assert(vertexId <= vertices.size());
+      SetVertexBoneData(vertices[vertexId], boneID, weight);
+    }
+  }
+}
+Engine::Graphics::Bone::Bone(const std::string &name, int ID,
+                             const aiNodeAnim *channel)
+    : m_Name(name), m_ID(ID), m_LocalTransform(1.0f) {
+  m_NumPositions = channel->mNumPositionKeys;
+
+  for (int positionIndex = 0; positionIndex < m_NumPositions; ++positionIndex) {
+    aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
+    float timeStamp = channel->mPositionKeys[positionIndex].mTime;
+    KeyPosition data;
+    data.position = glm::vec3();
+    data.position[0] = aiPosition[0];
+    data.position[1] = aiPosition[1];
+    data.position[2] = aiPosition[2];
+    data.timeStamp = timeStamp;
+    m_Positions.push_back(data);
+  }
+
+  m_NumRotations = channel->mNumRotationKeys;
+  for (int rotationIndex = 0; rotationIndex < m_NumRotations; ++rotationIndex) {
+    aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
+    float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
+    KeyRotation data;
+    data.orientation = glm::quat();
+    data.orientation.x = aiOrientation.x;
+    data.orientation.y = aiOrientation.y;
+    data.orientation.z = aiOrientation.z;
+    data.orientation.w = aiOrientation.w;
+    data.timeStamp = timeStamp;
+    m_Rotations.push_back(data);
+  }
+
+  m_NumScalings = channel->mNumScalingKeys;
+  for (int keyIndex = 0; keyIndex < m_NumScalings; ++keyIndex) {
+    aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
+    float timeStamp = channel->mScalingKeys[keyIndex].mTime;
+    KeyScale data;
+
+    data.scale = glm::vec3();
+    data.scale[0] = scale[0];
+    data.scale[1] = scale[1];
+    data.scale[2] = scale[2];
+
+    data.timeStamp = timeStamp;
+    m_Scales.push_back(data);
+  }
+}
+void Engine::Graphics::Bone::Update(float animationTime) {
+  glm::mat4 translation = InterpolatePosition(animationTime);
+  glm::mat4 rotation = InterpolateRotation(animationTime);
+  glm::mat4 scale = InterpolateScaling(animationTime);
+  m_LocalTransform = translation * rotation * scale;
+}
+
+int Engine::Graphics::Bone::GetPositionIndex(float animationTime) {
+  for (int index = 0; index < m_NumPositions - 1; ++index) {
+    if (animationTime < m_Positions[index + 1].timeStamp)
+      return index;
+  }
+  assert(0);
+}
+int Engine::Graphics::Bone::GetRotationIndex(float animationTime) {
+  for (int index = 0; index < m_NumRotations - 1; ++index) {
+    if (animationTime < m_Rotations[index + 1].timeStamp)
+      return index;
+  }
+  assert(0);
+}
+int Engine::Graphics::Bone::GetScaleIndex(float animationTime) {
+  for (int index = 0; index < m_NumScalings - 1; ++index) {
+    if (animationTime < m_Scales[index + 1].timeStamp)
+      return index;
+  }
+  assert(0);
+}
+float Engine::Graphics::Bone::GetScaleFactor(float lastTimeStamp,
+                                             float nextTimeStamp,
+                                             float animationTime) {
+  float scaleFactor = 0.0f;
+  float midWayLength = animationTime - lastTimeStamp;
+  float framesDiff = nextTimeStamp - lastTimeStamp;
+  scaleFactor = midWayLength / framesDiff;
+  return scaleFactor;
+}
+glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
+  if (1 == m_NumPositions)
+    return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
+
+  int p0Index = GetPositionIndex(animationTime);
+  int p1Index = p0Index + 1;
+  float scaleFactor =
+      GetScaleFactor(m_Positions[p0Index].timeStamp,
+                     m_Positions[p1Index].timeStamp, animationTime);
+  glm::vec3 finalPosition =
+      glm::mix(m_Positions[p0Index].position, m_Positions[p1Index].position,
+               scaleFactor);
+  return glm::translate(glm::mat4(1.0f), finalPosition);
+}
+glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
+  if (1 == m_NumRotations) {
+    auto rotation = glm::normalize(m_Rotations[0].orientation);
+    return glm::mat4_cast(rotation);
+  }
+
+  int p0Index = GetRotationIndex(animationTime);
+  int p1Index = p0Index + 1;
+  float scaleFactor =
+      GetScaleFactor(m_Rotations[p0Index].timeStamp,
+                     m_Rotations[p1Index].timeStamp, animationTime);
+  glm::quat finalRotation =
+      glm::slerp(m_Rotations[p0Index].orientation,
+                 m_Rotations[p1Index].orientation, scaleFactor);
+  finalRotation = glm::normalize(finalRotation);
+  return glm::mat4_cast(finalRotation);
+}
+glm::mat4 Engine::Graphics::Bone::InterpolateScaling(float animationTime) {
+  if (1 == m_NumScalings)
+    return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
+
+  int p0Index = GetScaleIndex(animationTime);
+  int p1Index = p0Index + 1;
+  float scaleFactor = GetScaleFactor(
+      m_Scales[p0Index].timeStamp, m_Scales[p1Index].timeStamp, animationTime);
+  glm::vec3 finalScale =
+      glm::mix(m_Scales[p0Index].scale, m_Scales[p1Index].scale, scaleFactor);
+  return glm::scale(glm::mat4(1.0f), finalScale);
+}
+Engine::Graphics::Animator::Animator(
+    std::shared_ptr<Animation> currentAnimation) {
+  m_CurrentTime = 0.0;
+  m_CurrentAnimation = currentAnimation;
+
+  m_FinalBoneMatrices.reserve(500);
+
+  for (int i = 0; i < 500; i++)
+    m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
+}
+void Engine::Graphics::Animator::UpdateAnimation(float dt) {
+  ZoneScoped;
+  m_DeltaTime = dt;
+  if (m_CurrentAnimation) {
+    m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
+    m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
+    CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+  }
+}
+void Engine::Graphics::Animator::PlayAnimation(
+    std::shared_ptr<Animation> pAnimation) {
+  m_CurrentAnimation = pAnimation;
+  m_CurrentTime = 0.0f;
+}
+void Engine::Graphics::Animator::CalculateBoneTransform(
+    const AssimpNodeData *node, glm::mat4 parentTransform) {
+  ZoneScoped;
+  std::string nodeName = node->name;
+  glm::mat4 nodeTransform = node->transformation;
+
+  Bone *Bone = m_CurrentAnimation->FindBone(nodeName);
+
+  if (Bone) {
+    Bone->Update(m_CurrentTime);
+    nodeTransform = Bone->GetLocalTransform();
+  }
+
+  glm::mat4 globalTransformation = parentTransform * nodeTransform;
+
+  const auto &boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
+  auto it = boneInfoMap.find(nodeName);
+  if (it != boneInfoMap.end()) {
+    m_FinalBoneMatrices[it->second.id] =
+        globalTransformation * it->second.offset;
+  }
+
+  for (int i = 0; i < node->childrenCount; i++)
+    CalculateBoneTransform(&node->children[i], globalTransformation);
+}
+Engine::Graphics::Animation::Animation(const std::string &animationPath,
+                                       std::shared_ptr<Model> model,
+                                       int animationIndex) {
+  std::string sanitized_path = (animationPath.rfind("resources/", 0) == 0)
+                                   ? animationPath
+                                   : ("resources/" + animationPath);
+  Assimp::Importer importer;
+  const aiScene *scene =
+      importer.ReadFile(sanitized_path, aiProcess_Triangulate);
+  assert(scene && scene->mRootNode);
+  assert(scene->mNumAnimations > (unsigned int)animationIndex);
+  auto animation = scene->mAnimations[animationIndex];
+  m_Name = animation->mName.C_Str();
+  if (m_Name.empty()) {
+    m_Name = "Animation_" + std::to_string(animationIndex);
+  }
+  m_Duration = animation->mDuration;
+  m_TicksPerSecond = animation->mTicksPerSecond;
+  ReadHeirarchyData(m_RootNode, scene->mRootNode);
+  ReadMissingBones(animation, *model);
+}
+Engine::Graphics::Bone *
+Engine::Graphics::Animation::FindBone(const std::string &name) {
+  ZoneScoped;
+  auto iter =
+      std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone &Bone) {
+        return Bone.GetBoneName() == name;
+      });
+  if (iter == m_Bones.end())
+    return nullptr;
+  else
+    return &(*iter);
+}
+
+void Engine::Graphics::Animation::ReadMissingBones(const aiAnimation *animation,
+                                                   Model &model) {
+  int size = animation->mNumChannels;
+
+  auto &boneInfoMap =
+      model.GetBoneInfoMap(); // getting m_BoneInfoMap from Model class
+  int &boneCount =
+      model.GetBoneCount(); // getting the m_BoneCounter from Model class
+
+  // reading channels(bones engaged in an animation and their keyframes)
+  for (int i = 0; i < size; i++) {
+    auto channel = animation->mChannels[i];
+    std::string boneName = channel->mNodeName.data;
+
+    if (boneInfoMap.find(boneName) == boneInfoMap.end()) {
+      boneInfoMap[boneName].id = boneCount;
+      boneCount++;
+    }
+    m_Bones.push_back(Bone(channel->mNodeName.data,
+                           boneInfoMap[channel->mNodeName.data].id, channel));
+  }
+
+  m_BoneInfoMap = boneInfoMap;
+}
+void Engine::Graphics::Animation::ReadHeirarchyData(AssimpNodeData &dest,
+                                                    const aiNode *src) {
+  assert(src);
+
+  dest.name = src->mName.data;
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      dest.transformation[j][i] = src->mTransformation[i][j];
+    }
+  }
+  dest.childrenCount = src->mNumChildren;
+
+  for (int i = 0; i < src->mNumChildren; i++) {
+    AssimpNodeData newData;
+    ReadHeirarchyData(newData, src->mChildren[i]);
+    dest.children.push_back(newData);
+  }
 }

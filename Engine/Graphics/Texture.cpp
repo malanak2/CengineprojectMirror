@@ -125,13 +125,16 @@ Engine::Graphics::Texture::Texture(std::string json_path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     break;
   }
-  if (translucent) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, tex->data);
-  } else {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex->width, tex->height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, tex->data);
+  GLenum format = GL_RGB;
+  if (tex->nrChannels == 4 || translucent) {
+    format = GL_RGBA;
+  } else if (tex->nrChannels == 1) {
+    format = GL_RED;
   }
+
+  glTexImage2D(GL_TEXTURE_2D, 0, format, tex->width, tex->height, 0, format,
+               GL_UNSIGNED_BYTE, tex->data);
+
   if (mipmap) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
@@ -147,13 +150,20 @@ Engine::Graphics::Texture::CreateModel(std::string textureName) {
   std::string modelTexMetaPath =
       Config::inst->graphics->texturePath + "/models";
 
-  size_t lastindex = textureName.find_last_of(".");
-  std::string rawname = textureName.substr(0, lastindex);
+  size_t lastSlash = textureName.find_last_of("/\\");
+  std::string filename = (lastSlash != std::string::npos)
+                             ? textureName.substr(lastSlash + 1)
+                             : textureName;
+
+  size_t lastDot = filename.find_last_of(".");
+  std::string rawname =
+      (lastDot != std::string::npos) ? filename.substr(0, lastDot) : filename;
+
   struct stat sb;
   std::string jsonPath = modelTexMetaPath + "/" + rawname + ".json";
   if (stat(jsonPath.c_str(), &sb) != 0) {
     TextureJson tj;
-    tj.path = "textures/" + textureName; // path to the actual .png / .jpg
+    tj.path = "textures/" + filename; // points cleanly to textures/<filename>
     tj.filterType = TexFiltering::linear;
     tj.wrapS = TexWrap::repeat;
     tj.wrapT = TexWrap::repeat;

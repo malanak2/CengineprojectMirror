@@ -1,4 +1,5 @@
 #include "IComponent.hpp"
+#include "Engine.hpp"
 
 namespace Engine {
 /*std::map<ENGINE_COMPONENT_TYPE, void(json &js)> constructors = {
@@ -8,6 +9,7 @@ namespace Engine {
 void IComponent::Setup() {}
 void IComponent::Update() {}
 void IComponent::End() {}
+float IComponent::GetDeltaTime() { return Engine::Engine::GetDeltaTime(); }
 
 void IComponent::FixedUpdate() {}
 void IComponent::SetObject(std::shared_ptr<Object> object) {

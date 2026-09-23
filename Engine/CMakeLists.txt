@@ -34,6 +34,8 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Graphics/Texture.hpp
         Graphics/Components/ComponentRenderable.hpp
         Graphics/Components/ComponentRenderable.cpp
+        Graphics/Components/ComponentAnimator.cpp
+        Graphics/Components/ComponentAnimator.hpp
         Components/InvalidComponent.cpp
         Components/InvalidComponent.cpp
         Config/Config.cpp

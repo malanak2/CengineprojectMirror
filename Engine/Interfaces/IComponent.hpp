@@ -42,6 +42,8 @@ public:
   //!
   virtual void End();
 
+  float GetDeltaTime();
+
   void SetObject(std::shared_ptr<Object> object);
 
   //!

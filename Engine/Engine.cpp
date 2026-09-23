@@ -13,6 +13,7 @@
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
+#include <GLFW/glfw3.h>
 #include <chrono>
 #include <exception>
 #include <memory>
@@ -99,10 +100,17 @@ void Engine::Engine::Run() {
   ZoneScoped;
   auto logger = spdlog::get("console");
   SPDLOG_LOGGER_INFO(logger, "Running...");
+
   // Handle
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
   current_scene->Setup();
   while (true) {
+    float currTime = glfwGetTime();
+    if (lastTime == 0) {
+      lastTime = currTime;
+    }
+    deltaTime = currTime - lastTime;
+    lastTime = currTime;
     // break;
     auto current_time = std::chrono::steady_clock::now();
     auto dur_graphics = current_time - last_tick_begin;
@@ -128,6 +136,7 @@ void Engine::Engine::Run() {
   }
   SPDLOG_LOGGER_INFO(logger, "Main stopping.");
 }
+float Engine::GetDeltaTime() { return instance->deltaTime; }
 
 void Engine::Engine::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");

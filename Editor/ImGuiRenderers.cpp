@@ -2,6 +2,7 @@
 #include "Components/InvalidComponent.hpp"
 #include "Components/TestComponent.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
+#include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
@@ -117,6 +118,32 @@ void ImGuiComponentRenderer::Init() {
 
   IMGUI_REGISTER_COMPONENT(Engine::TestComponent, {
     ImGui::InputFloat("Amount", &component->amount);
+  });
+
+  IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentAnimator, {
+    if (ImGui::BeginCombo("Animation",
+                          component->GetCurrentAnimation().c_str())) {
+      for (const auto &[name, anim] : component->animators) {
+        bool isSelected = (component->GetCurrentAnimation() == name);
+        if (ImGui::Selectable(name.c_str(), isSelected)) {
+          component->SetAnimation(name);
+        }
+      }
+      bool isSelected = (component->GetCurrentAnimation() == "");
+      if (ImGui::Selectable("None", isSelected)) {
+        component->SetAnimation("");
+      }
+      ImGui::EndCombo();
+    }
+    if (component->GetIsPlaying()) {
+      if (ImGui::Button("Pause")) {
+        component->SetIsPlaying(false);
+      }
+    } else {
+      if (ImGui::Button("Play")) {
+        component->SetIsPlaying(true);
+      }
+    }
   });
 }
 

@@ -7,6 +7,7 @@ class ScriptRegistrar {
 public:
   static void RegisterCommonComponents();
   static void RegisterGraphicComponents();
+  static void RegisterPhysicsComponents();
   static void RegisterComponents();
 };
 } // namespace Engine

@@ -1,6 +1,7 @@
 #include "Material.hpp"
 #include "Engine.hpp"
 #include "Graphics.hpp"
+#include "Graphics/Components/ComponentAnimator.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/FileUtil.hpp"
@@ -55,6 +56,7 @@ Material::Material(std::string path) {
   this->path = path;
   CHECK_GL_ERROR();
   uses_camera = m.uses_camera;
+  uses_animations = m.uses_animations;
   texture_path.reserve(100);
   if (m.texture_path == "") {
     texture_path = "";
@@ -186,6 +188,28 @@ void Material::RenderObjects() {
       glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
       CHECK_GL_ERROR();
     }
+    if (uses_animations) {
+      ZoneScopedN("UploadBoneSSBo");
+      auto obj = instances[0]->object.lock();
+      if (obj) {
+        auto animatorComp = obj->GetComponent<ComponentAnimator>();
+        if (animatorComp && animatorComp->GetAnimator()) {
+          auto transforms = animatorComp->GetAnimator()->GetFinalBoneMatrices();
+          if (!transforms.empty()) {
+            if (boneSSBO == 0) {
+              glGenBuffers(1, &boneSSBO);
+            }
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, boneSSBO);
+            glBufferData(GL_SHADER_STORAGE_BUFFER,
+                         transforms.size() * sizeof(glm::mat4),
+                         transforms.data(), GL_DYNAMIC_DRAW);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, boneSSBO);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+            CHECK_GL_ERROR();
+          }
+        }
+      }
+    }
 
     {
       ZoneScopedN("DrawModel");
@@ -219,6 +243,10 @@ Material::~Material() {
   if (instanceSSBO != 0) {
     glDeleteBuffers(1, &instanceSSBO);
     instanceSSBO = 0;
+  }
+  if (boneSSBO != 0) {
+    glDeleteBuffers(1, &boneSSBO);
+    boneSSBO = 0;
   }
 }
 } // namespace Engine::Graphics

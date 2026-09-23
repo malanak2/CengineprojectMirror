@@ -4,6 +4,7 @@
   "uses_camera": true,
   "uses_translate": false,
   "texture_path": "",
+  "uses_animations": false,
   "shaders": [
     {
       "type": "vertex",
