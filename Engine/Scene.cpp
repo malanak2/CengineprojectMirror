@@ -173,5 +173,28 @@ void SceneObject::Update() {
     var->Update();
   }
 }
+
+static std::shared_ptr<Engine::Object>
+FindObjectRecursive(const std::shared_ptr<Engine::SceneObject> &so,
+                    const std::string &name) {
+  if (so && so->instance && so->instance->_name == name)
+    return so->instance;
+  if (so) {
+    for (const auto &child : so->Children) {
+      auto res = FindObjectRecursive(child, name);
+      if (res)
+        return res;
+    }
+  }
+  return nullptr;
+}
+
+std::shared_ptr<Engine::Object> Scene::FindObject(const std::string &name) {
+  for (const auto &rootSo : objects) {
+    auto res = FindObjectRecursive(rootSo, name);
+    if (res)
+      return res;
+  }
+  return nullptr;
+}
 } // namespace Engine
-  //

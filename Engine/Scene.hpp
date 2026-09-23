@@ -84,6 +84,7 @@ public:
   std::shared_ptr<Graphics::CameraComponent> camera = nullptr;
   void FromJson(json &js) override;
   void FromJson(json &js, std::shared_ptr<Scene> self);
+  std::shared_ptr<Object> FindObject(const std::string &name);
   void Setup();
   void Update();
 };

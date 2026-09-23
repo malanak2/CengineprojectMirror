@@ -6,6 +6,7 @@
 #include "sys/stat.h"
 #include <memory>
 #include <tracy/Tracy.hpp>
+#include <tracy/TracyOpenGL.hpp>
 using namespace Engine::Graphics;
 json Engine::Graphics::Texture::ToJson() {
   JsonFileBase ret = JsonFileBase();
@@ -40,6 +41,7 @@ void Engine::Graphics::Texture::FromJson(json &js) {
 
 Engine::Graphics::Texture::Texture(std::string json_path) {
   ZoneScoped;
+  TracyGpuZone("Texture");
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading texture at {}", json_path);
   this->path = json_path;
   std::string js;
@@ -143,7 +145,14 @@ Engine::Graphics::Texture::Texture(std::string json_path) {
 // TODO: Have a cache
 std::shared_ptr<Engine::Graphics::Texture>
 Engine::Graphics::Texture::Create(std::string json_path) {
-  return std::make_shared<Texture>(json_path);
+  ZoneScoped;
+  auto cache = &Engine::Graphics::Main::textures;
+  if (cache->contains(json_path))
+    return (*cache)[json_path];
+
+  auto t = std::make_shared<Texture>(json_path);
+  (*cache)[json_path] = t;
+  return t;
 }
 std::shared_ptr<Texture>
 Engine::Graphics::Texture::CreateModel(std::string textureName) {

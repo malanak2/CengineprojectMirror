@@ -22,16 +22,22 @@ std::shared_ptr<Model> Model::Create(const std::string &path) {
   return m;
 }
 
-Engine::Graphics::Mesh::Mesh(std::vector<MVertex> vertices,
+Engine::Graphics::Mesh::Mesh(std::string name, std::vector<MVertex> vertices,
                              std::vector<unsigned int> indices,
                              std::vector<MTexture> textures) {
   ZoneScoped;
+  this->name = name;
   this->vertices = vertices;
   this->indices = indices;
   this->textures = textures;
 
   setupMesh();
 }
+
+Engine::Graphics::Mesh::Mesh(std::vector<MVertex> vertices,
+                             std::vector<unsigned int> indices,
+                             std::vector<MTexture> textures)
+    : Mesh("", vertices, indices, textures) {}
 
 void Engine::Graphics::Mesh::Draw(Engine::Graphics::Program &program) {
   ZoneScopedN("Mesh::Draw");
@@ -117,12 +123,15 @@ void Engine::Graphics::Model::Draw(Engine::Graphics::Program &program) {
   DrawInstanced(program, 1);
 }
 
-void Engine::Graphics::Model::DrawInstanced(Engine::Graphics::Program &program,
-                                            unsigned int instanceCount) {
+void Engine::Graphics::Model::DrawInstanced(
+    Engine::Graphics::Program &program, unsigned int instanceCount,
+    const std::vector<bool> &enabledMeshes) {
   ZoneScopedN("Model::DrawInstanced");
   TracyGpuZone("Model::DrawInstanced");
-  for (auto &mesh : meshes) {
-    mesh.DrawInstanced(program, instanceCount);
+  for (size_t i = 0; i < meshes.size(); ++i) {
+    if (!enabledMeshes.empty() && i < enabledMeshes.size() && !enabledMeshes[i])
+      continue;
+    meshes[i].DrawInstanced(program, instanceCount);
   }
 }
 
@@ -217,7 +226,7 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   }
   ExtractBoneWeightForVertices(vertices, mesh, scene);
 
-  return Mesh(vertices, indices, textures);
+  return Mesh(mesh->mName.C_Str(), vertices, indices, textures);
 }
 
 std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
@@ -253,6 +262,8 @@ void Engine::Graphics::Model::SetVertexBoneData(MVertex &vertex, int boneID,
 void Engine::Graphics::Model::ExtractBoneWeightForVertices(
     std::vector<MVertex> &vertices, aiMesh *mesh, const aiScene *scene) {
   for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+    if (mesh->mBones[boneIndex]->mNumWeights == 0)
+      continue;
     int boneID = -1;
     std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
     if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()) {
@@ -444,10 +455,12 @@ Engine::Graphics::Animator::Animator(
   m_CurrentTime = 0.0;
   m_CurrentAnimation = currentAnimation;
 
-  m_FinalBoneMatrices.reserve(500);
-
-  for (int i = 0; i < 500; i++)
-    m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
+  if (m_CurrentAnimation &&
+      !m_CurrentAnimation->GetDefaultBoneMatrices().empty()) {
+    m_FinalBoneMatrices = m_CurrentAnimation->GetDefaultBoneMatrices();
+  } else {
+    m_FinalBoneMatrices.assign(500, glm::mat4(1.0f));
+  }
 }
 void Engine::Graphics::Animator::UpdateAnimation(float dt) {
   ZoneScoped;
@@ -463,24 +476,124 @@ void Engine::Graphics::Animator::PlayAnimation(
   m_CurrentAnimation = pAnimation;
   m_CurrentTime = 0.0f;
 }
+void Engine::Graphics::Animator::SetSockets(
+    const std::vector<SocketAttachment> &sockets) {
+  m_Sockets = sockets;
+  if (m_CurrentAnimation) {
+    CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+  }
+}
+
+glm::mat4 Engine::Graphics::Animator::GetBoneGlobalTransform(
+    const std::string &boneName) const {
+  auto it = m_GlobalNodeTransforms.find(boneName);
+  if (it != m_GlobalNodeTransforms.end()) {
+    return it->second;
+  }
+  return glm::mat4(1.0f);
+}
+
 void Engine::Graphics::Animator::CalculateBoneTransform(
     const AssimpNodeData *node, const glm::mat4 &parentTransform) {
-  glm::mat4 nodeTransform = node->transformation;
+  m_GlobalNodeTransforms.clear();
 
+  std::unordered_map<std::string, const SocketAttachment *> activeSockets;
+  for (const auto &s : m_Sockets) {
+    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+      activeSockets[s.targetNode] = &s;
+    }
+  }
+
+  // Pass 1: unsocketed hierarchy
+  CalculateBoneTransformInternal(node, parentTransform, activeSockets);
+
+  // Pass 2: socket attachments (iterative in case of chaining)
+  if (m_CurrentAnimation) {
+    std::vector<const SocketAttachment *> pendingSockets;
+    for (const auto &s : m_Sockets) {
+      if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+        pendingSockets.push_back(&s);
+      }
+    }
+
+    bool progress = true;
+    while (!pendingSockets.empty() && progress) {
+      progress = false;
+      for (auto it = pendingSockets.begin(); it != pendingSockets.end();) {
+        const SocketAttachment *socket = *it;
+        auto boneIt = m_GlobalNodeTransforms.find(socket->targetBone);
+        if (boneIt != m_GlobalNodeTransforms.end()) {
+          const AssimpNodeData *targetNode =
+              m_CurrentAnimation->FindNode(socket->targetNode);
+          if (targetNode) {
+            glm::mat4 socketOffset =
+                glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
+                glm::mat4_cast(glm::quat(glm::radians(socket->offsetRotation))) *
+                glm::scale(glm::mat4(1.0f), socket->offsetScale);
+            glm::mat4 socketParentTransform = boneIt->second * socketOffset;
+            CalculateSocketSubtree(targetNode, socketParentTransform, true);
+          }
+          it = pendingSockets.erase(it);
+          progress = true;
+        } else {
+          ++it;
+        }
+      }
+    }
+  }
+}
+
+void Engine::Graphics::Animator::CalculateBoneTransformInternal(
+    const AssimpNodeData *node, const glm::mat4 &parentTransform,
+    const std::unordered_map<std::string, const SocketAttachment *>
+        &activeSockets) {
+  if (activeSockets.contains(node->name)) {
+    return;
+  }
+
+  glm::mat4 nodeTransform = node->transformation;
   if (node->bone) {
     node->bone->Update(m_CurrentTime);
     nodeTransform = node->bone->GetLocalTransform();
   }
 
   glm::mat4 globalTransformation = parentTransform * nodeTransform;
+  m_GlobalNodeTransforms[node->name] = globalTransformation;
 
-  if (node->boneInfoId >= 0) {
+  if (node->boneInfoId >= 0 &&
+      node->boneInfoId < (int)m_FinalBoneMatrices.size()) {
     m_FinalBoneMatrices[node->boneInfoId] =
         globalTransformation * node->offsetMatrix;
   }
 
-  for (int i = 0; i < node->childrenCount; i++)
-    CalculateBoneTransform(&node->children[i], globalTransformation);
+  for (int i = 0; i < node->childrenCount; i++) {
+    CalculateBoneTransformInternal(&node->children[i], globalTransformation,
+                                   activeSockets);
+  }
+}
+
+void Engine::Graphics::Animator::CalculateSocketSubtree(
+    const AssimpNodeData *node, const glm::mat4 &parentTransform,
+    bool isSocketRoot) {
+  glm::mat4 nodeTransform =
+      isSocketRoot ? glm::mat4(1.0f) : node->transformation;
+  if (!isSocketRoot && node->bone) {
+    node->bone->Update(m_CurrentTime);
+    nodeTransform = node->bone->GetLocalTransform();
+  }
+
+  glm::mat4 globalTransformation = parentTransform * nodeTransform;
+  m_GlobalNodeTransforms[node->name] = globalTransformation;
+
+  if (node->boneInfoId >= 0 &&
+      node->boneInfoId < (int)m_FinalBoneMatrices.size()) {
+    m_FinalBoneMatrices[node->boneInfoId] =
+        globalTransformation * node->offsetMatrix;
+  }
+
+  for (int i = 0; i < node->childrenCount; i++) {
+    CalculateSocketSubtree(&node->children[i], globalTransformation, false);
+  }
 }
 Engine::Graphics::Animation::Animation(const std::string &animationPath,
                                        std::shared_ptr<Model> model,
@@ -503,6 +616,8 @@ Engine::Graphics::Animation::Animation(const std::string &animationPath,
   ReadHeirarchyData(m_RootNode, scene->mRootNode);
   ReadMissingBones(animation, *model);
   SetupNodeHierarchy(m_RootNode);
+  m_DefaultBoneMatrices.assign(500, glm::mat4(1.0f));
+  CalculateRestPose(&m_RootNode, glm::mat4(1.0f), m_DefaultBoneMatrices);
 }
 Engine::Graphics::Bone *
 Engine::Graphics::Animation::FindBone(const std::string &name) {
@@ -533,6 +648,7 @@ void Engine::Graphics::Animation::ReadMissingBones(const aiAnimation *animation,
 
     if (boneInfoMap.find(boneName) == boneInfoMap.end()) {
       boneInfoMap[boneName].id = boneCount;
+      boneInfoMap[boneName].offset = glm::mat4(1.0f);
       boneCount++;
     }
     m_Bones.push_back(Bone(channel->mNodeName.data,
@@ -573,4 +689,139 @@ void Engine::Graphics::Animation::SetupNodeHierarchy(AssimpNodeData &node) {
     SetupNodeHierarchy(child);
   }
 }
+
+static const Engine::Graphics::AssimpNodeData *
+FindNodeRecursive(const Engine::Graphics::AssimpNodeData *node,
+                  const std::string &name) {
+  if (node->name == name)
+    return node;
+  for (int i = 0; i < node->childrenCount; ++i) {
+    const auto *found = FindNodeRecursive(&node->children[i], name);
+    if (found)
+      return found;
+  }
+  return nullptr;
+}
+
+const Engine::Graphics::AssimpNodeData *
+Engine::Graphics::Animation::FindNode(const std::string &name) const {
+  return FindNodeRecursive(&m_RootNode, name);
+}
+
+static void
+CollectNodeNamesRecursive(const Engine::Graphics::AssimpNodeData *node,
+                          std::vector<std::string> &names) {
+  names.push_back(node->name);
+  for (int i = 0; i < node->childrenCount; ++i) {
+    CollectNodeNamesRecursive(&node->children[i], names);
+  }
+}
+
+std::vector<std::string> Engine::Graphics::Animation::GetNodeNames() const {
+  std::vector<std::string> names;
+  CollectNodeNamesRecursive(&m_RootNode, names);
+  return names;
+}
+
+void Engine::Graphics::Animation::SetSockets(
+    const std::vector<SocketAttachment> &sockets) {
+  m_Sockets = sockets;
+  RecalculateRestPose();
+}
+
+void Engine::Graphics::Animation::RecalculateRestPose() {
+  m_DefaultBoneMatrices.assign(500, glm::mat4(1.0f));
+  CalculateRestPose(&m_RootNode, glm::mat4(1.0f), m_DefaultBoneMatrices);
+}
+
+void Engine::Graphics::Animation::CalculateRestPose(
+    const AssimpNodeData *node, const glm::mat4 &parentTransform,
+    std::vector<glm::mat4> &outMatrices) const {
+  std::unordered_map<std::string, glm::mat4> globalTransforms;
+  std::unordered_map<std::string, const SocketAttachment *> activeSockets;
+  for (const auto &s : m_Sockets) {
+    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+      activeSockets[s.targetNode] = &s;
+    }
+  }
+
+  CalculateRestPoseInternal(node, parentTransform, outMatrices,
+                            globalTransforms, activeSockets);
+
+  std::vector<const SocketAttachment *> pendingSockets;
+  for (const auto &s : m_Sockets) {
+    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+      pendingSockets.push_back(&s);
+    }
+  }
+
+  bool progress = true;
+  while (!pendingSockets.empty() && progress) {
+    progress = false;
+    for (auto it = pendingSockets.begin(); it != pendingSockets.end();) {
+      const SocketAttachment *socket = *it;
+      auto boneIt = globalTransforms.find(socket->targetBone);
+      if (boneIt != globalTransforms.end()) {
+        const AssimpNodeData *targetNode = FindNode(socket->targetNode);
+        if (targetNode) {
+          glm::mat4 socketOffset =
+              glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
+              glm::mat4_cast(glm::quat(glm::radians(socket->offsetRotation))) *
+              glm::scale(glm::mat4(1.0f), socket->offsetScale);
+          glm::mat4 socketParentTransform = boneIt->second * socketOffset;
+          CalculateSocketSubtreeRestPose(targetNode, socketParentTransform,
+                                         outMatrices, globalTransforms, true);
+        }
+        it = pendingSockets.erase(it);
+        progress = true;
+      } else {
+        ++it;
+      }
+    }
+  }
+}
+
+void Engine::Graphics::Animation::CalculateRestPoseInternal(
+    const AssimpNodeData *node, const glm::mat4 &parentTransform,
+    std::vector<glm::mat4> &outMatrices,
+    std::unordered_map<std::string, glm::mat4> &globalTransforms,
+    const std::unordered_map<std::string, const SocketAttachment *>
+        &activeSockets) const {
+  if (activeSockets.contains(node->name)) {
+    return;
+  }
+
+  glm::mat4 globalTransformation = parentTransform * node->transformation;
+  globalTransforms[node->name] = globalTransformation;
+
+  if (node->boneInfoId >= 0 && node->boneInfoId < (int)outMatrices.size()) {
+    outMatrices[node->boneInfoId] = globalTransformation * node->offsetMatrix;
+  }
+
+  for (int i = 0; i < node->childrenCount; i++) {
+    CalculateRestPoseInternal(&node->children[i], globalTransformation,
+                              outMatrices, globalTransforms, activeSockets);
+  }
+}
+
+void Engine::Graphics::Animation::CalculateSocketSubtreeRestPose(
+    const AssimpNodeData *node, const glm::mat4 &parentTransform,
+    std::vector<glm::mat4> &outMatrices,
+    std::unordered_map<std::string, glm::mat4> &globalTransforms,
+    bool isSocketRoot) const {
+  glm::mat4 nodeTransform =
+      isSocketRoot ? glm::mat4(1.0f) : node->transformation;
+  glm::mat4 globalTransformation = parentTransform * nodeTransform;
+  globalTransforms[node->name] = globalTransformation;
+
+  if (node->boneInfoId >= 0 && node->boneInfoId < (int)outMatrices.size()) {
+    outMatrices[node->boneInfoId] = globalTransformation * node->offsetMatrix;
+  }
+
+  for (int i = 0; i < node->childrenCount; i++) {
+    CalculateSocketSubtreeRestPose(&node->children[i], globalTransformation,
+                                   outMatrices, globalTransforms, false);
+  }
+}
+
 

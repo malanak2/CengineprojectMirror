@@ -18,9 +18,26 @@ public:
   std::string model_path;
   std::string material_path;
   std::map<std::string, std::shared_ptr<IUniform>> uniforms;
+  std::vector<std::string> disabled_meshes;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, model_path,
-                                   material_path, uniforms);
+
+inline void to_json(json &j, const RenderableDataJson &p) {
+  j = json{{"model_path", p.model_path},
+           {"material_path", p.material_path},
+           {"uniforms", p.uniforms},
+           {"disabled_meshes", p.disabled_meshes}};
+}
+
+inline void from_json(const json &j, RenderableDataJson &p) {
+  j.at("model_path").get_to(p.model_path);
+  j.at("material_path").get_to(p.material_path);
+  if (j.contains("uniforms")) {
+    j.at("uniforms").get_to(p.uniforms);
+  }
+  if (j.contains("disabled_meshes")) {
+    j.at("disabled_meshes").get_to(p.disabled_meshes);
+  }
+}
 
 class ComponentRenderable
     : public IComponent,
@@ -49,10 +66,16 @@ public:
   std::string _model_path;
   // Value storing the values of uniforms
   std::map<std::string, std::shared_ptr<IUniform>> _uniforms;
+  std::vector<std::string> disabled_meshes;
+
+  std::vector<bool> GetEnabledMeshes() const;
+  bool IsMeshEnabled(const std::string &meshName) const;
+  void SetMeshEnabled(const std::string &meshName, bool enabled);
 
 private:
   void FromData(std::string model_path, std::string material_path,
-                std::map<std::string, std::shared_ptr<IUniform>> uniforms);
+                std::map<std::string, std::shared_ptr<IUniform>> uniforms,
+                std::vector<std::string> disabled_meshes = {});
 };
 } // namespace Graphics
 } // namespace Engine

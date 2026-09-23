@@ -4,8 +4,42 @@
 #include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <tracy/Tracy.hpp>
-json Engine::Graphics::ComponentAnimator::ToJson() { return {}; }
-void Engine::Graphics::ComponentAnimator::FromJson(json &js) {}
+json Engine::Graphics::ComponentAnimator::ToJson() {
+  json js;
+  json socketsJson = json::array();
+  for (const auto &s : sockets) {
+    json item;
+    to_json(item, s);
+    socketsJson.push_back(item);
+  }
+  js["sockets"] = socketsJson;
+  js["current_animation"] = current_animation;
+  js["is_playing"] = isPlaying;
+  return js;
+}
+
+void Engine::Graphics::ComponentAnimator::FromJson(json &js) {
+  if (js.is_null())
+    return;
+  if (js.contains("sockets") && js["sockets"].is_array()) {
+    sockets.clear();
+    for (const auto &item : js["sockets"]) {
+      SocketAttachment sa;
+      from_json(item, sa);
+      sockets.push_back(sa);
+    }
+    SetSockets(sockets);
+  }
+  if (js.contains("current_animation") && js["current_animation"].is_string()) {
+    current_animation = js["current_animation"];
+    if (animators.contains(current_animation) || current_animation.empty()) {
+      SetAnimation(current_animation);
+    }
+  }
+  if (js.contains("is_playing") && js["is_playing"].is_boolean()) {
+    SetIsPlaying(js["is_playing"]);
+  }
+}
 void Engine::Graphics::ComponentAnimator::Update() {
   ZoneScoped;
   if (isPlaying && animation) {
@@ -38,14 +72,79 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
 
   for (unsigned int i = 0; i < scene->mNumAnimations; ++i) {
     auto anim = std::make_shared<Animation>(sanitized_path, model, i);
+    anim->SetSockets(sockets);
     std::string name = anim->GetName();
     animations[name] = anim;
-    animators[name] = std::make_shared<Animator>(anim);
+    auto animator = std::make_shared<Animator>(anim);
+    animator->SetSockets(sockets);
+    animators[name] = animator;
   }
 
-  if (!animations.empty() && current_animation.empty()) {
+  if (!animations.empty()) {
+    m_DefaultBoneMatrices = animations.begin()->second->GetDefaultBoneMatrices();
+  }
+
+  if (!current_animation.empty() && animators.contains(current_animation)) {
+    SetAnimation(current_animation);
+  } else if (!animations.empty()) {
     SetAnimation(animations.begin()->first);
   }
+}
+
+void Engine::Graphics::ComponentAnimator::SetSockets(
+    const std::vector<SocketAttachment> &newSockets) {
+  sockets = newSockets;
+  for (auto &[name, anim] : animations) {
+    anim->SetSockets(sockets);
+  }
+  for (auto &[name, anim] : animators) {
+    anim->SetSockets(sockets);
+  }
+  if (!animations.empty()) {
+    m_DefaultBoneMatrices = animations.begin()->second->GetDefaultBoneMatrices();
+  }
+}
+
+void Engine::Graphics::ComponentAnimator::AddSocket(
+    const SocketAttachment &socket) {
+  sockets.push_back(socket);
+  SetSockets(sockets);
+}
+
+void Engine::Graphics::ComponentAnimator::RemoveSocket(size_t index) {
+  if (index < sockets.size()) {
+    sockets.erase(sockets.begin() + index);
+    SetSockets(sockets);
+  }
+}
+
+glm::mat4 Engine::Graphics::ComponentAnimator::GetBoneGlobalTransform(
+    const std::string &boneName) const {
+  if (animation) {
+    return animation->GetBoneGlobalTransform(boneName);
+  }
+  return glm::mat4(1.0f);
+}
+
+glm::mat4 Engine::Graphics::ComponentAnimator::GetBoneWorldTransform(
+    const std::string &boneName) const {
+  glm::mat4 localBone = GetBoneGlobalTransform(boneName);
+  auto obj = object.lock();
+  if (obj) {
+    glm::mat4 modelMatrix =
+        glm::translate(glm::mat4(1.0f), obj->_position) *
+        glm::mat4_cast(obj->_rotation);
+    return modelMatrix * localBone;
+  }
+  return localBone;
+}
+
+std::vector<std::string>
+Engine::Graphics::ComponentAnimator::GetNodeNames() const {
+  if (!animations.empty()) {
+    return animations.begin()->second->GetNodeNames();
+  }
+  return {};
 }
 
 void Engine::Graphics::ComponentAnimator::SetAnimation(std::string path) {
@@ -73,3 +172,17 @@ Engine::Graphics::ComponentAnimator::GetAnimator() {
 std::string Engine::Graphics::ComponentAnimator::GetCurrentAnimation() {
   return current_animation;
 }
+
+static const std::vector<glm::mat4> s_defaultBoneMatrices(500, glm::mat4(1.0f));
+
+const std::vector<glm::mat4> &
+Engine::Graphics::ComponentAnimator::GetFinalBoneMatrices() const {
+  if (animation) {
+    return animation->GetFinalBoneMatrices();
+  }
+  if (!m_DefaultBoneMatrices.empty()) {
+    return m_DefaultBoneMatrices;
+  }
+  return s_defaultBoneMatrices;
+}
+

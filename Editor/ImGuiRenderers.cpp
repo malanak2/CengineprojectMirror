@@ -4,6 +4,7 @@
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "Graphics/Components/ComponentSocket.hpp"
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "ImGuiMacros.hpp"
@@ -12,6 +13,7 @@
 #include "Util/LoggerUtil.hpp"
 #include <imgui.h>
 #include <memory>
+#include <set>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 
@@ -107,6 +109,27 @@ void ImGuiComponentRenderer::Init() {
         ImGuiUniformRenderer::instance->Render(val);
       }
     }
+
+    if (component->model && ImGui::CollapsingHeader("Sub-Meshes")) {
+      std::set<std::string> seenNames;
+      const auto &mList = component->model->GetMeshes();
+      for (size_t i = 0; i < mList.size(); ++i) {
+        const std::string &meshName = mList[i].name;
+        if (!meshName.empty() && seenNames.contains(meshName)) {
+          continue;
+        }
+        if (!meshName.empty()) {
+          seenNames.insert(meshName);
+        }
+        std::string label =
+            meshName.empty() ? ("Mesh " + std::to_string(i)) : meshName;
+        label += "##" + std::to_string(i);
+        bool enabled = component->IsMeshEnabled(meshName);
+        if (ImGui::Checkbox(label.c_str(), &enabled)) {
+          component->SetMeshEnabled(meshName, enabled);
+        }
+      }
+    }
   });
   IMGUI_REGISTER_COMPONENT(Engine::InvalidComponent,
                            { ImGui::Text("Invalid Component"); })
@@ -144,6 +167,99 @@ void ImGuiComponentRenderer::Init() {
         component->SetIsPlaying(true);
       }
     }
+
+    if (ImGui::CollapsingHeader("Socket Attachments")) {
+      auto sockets = component->GetSockets();
+      bool changed = false;
+      int toDelete = -1;
+
+      for (size_t i = 0; i < sockets.size(); ++i) {
+        ImGui::PushID(static_cast<int>(i));
+        std::string headerName = "Socket " + std::to_string(i) + ": " +
+                                 (sockets[i].targetNode.empty()
+                                      ? "(Empty)"
+                                      : sockets[i].targetNode) +
+                                 " -> " +
+                                 (sockets[i].targetBone.empty()
+                                      ? "(None)"
+                                      : sockets[i].targetBone);
+        if (ImGui::TreeNode(headerName.c_str())) {
+          if (ImGui::Checkbox("Enabled", &sockets[i].enabled)) {
+            changed = true;
+          }
+          char nodeBuf[128];
+          strncpy(nodeBuf, sockets[i].targetNode.c_str(), sizeof(nodeBuf));
+          nodeBuf[sizeof(nodeBuf) - 1] = 0;
+          if (ImGui::InputText("Target Node", nodeBuf, sizeof(nodeBuf))) {
+            sockets[i].targetNode = nodeBuf;
+            changed = true;
+          }
+
+          char boneBuf[128];
+          strncpy(boneBuf, sockets[i].targetBone.c_str(), sizeof(boneBuf));
+          boneBuf[sizeof(boneBuf) - 1] = 0;
+          if (ImGui::InputText("Target Bone", boneBuf, sizeof(boneBuf))) {
+            sockets[i].targetBone = boneBuf;
+            changed = true;
+          }
+
+          if (ImGui::DragFloat3("Position Offset",
+                                &sockets[i].offsetPosition[0], 0.1f)) {
+            changed = true;
+          }
+          if (ImGui::DragFloat3("Rotation Offset (Deg)",
+                                &sockets[i].offsetRotation[0], 1.0f)) {
+            changed = true;
+          }
+          if (ImGui::DragFloat3("Scale Offset", &sockets[i].offsetScale[0],
+                                0.01f)) {
+            changed = true;
+          }
+
+          if (ImGui::Button("Delete Socket")) {
+            toDelete = static_cast<int>(i);
+          }
+          ImGui::TreePop();
+        }
+        ImGui::PopID();
+      }
+
+      if (toDelete >= 0 && toDelete < (int)sockets.size()) {
+        sockets.erase(sockets.begin() + toDelete);
+        changed = true;
+      }
+
+      if (ImGui::Button("Add Socket Attachment")) {
+        Engine::Graphics::SocketAttachment newSocket;
+        sockets.push_back(newSocket);
+        changed = true;
+      }
+
+      if (changed) {
+        component->SetSockets(sockets);
+      }
+    }
+  });
+
+  IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentSocket, {
+    char objBuf[128];
+    strncpy(objBuf, component->target_object.c_str(), sizeof(objBuf));
+    objBuf[sizeof(objBuf) - 1] = 0;
+    if (ImGui::InputText("Target Object", objBuf, sizeof(objBuf))) {
+      component->target_object = objBuf;
+    }
+
+    char boneBuf[128];
+    strncpy(boneBuf, component->target_bone.c_str(), sizeof(boneBuf));
+    boneBuf[sizeof(boneBuf) - 1] = 0;
+    if (ImGui::InputText("Target Bone", boneBuf, sizeof(boneBuf))) {
+      component->target_bone = boneBuf;
+    }
+
+    ImGui::DragFloat3("Position Offset", &component->offset_position[0], 0.1f);
+    ImGui::DragFloat3("Rotation Offset (Deg)", &component->offset_rotation[0],
+                      1.0f);
+    ImGui::DragFloat3("Scale Offset", &component->offset_scale[0], 0.01f);
   });
 }
 

@@ -42,6 +42,7 @@ public:
   static std::unordered_map<std::string, std::shared_ptr<Shader>>
       fragmentShaders;
   static std::unordered_map<std::string, std::shared_ptr<Material>> materials;
+  static std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
 
   // Inputs
   static void SetKeyCallback(const int key,

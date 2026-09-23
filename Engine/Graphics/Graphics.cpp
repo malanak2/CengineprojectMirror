@@ -43,6 +43,7 @@ std::unordered_map<std::string, std::shared_ptr<Shader>> Main::vertexShaders =
 std::unordered_map<std::string, std::shared_ptr<Shader>> Main::fragmentShaders =
     {};
 std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
+std::unordered_map<std::string, std::shared_ptr<Texture>> Main::textures = {};
 std::shared_ptr<Main> Main::instance = std::make_shared<Main>();
 
 int Main::Init(std::shared_ptr<Config> config) {

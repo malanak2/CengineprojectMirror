@@ -22,7 +22,8 @@ ComponentRenderable::ComponentRenderable(std::string model_path,
 
 void ComponentRenderable::FromData(
     std::string model_path, std::string material_path,
-    std::map<std::string, std::shared_ptr<IUniform>> uniforms) {
+    std::map<std::string, std::shared_ptr<IUniform>> uniforms,
+    std::vector<std::string> disabled_meshes) {
   ZoneScoped;
   _model_path = model_path;
   _model_path.reserve(100);
@@ -31,6 +32,7 @@ void ComponentRenderable::FromData(
   _material_path = material_path;
   _material_path.reserve(100);
   material = Material::Create(material_path);
+  this->disabled_meshes = disabled_meshes;
 
   auto logger = spdlog::get("console");
   if (!material || !material->usable) {
@@ -66,6 +68,35 @@ void ComponentRenderable::FromData(
   this->_uniforms = uniforms;
 }
 
+std::vector<bool> ComponentRenderable::GetEnabledMeshes() const {
+  if (!model)
+    return {};
+  const auto &mList = model->GetMeshes();
+  std::vector<bool> result(mList.size(), true);
+  for (size_t i = 0; i < mList.size(); ++i) {
+    if (std::find(disabled_meshes.begin(), disabled_meshes.end(),
+                  mList[i].name) != disabled_meshes.end()) {
+      result[i] = false;
+    }
+  }
+  return result;
+}
+
+bool ComponentRenderable::IsMeshEnabled(const std::string &meshName) const {
+  return std::find(disabled_meshes.begin(), disabled_meshes.end(),
+                   meshName) == disabled_meshes.end();
+}
+
+void ComponentRenderable::SetMeshEnabled(const std::string &meshName,
+                                         bool enabled) {
+  auto it = std::find(disabled_meshes.begin(), disabled_meshes.end(), meshName);
+  if (!enabled && it == disabled_meshes.end()) {
+    disabled_meshes.push_back(meshName);
+  } else if (enabled && it != disabled_meshes.end()) {
+    disabled_meshes.erase(it);
+  }
+}
+
 void ComponentRenderable::Setup() {};
 void ComponentRenderable::Update() {};
 void ComponentRenderable::FixedUpdate() {}
@@ -80,6 +111,7 @@ json ComponentRenderable::ToJson() {
   j.model_path = _model_path;
   j.material_path = _material_path;
   j.uniforms = this->_uniforms;
+  j.disabled_meshes = this->disabled_meshes;
   jb.object_type = ObjectType::Component;
   jb.data = j;
   return jb;
@@ -100,7 +132,7 @@ ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
       std::make_shared<ComponentRenderable>();
   cr->SetObject(object);
   cr->FromData(json_inst.model_path, json_inst.material_path,
-               json_inst.uniforms);
+               json_inst.uniforms, json_inst.disabled_meshes);
   if (cr->material) {
     cr->material->renderableObjects.push_back(cr);
   }
@@ -118,7 +150,8 @@ void ComponentRenderable::FromJson(json &js) {
   }
   RenderableDataJson json_inst;
   json_inst = js["data"];
-  FromData(json_inst.model_path, json_inst.material_path, json_inst.uniforms);
+  FromData(json_inst.model_path, json_inst.material_path, json_inst.uniforms,
+           json_inst.disabled_meshes);
   if (material) {
     material->renderableObjects.push_back(shared_from_this());
   }

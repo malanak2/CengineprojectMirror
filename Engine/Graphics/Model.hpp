@@ -9,6 +9,7 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -48,10 +49,13 @@ struct MTexture {
 class Mesh {
 public:
   // mesh data
+  std::string name;
   std::vector<MVertex> vertices;
   std::vector<unsigned int> indices;
   std::vector<MTexture> textures;
 
+  Mesh(std::string name, std::vector<MVertex> vertices,
+       std::vector<unsigned int> indices, std::vector<MTexture> textures);
   Mesh(std::vector<MVertex> vertices, std::vector<unsigned int> indices,
        std::vector<MTexture> textures);
   void Draw(Engine::Graphics::Program &program);
@@ -78,7 +82,8 @@ public:
   Model() = default;
   void Draw(Engine::Graphics::Program &program);
   void DrawInstanced(Engine::Graphics::Program &program,
-                     unsigned int instanceCount);
+                     unsigned int instanceCount,
+                     const std::vector<bool> &enabledMeshes = {});
 
   const std::vector<Mesh> &GetMeshes() const { return meshes; }
   std::string path;
@@ -191,6 +196,51 @@ struct AssimpNodeData {
   glm::mat4 offsetMatrix{1.0f};
 };
 
+struct SocketAttachment {
+  std::string targetNode;
+  std::string targetBone;
+  glm::vec3 offsetPosition = glm::vec3(0.0f);
+  glm::vec3 offsetRotation = glm::vec3(0.0f); // Euler in degrees
+  glm::vec3 offsetScale = glm::vec3(1.0f);
+  bool enabled = true;
+};
+
+inline void to_json(nlohmann::json &j, const SocketAttachment &s) {
+  j = nlohmann::json{
+      {"target_node", s.targetNode},
+      {"target_bone", s.targetBone},
+      {"position",
+       {s.offsetPosition.x, s.offsetPosition.y, s.offsetPosition.z}},
+      {"rotation",
+       {s.offsetRotation.x, s.offsetRotation.y, s.offsetRotation.z}},
+      {"scale", {s.offsetScale.x, s.offsetScale.y, s.offsetScale.z}},
+      {"enabled", s.enabled}};
+}
+
+inline void from_json(const nlohmann::json &j, SocketAttachment &s) {
+  if (j.contains("target_node"))
+    j.at("target_node").get_to(s.targetNode);
+  if (j.contains("target_bone"))
+    j.at("target_bone").get_to(s.targetBone);
+  if (j.contains("position") && j["position"].is_array() &&
+      j["position"].size() >= 3) {
+    s.offsetPosition =
+        glm::vec3(j["position"][0], j["position"][1], j["position"][2]);
+  }
+  if (j.contains("rotation") && j["rotation"].is_array() &&
+      j["rotation"].size() >= 3) {
+    s.offsetRotation =
+        glm::vec3(j["rotation"][0], j["rotation"][1], j["rotation"][2]);
+  }
+  if (j.contains("scale") && j["scale"].is_array() &&
+      j["scale"].size() >= 3) {
+    s.offsetScale =
+        glm::vec3(j["scale"][0], j["scale"][1], j["scale"][2]);
+  }
+  if (j.contains("enabled"))
+    j.at("enabled").get_to(s.enabled);
+}
+
 class Animation {
 public:
   Animation() = default;
@@ -211,8 +261,33 @@ public:
   inline const std::map<std::string, BoneInfo> &GetBoneIDMap() {
     return m_BoneInfoMap;
   }
+  inline const std::vector<glm::mat4> &GetDefaultBoneMatrices() const {
+    return m_DefaultBoneMatrices;
+  }
+
+  void SetSockets(const std::vector<SocketAttachment> &sockets);
+  const std::vector<SocketAttachment> &GetSockets() const { return m_Sockets; }
+  void RecalculateRestPose();
+  const AssimpNodeData *FindNode(const std::string &name) const;
+  std::vector<std::string> GetNodeNames() const;
+
+  void CalculateRestPose(const AssimpNodeData *node,
+                         const glm::mat4 &parentTransform,
+                         std::vector<glm::mat4> &outMatrices) const;
 
 private:
+  void CalculateRestPoseInternal(
+      const AssimpNodeData *node, const glm::mat4 &parentTransform,
+      std::vector<glm::mat4> &outMatrices,
+      std::unordered_map<std::string, glm::mat4> &globalTransforms,
+      const std::unordered_map<std::string, const SocketAttachment *>
+          &activeSockets) const;
+  void CalculateSocketSubtreeRestPose(
+      const AssimpNodeData *node, const glm::mat4 &parentTransform,
+      std::vector<glm::mat4> &outMatrices,
+      std::unordered_map<std::string, glm::mat4> &globalTransforms,
+      bool isSocketRoot) const;
+
   void ReadMissingBones(const aiAnimation *animation, Model &model);
 
   void ReadHeirarchyData(AssimpNodeData &dest, const aiNode *src);
@@ -223,6 +298,8 @@ private:
   std::vector<Bone> m_Bones;
   AssimpNodeData m_RootNode;
   std::map<std::string, BoneInfo> m_BoneInfoMap;
+  std::vector<glm::mat4> m_DefaultBoneMatrices;
+  std::vector<SocketAttachment> m_Sockets;
 };
 
 class Animator {
@@ -240,11 +317,29 @@ public:
     return m_FinalBoneMatrices;
   }
 
+  void SetSockets(const std::vector<SocketAttachment> &sockets);
+  const std::vector<SocketAttachment> &GetSockets() const { return m_Sockets; }
+  glm::mat4 GetBoneGlobalTransform(const std::string &boneName) const;
+  const std::unordered_map<std::string, glm::mat4> &
+  GetGlobalNodeTransforms() const {
+    return m_GlobalNodeTransforms;
+  }
+
 private:
+  void CalculateBoneTransformInternal(
+      const AssimpNodeData *node, const glm::mat4 &parentTransform,
+      const std::unordered_map<std::string, const SocketAttachment *>
+          &activeSockets);
+  void CalculateSocketSubtree(const AssimpNodeData *node,
+                              const glm::mat4 &parentTransform,
+                              bool isSocketRoot);
+
   std::vector<glm::mat4> m_FinalBoneMatrices;
   std::shared_ptr<Animation> m_CurrentAnimation;
   float m_CurrentTime;
   float m_DeltaTime;
+  std::vector<SocketAttachment> m_Sockets;
+  std::unordered_map<std::string, glm::mat4> m_GlobalNodeTransforms;
 };
 } // namespace Graphics
 } // namespace Engine

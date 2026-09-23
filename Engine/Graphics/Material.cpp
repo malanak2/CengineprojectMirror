@@ -2,6 +2,7 @@
 #include "Engine.hpp"
 #include "Graphics.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
+#include "Graphics/Components/ComponentRenderable.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/FileUtil.hpp"
@@ -193,9 +194,8 @@ void Material::RenderObjects() {
       auto obj = instances[0]->object.lock();
       if (obj) {
         auto animatorComp = obj->GetComponent<ComponentAnimator>();
-        if (animatorComp && animatorComp->GetAnimator()) {
-          const auto &transforms =
-              animatorComp->GetAnimator()->GetFinalBoneMatrices();
+        if (animatorComp) {
+          const auto &transforms = animatorComp->GetFinalBoneMatrices();
           if (!transforms.empty()) {
             if (boneSSBO == 0) {
               glGenBuffers(1, &boneSSBO);
@@ -220,8 +220,13 @@ void Material::RenderObjects() {
     {
       ZoneScopedN("DrawModel");
       TracyGpuZone("DrawModel");
+      std::vector<bool> enabledMeshes;
+      if (!instances.empty() && instances[0]) {
+        enabledMeshes = instances[0]->GetEnabledMeshes();
+      }
       model->DrawInstanced(*program,
-                           static_cast<unsigned int>(transforms.size()));
+                           static_cast<unsigned int>(transforms.size()),
+                           enabledMeshes);
       CHECK_GL_ERROR();
     }
   }
