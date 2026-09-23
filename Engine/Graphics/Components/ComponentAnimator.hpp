@@ -27,7 +27,7 @@ public:
   std::map<std::string, std::shared_ptr<Animator>> animators;
 
 private:
-  bool isPlaying;
+  bool isPlaying = true;
   std::string current_animation = "";
   std::shared_ptr<Animator> animation = nullptr;
 };

@@ -194,15 +194,21 @@ void Material::RenderObjects() {
       if (obj) {
         auto animatorComp = obj->GetComponent<ComponentAnimator>();
         if (animatorComp && animatorComp->GetAnimator()) {
-          auto transforms = animatorComp->GetAnimator()->GetFinalBoneMatrices();
+          const auto &transforms =
+              animatorComp->GetAnimator()->GetFinalBoneMatrices();
           if (!transforms.empty()) {
             if (boneSSBO == 0) {
               glGenBuffers(1, &boneSSBO);
+              glBindBuffer(GL_SHADER_STORAGE_BUFFER, boneSSBO);
+              glBufferData(GL_SHADER_STORAGE_BUFFER,
+                           transforms.size() * sizeof(glm::mat4),
+                           transforms.data(), GL_DYNAMIC_DRAW);
+            } else {
+              glBindBuffer(GL_SHADER_STORAGE_BUFFER, boneSSBO);
+              glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+                              transforms.size() * sizeof(glm::mat4),
+                              transforms.data());
             }
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, boneSSBO);
-            glBufferData(GL_SHADER_STORAGE_BUFFER,
-                         transforms.size() * sizeof(glm::mat4),
-                         transforms.data(), GL_DYNAMIC_DRAW);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, boneSSBO);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             CHECK_GL_ERROR();

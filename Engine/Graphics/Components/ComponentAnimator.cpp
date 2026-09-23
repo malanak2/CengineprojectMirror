@@ -8,7 +8,7 @@ json Engine::Graphics::ComponentAnimator::ToJson() { return {}; }
 void Engine::Graphics::ComponentAnimator::FromJson(json &js) {}
 void Engine::Graphics::ComponentAnimator::Update() {
   ZoneScoped;
-  if (animation) {
+  if (isPlaying && animation) {
     animation->UpdateAnimation(GetDeltaTime());
   }
 }

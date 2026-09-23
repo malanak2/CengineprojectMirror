@@ -136,6 +136,10 @@ private:
   std::string m_Name;
   int m_ID;
 
+  int m_LastPositionIndex = 0;
+  int m_LastRotationIndex = 0;
+  int m_LastScaleIndex = 0;
+
 public:
   /*reads keyframes from aiNodeAnim*/
   Bone(const std::string &name, int ID, const aiNodeAnim *channel);
@@ -178,10 +182,13 @@ public:
   glm::mat4 InterpolateScaling(float animationTime);
 };
 struct AssimpNodeData {
-  glm::mat4 transformation;
+  glm::mat4 transformation{1.0f};
   std::string name;
-  int childrenCount;
+  int childrenCount = 0;
   std::vector<AssimpNodeData> children;
+  Bone *bone = nullptr;
+  int boneInfoId = -1;
+  glm::mat4 offsetMatrix{1.0f};
 };
 
 class Animation {
@@ -209,6 +216,7 @@ private:
   void ReadMissingBones(const aiAnimation *animation, Model &model);
 
   void ReadHeirarchyData(AssimpNodeData &dest, const aiNode *src);
+  void SetupNodeHierarchy(AssimpNodeData &node);
   std::string m_Name;
   float m_Duration;
   int m_TicksPerSecond;
@@ -226,9 +234,11 @@ public:
   void PlayAnimation(std::shared_ptr<Animation> pAnimation);
 
   void CalculateBoneTransform(const AssimpNodeData *node,
-                              glm::mat4 parentTransform);
+                              const glm::mat4 &parentTransform);
 
-  std::vector<glm::mat4> GetFinalBoneMatrices() { return m_FinalBoneMatrices; }
+  const std::vector<glm::mat4> &GetFinalBoneMatrices() const {
+    return m_FinalBoneMatrices;
+  }
 
 private:
   std::vector<glm::mat4> m_FinalBoneMatrices;

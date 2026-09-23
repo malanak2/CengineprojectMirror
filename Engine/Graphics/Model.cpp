@@ -287,44 +287,35 @@ Engine::Graphics::Bone::Bone(const std::string &name, int ID,
                              const aiNodeAnim *channel)
     : m_Name(name), m_ID(ID), m_LocalTransform(1.0f) {
   m_NumPositions = channel->mNumPositionKeys;
-
+  m_Positions.reserve(m_NumPositions);
   for (int positionIndex = 0; positionIndex < m_NumPositions; ++positionIndex) {
     aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
     float timeStamp = channel->mPositionKeys[positionIndex].mTime;
     KeyPosition data;
-    data.position = glm::vec3();
-    data.position[0] = aiPosition[0];
-    data.position[1] = aiPosition[1];
-    data.position[2] = aiPosition[2];
+    data.position = glm::vec3(aiPosition.x, aiPosition.y, aiPosition.z);
     data.timeStamp = timeStamp;
     m_Positions.push_back(data);
   }
 
   m_NumRotations = channel->mNumRotationKeys;
+  m_Rotations.reserve(m_NumRotations);
   for (int rotationIndex = 0; rotationIndex < m_NumRotations; ++rotationIndex) {
     aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
     float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
     KeyRotation data;
-    data.orientation = glm::quat();
-    data.orientation.x = aiOrientation.x;
-    data.orientation.y = aiOrientation.y;
-    data.orientation.z = aiOrientation.z;
-    data.orientation.w = aiOrientation.w;
+    data.orientation = glm::quat(aiOrientation.w, aiOrientation.x,
+                                 aiOrientation.y, aiOrientation.z);
     data.timeStamp = timeStamp;
     m_Rotations.push_back(data);
   }
 
   m_NumScalings = channel->mNumScalingKeys;
+  m_Scales.reserve(m_NumScalings);
   for (int keyIndex = 0; keyIndex < m_NumScalings; ++keyIndex) {
     aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
     float timeStamp = channel->mScalingKeys[keyIndex].mTime;
     KeyScale data;
-
-    data.scale = glm::vec3();
-    data.scale[0] = scale[0];
-    data.scale[1] = scale[1];
-    data.scale[2] = scale[2];
-
+    data.scale = glm::vec3(scale.x, scale.y, scale.z);
     data.timeStamp = timeStamp;
     m_Scales.push_back(data);
   }
@@ -337,25 +328,64 @@ void Engine::Graphics::Bone::Update(float animationTime) {
 }
 
 int Engine::Graphics::Bone::GetPositionIndex(float animationTime) {
-  for (int index = 0; index < m_NumPositions - 1; ++index) {
-    if (animationTime < m_Positions[index + 1].timeStamp)
-      return index;
+  if (m_NumPositions <= 1)
+    return 0;
+  if (m_LastPositionIndex < m_NumPositions - 1 &&
+      animationTime >= m_Positions[m_LastPositionIndex].timeStamp &&
+      animationTime < m_Positions[m_LastPositionIndex + 1].timeStamp) {
+    return m_LastPositionIndex;
   }
-  assert(0);
+  if (m_LastPositionIndex + 1 < m_NumPositions - 1 &&
+      animationTime >= m_Positions[m_LastPositionIndex + 1].timeStamp &&
+      animationTime < m_Positions[m_LastPositionIndex + 2].timeStamp) {
+    return ++m_LastPositionIndex;
+  }
+  auto it = std::upper_bound(
+      m_Positions.begin(), m_Positions.end() - 1, animationTime,
+      [](float val, const KeyPosition &k) { return val < k.timeStamp; });
+  m_LastPositionIndex =
+      std::max(0, static_cast<int>(std::distance(m_Positions.begin(), it) - 1));
+  return m_LastPositionIndex;
 }
 int Engine::Graphics::Bone::GetRotationIndex(float animationTime) {
-  for (int index = 0; index < m_NumRotations - 1; ++index) {
-    if (animationTime < m_Rotations[index + 1].timeStamp)
-      return index;
+  if (m_NumRotations <= 1)
+    return 0;
+  if (m_LastRotationIndex < m_NumRotations - 1 &&
+      animationTime >= m_Rotations[m_LastRotationIndex].timeStamp &&
+      animationTime < m_Rotations[m_LastRotationIndex + 1].timeStamp) {
+    return m_LastRotationIndex;
   }
-  assert(0);
+  if (m_LastRotationIndex + 1 < m_NumRotations - 1 &&
+      animationTime >= m_Rotations[m_LastRotationIndex + 1].timeStamp &&
+      animationTime < m_Rotations[m_LastRotationIndex + 2].timeStamp) {
+    return ++m_LastRotationIndex;
+  }
+  auto it = std::upper_bound(
+      m_Rotations.begin(), m_Rotations.end() - 1, animationTime,
+      [](float val, const KeyRotation &k) { return val < k.timeStamp; });
+  m_LastRotationIndex =
+      std::max(0, static_cast<int>(std::distance(m_Rotations.begin(), it) - 1));
+  return m_LastRotationIndex;
 }
 int Engine::Graphics::Bone::GetScaleIndex(float animationTime) {
-  for (int index = 0; index < m_NumScalings - 1; ++index) {
-    if (animationTime < m_Scales[index + 1].timeStamp)
-      return index;
+  if (m_NumScalings <= 1)
+    return 0;
+  if (m_LastScaleIndex < m_NumScalings - 1 &&
+      animationTime >= m_Scales[m_LastScaleIndex].timeStamp &&
+      animationTime < m_Scales[m_LastScaleIndex + 1].timeStamp) {
+    return m_LastScaleIndex;
   }
-  assert(0);
+  if (m_LastScaleIndex + 1 < m_NumScalings - 1 &&
+      animationTime >= m_Scales[m_LastScaleIndex + 1].timeStamp &&
+      animationTime < m_Scales[m_LastScaleIndex + 2].timeStamp) {
+    return ++m_LastScaleIndex;
+  }
+  auto it = std::upper_bound(
+      m_Scales.begin(), m_Scales.end() - 1, animationTime,
+      [](float val, const KeyScale &k) { return val < k.timeStamp; });
+  m_LastScaleIndex =
+      std::max(0, static_cast<int>(std::distance(m_Scales.begin(), it) - 1));
+  return m_LastScaleIndex;
 }
 float Engine::Graphics::Bone::GetScaleFactor(float lastTimeStamp,
                                              float nextTimeStamp,
@@ -434,25 +464,19 @@ void Engine::Graphics::Animator::PlayAnimation(
   m_CurrentTime = 0.0f;
 }
 void Engine::Graphics::Animator::CalculateBoneTransform(
-    const AssimpNodeData *node, glm::mat4 parentTransform) {
-  ZoneScoped;
-  std::string nodeName = node->name;
+    const AssimpNodeData *node, const glm::mat4 &parentTransform) {
   glm::mat4 nodeTransform = node->transformation;
 
-  Bone *Bone = m_CurrentAnimation->FindBone(nodeName);
-
-  if (Bone) {
-    Bone->Update(m_CurrentTime);
-    nodeTransform = Bone->GetLocalTransform();
+  if (node->bone) {
+    node->bone->Update(m_CurrentTime);
+    nodeTransform = node->bone->GetLocalTransform();
   }
 
   glm::mat4 globalTransformation = parentTransform * nodeTransform;
 
-  const auto &boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
-  auto it = boneInfoMap.find(nodeName);
-  if (it != boneInfoMap.end()) {
-    m_FinalBoneMatrices[it->second.id] =
-        globalTransformation * it->second.offset;
+  if (node->boneInfoId >= 0) {
+    m_FinalBoneMatrices[node->boneInfoId] =
+        globalTransformation * node->offsetMatrix;
   }
 
   for (int i = 0; i < node->childrenCount; i++)
@@ -478,6 +502,7 @@ Engine::Graphics::Animation::Animation(const std::string &animationPath,
   m_TicksPerSecond = animation->mTicksPerSecond;
   ReadHeirarchyData(m_RootNode, scene->mRootNode);
   ReadMissingBones(animation, *model);
+  SetupNodeHierarchy(m_RootNode);
 }
 Engine::Graphics::Bone *
 Engine::Graphics::Animation::FindBone(const std::string &name) {
@@ -534,3 +559,18 @@ void Engine::Graphics::Animation::ReadHeirarchyData(AssimpNodeData &dest,
     dest.children.push_back(newData);
   }
 }
+
+void Engine::Graphics::Animation::SetupNodeHierarchy(AssimpNodeData &node) {
+  node.bone = FindBone(node.name);
+  auto it = m_BoneInfoMap.find(node.name);
+  if (it != m_BoneInfoMap.end()) {
+    node.boneInfoId = it->second.id;
+    node.offsetMatrix = it->second.offset;
+  } else {
+    node.boneInfoId = -1;
+  }
+  for (auto &child : node.children) {
+    SetupNodeHierarchy(child);
+  }
+}
+
