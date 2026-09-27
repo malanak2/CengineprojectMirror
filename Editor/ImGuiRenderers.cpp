@@ -175,14 +175,12 @@ void ImGuiComponentRenderer::Init() {
 
       for (size_t i = 0; i < sockets.size(); ++i) {
         ImGui::PushID(static_cast<int>(i));
-        std::string headerName = "Socket " + std::to_string(i) + ": " +
-                                 (sockets[i].targetNode.empty()
-                                      ? "(Empty)"
-                                      : sockets[i].targetNode) +
-                                 " -> " +
-                                 (sockets[i].targetBone.empty()
-                                      ? "(None)"
-                                      : sockets[i].targetBone);
+        std::string headerName =
+            "Socket " + std::to_string(i) + ": " +
+            (sockets[i].targetNode.empty() ? "(Empty)"
+                                           : sockets[i].targetNode) +
+            " -> " +
+            (sockets[i].targetBone.empty() ? "(None)" : sockets[i].targetBone);
         if (ImGui::TreeNode(headerName.c_str())) {
           if (ImGui::Checkbox("Enabled", &sockets[i].enabled)) {
             changed = true;
@@ -440,6 +438,7 @@ void ImGuiRenderer::RenderObjectInspector() {
     auto obj = sceneObject->instance;
     if (obj) {
       ImGui::InputFloat3("XYZ", &obj->_position[0]);
+      ImGui::InputFloat("Scale", &obj->scale);
 
       static glm::vec3 currentAngles =
           glm::degrees(glm::eulerAngles(obj->_rotation));

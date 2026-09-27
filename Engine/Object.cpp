@@ -89,14 +89,14 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
       cc = std::static_pointer_cast<Graphics::CameraComponent>(script);
     }
   }
-  fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation);
+  fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation, jsobj.scale);
   return cc;
 }
 
 void Object::fromParams(std::string name,
                         std::vector<std::shared_ptr<IComponent>> comps,
                         std::vector<float> position,
-                        std::vector<float> rotation) {
+                        std::vector<float> rotation, float scale) {
   _name = name;
   _name.reserve(50);
   for (auto cmp : comps) {
@@ -120,6 +120,7 @@ void Object::fromParams(std::string name,
                        rotation.size());
     this->_rotation = glm::identity<glm::quat>();
   }
+  this->scale = scale;
 }
 Object::Object(std::shared_ptr<Scene> scene) {
   this->scene = scene;

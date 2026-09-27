@@ -142,8 +142,12 @@ void Engine::Graphics::Model::loadModel(std::string path) {
   std::string sanitized_path =
       (path.rfind("resources/", 0) == 0) ? path : ("resources/" + path);
 
-  const aiScene *scene = import.ReadFile(
-      sanitized_path, aiProcess_Triangulate | aiProcess_GenSmoothNormals);
+  const aiScene *scene = nullptr;
+  {
+    ZoneScopedN("Loading file");
+    scene = import.ReadFile(sanitized_path,
+                            aiProcess_Triangulate | aiProcess_GenSmoothNormals);
+  }
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
       !scene->mRootNode) {
@@ -528,7 +532,8 @@ void Engine::Graphics::Animator::CalculateBoneTransform(
           if (targetNode) {
             glm::mat4 socketOffset =
                 glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
-                glm::mat4_cast(glm::quat(glm::radians(socket->offsetRotation))) *
+                glm::mat4_cast(
+                    glm::quat(glm::radians(socket->offsetRotation))) *
                 glm::scale(glm::mat4(1.0f), socket->offsetScale);
             glm::mat4 socketParentTransform = boneIt->second * socketOffset;
             CalculateSocketSubtree(targetNode, socketParentTransform, true);
@@ -823,5 +828,3 @@ void Engine::Graphics::Animation::CalculateSocketSubtreeRestPose(
                                    outMatrices, globalTransforms, false);
   }
 }
-
-

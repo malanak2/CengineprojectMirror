@@ -156,6 +156,8 @@ void Material::RenderObjects() {
       if (obj) {
         glm::mat4 translationMatrix =
             glm::translate(glm::mat4(1.0f), obj->_position);
+        translationMatrix =
+            glm::scale(translationMatrix, {obj->scale, obj->scale, obj->scale});
         glm::mat4 rotationMatrix = glm::mat4_cast(obj->_rotation);
 
         transform = translationMatrix * rotationMatrix;

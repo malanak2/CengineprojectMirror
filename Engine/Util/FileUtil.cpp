@@ -4,8 +4,17 @@
 #include <iterator>
 #include <memory>
 #include <regex>
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "External/stb/stb_image.h"
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC pop_options
+#endif
 /// Loads a text file from the resources directory
 int FileUtil::ReadFile(std::string path, std::string *result) {
   std::ifstream file;
@@ -54,14 +63,25 @@ std::shared_ptr<FileUtil::ImageFile> FileUtil::LoadImage(std::string path) {
   path = sanitizePath(path);
   auto ret = std::make_shared<ImageFile>();
   stbi_set_flip_vertically_on_load(1);
-  ret->data =
-      stbi_load(path.c_str(), &ret->width, &ret->height, &ret->nrChannels, 0);
+  int comp = 0;
+  if (stbi_info(path.c_str(), &ret->width, &ret->height, &comp)) {
+    int desired = (comp == 1) ? 1 : 4;
+    ret->data = stbi_load(path.c_str(), &ret->width, &ret->height, &ret->nrChannels, desired);
+    if (ret->data) {
+      ret->nrChannels = desired;
+    }
+  } else {
+    ret->data =
+        stbi_load(path.c_str(), &ret->width, &ret->height, &ret->nrChannels, 0);
+  }
   return ret;
 }
 
 std::string FileUtil::sanitizePath(std::string path) {
   stbi_set_flip_vertically_on_load(true);
-  path = "resources/" + path;
+  if (!path.starts_with("resources/") && !path.starts_with("resources\\")) {
+    path = "resources/" + path;
+  }
   // Everything should be in the resources directory. if it is not, then move it
   // there!
   path = std::regex_replace(path, std::regex("\\.\\."), ".");
