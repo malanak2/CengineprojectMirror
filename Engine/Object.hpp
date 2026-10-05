@@ -11,6 +11,7 @@
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 #include <string>
+#include <tracy/Tracy.hpp>
 #include <vector>
 using json = nlohmann::json;
 
@@ -92,12 +93,18 @@ public:
   //! @param[in] key key
   //!
   void AddComponent(std::string key) {
+    ZoneScoped;
     if (_components.contains(key)) {
       SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
                          "Tried adding already present component");
       return;
     }
     auto component = Main::ScriptSystem::instance->GetScript(key);
+    if (component == nullptr) {
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                          "Getscript returned nullptr for {}", key);
+      return;
+    }
     component->SetObject(shared_from_this());
     component->Setup();
     _components[key] = component;

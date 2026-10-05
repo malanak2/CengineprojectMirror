@@ -53,6 +53,7 @@ inline void Register() {
         Editor::ImGuiR::ImGuiRenderer::RenderSceneView(
             Engine::Engine::instance->current_scene);
         Editor::ImGuiR::ImGuiRenderer::RenderObjectInspector();
+        Editor::ImGuiR::ImGuiRenderer::RenderInputMaps();
       });
   Engine::Graphics::Main::instance->postRender->insert(
       Engine::Graphics::Main::instance->postRender->end(), []() {

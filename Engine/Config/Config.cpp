@@ -81,6 +81,7 @@ Config::Config(std::string file_path) {
     cfg["Window"]["Title"] = "New Project";
     cfg["Graphics"]["EnableAntiAliasing"] = true;
     cfg["Defaults"]["StartupScenePath"] = "scenes/default.json";
+    cfg["Defaults"]["InputPath"] = "input.json";
     cfg["Graphics"]["EnableVsync"] = true;
     cfg["Graphics"]["MaterialPath"] = "materials";
     cfg["Graphics"]["TexturePath"] = "textures/metadata";
@@ -94,6 +95,7 @@ Config::Config(std::string file_path) {
 
   defaults->StartupScenePath =
       cfg["Defaults"]["StartupScenePath"].as<std::string>();
+  defaults->InputPath = cfg["Defaults"]["InputPath"].as<std::string>();
   graphics->materialPath = cfg["Graphics"]["MaterialPath"].as<std::string>();
   graphics->texturePath = cfg["Graphics"]["TexturePath"].as<std::string>();
   graphics->scenePath = cfg["Graphics"]["ScenePath"].as<std::string>();

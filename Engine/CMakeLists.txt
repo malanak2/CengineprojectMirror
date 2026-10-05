@@ -60,6 +60,8 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Interfaces/IIdentifiable.hpp
         Graphics/Model.hpp
         Graphics/Model.cpp
+        InputSystem.hpp
+        InputSystem.cpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)

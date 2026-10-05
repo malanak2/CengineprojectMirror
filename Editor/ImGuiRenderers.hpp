@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graphics/Interfaces/IUniform.hpp"
+#include "InputSystem.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Scene.hpp"
 #include "implot.h" // IWYU pragma: keep
@@ -93,6 +94,11 @@ public:
   //! @newObjectParent Variable for changing hierarchy
   //!
   static std::shared_ptr<Engine::SceneObject> newObjectParent;
+
+  static void RenderInputMaps();
+  static void
+  RenderInputMap(std::string name,
+                 std::map<int, std::shared_ptr<Engine::Keybind>> *map);
 
   static bool wasSavePressedThisFrame;
   static char namebuf[64];

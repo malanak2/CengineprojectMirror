@@ -35,6 +35,7 @@ public:
   class Defaults {
   public:
     std::string StartupScenePath;
+    std::string InputPath;
   };
   class Window {
   public:

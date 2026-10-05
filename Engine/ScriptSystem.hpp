@@ -10,11 +10,11 @@ namespace Main {
 //!
 #define REGISTER_SCRIPT(script)                                                \
   {                                                                            \
-    (Main::ScriptSystem::instance->RegisterScript<script>());                  \
+    (Engine::Main::ScriptSystem::instance->RegisterScript<script>());          \
   }
 
 //!
-//! @brief System for registering user scripts. Uses the std::type_index
+//! @brief System for registering user scripts.
 //!
 class ScriptSystem {
 public:

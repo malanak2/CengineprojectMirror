@@ -1,6 +1,7 @@
 #include "ImGuiRenderers.hpp"
 #include "Components/InvalidComponent.hpp"
 #include "Components/TestComponent.hpp"
+#include "Components/TestInputComponent.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
@@ -8,9 +9,11 @@
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "ImGuiMacros.hpp"
+#include "InputSystem.hpp"
 #include "ScriptSystem.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
+#include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <memory>
 #include <set>
@@ -259,6 +262,9 @@ void ImGuiComponentRenderer::Init() {
                       1.0f);
     ImGui::DragFloat3("Scale Offset", &component->offset_scale[0], 0.01f);
   });
+  IMGUI_REGISTER_COMPONENT(Editor::TestInputComponent, {
+
+                                                       });
 }
 
 std::shared_ptr<Engine::SceneObject> ImGuiRenderer::sceneObject = nullptr;
@@ -500,4 +506,24 @@ void ImGuiRenderer::RenderObjectInspector() {
   }
   ImGui::End();
 }
+void ImGuiRenderer::RenderInputMaps() {
+  ImGui::Begin("Input Maps");
+  RenderInputMap("Press", &(Engine::InputSystem::instance->keybind_map_press));
+  RenderInputMap("Hold", &(Engine::InputSystem::instance->keybind_map_hold));
+  RenderInputMap("Hold Text",
+                 &(Engine::InputSystem::instance->keybind_map_hold_text));
+  RenderInputMap("Release",
+                 &(Engine::InputSystem::instance->keybind_map_release));
+  ImGui::End();
+}
+void ImGuiRenderer::RenderInputMap(
+    std::string name, std::map<int, std::shared_ptr<Engine::Keybind>> *map) {
+  ImGui::Text("KeyMap: %s", name.c_str());
+  for (auto const &[scancode, keybind] : *map) {
+    ImGui::Text("ID: %s, Key: %s", keybind->name.c_str(),
+                glfwGetKeyName(keybind->key, scancode));
+  }
+  ImGui::Separator();
+}
+
 } // namespace Editor::ImGuiR

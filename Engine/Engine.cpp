@@ -6,6 +6,7 @@
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
+#include "InputSystem.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Object.hpp"
@@ -45,6 +46,7 @@ void Engine::Engine::Init() {
                         "Failed to initialize Graphics::Main::instance!");
     throw std::logic_error("Failed to initialize Graphics::Main::instance!");
   }
+  InputSystem::Init();
   instance = e;
 }
 void Engine::LoadScene() {
@@ -114,6 +116,10 @@ void Engine::Engine::Run() {
     // break;
     auto current_time = std::chrono::steady_clock::now();
     auto dur_graphics = current_time - last_tick_begin;
+    {
+      ZoneScopedN("Inputs");
+      InputSystem::ProcessEvents();
+    }
     {
       ZoneScopedN("Update");
       current_scene->Update();

@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 
+#include "Editor/Components/Registrar.hpp"
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
@@ -25,16 +26,30 @@ void operator delete(void *ptr) noexcept {
 int main() {
   ZoneScopedNS("main", 64);
   /// Inject functions
-  Editor::ImGuiR::Register();
+  {
+    ZoneScopedN("Register ImGui") Editor::ImGuiR::Register();
+  }
   /// Init engine
-  Engine::Engine::Init();
+  {
+    ZoneScopedN("Initialize Engine");
+    Engine::Engine::Init();
+  }
   // Init editor ImGui
-  Editor::ImGuiR::ImGuiUniformRenderer::Init();
-  Editor::ImGuiR::ImGuiComponentRenderer::Init();
+  {
+    ZoneScopedN("Register imgui renderers");
+    Editor::ImGuiR::ImGuiUniformRenderer::Init();
+    Editor::ImGuiR::ImGuiComponentRenderer::Init();
+  }
   /// Register components
-  // REGISTER_SCRIPT(script);
+  {
+    ZoneScopedN("Register comonents");
+    Editor::Registrar::RegisterComponents();
+  }
   /// Load scene
-  Engine::Engine::LoadScene();
+  {
+    ZoneScopedN("Load scene");
+    Engine::Engine::LoadScene();
+  }
   /// Run
   Engine::Engine::instance->Run();
   return 0;
