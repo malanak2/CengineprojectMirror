@@ -1,6 +1,5 @@
 #pragma once
 #include "Graphics/Program.hpp"
-#include "Graphics/Shader.hpp"
 #include "Graphics/Texture.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -17,8 +16,9 @@
 #define MAX_BONE_WEIGHTS 500
 /// Mesh logic in this file is from https://learnopengl.com/Model-Loading/Mesh
 /// Model logic in this file is from https://learnopengl.com/Model-Loading/Model
-/// and bone logic is by
+/// and bone logic is from
 /// https://learnopengl.com/Guest-Articles/2020/Skeletal-Animation
+/// TODO: Rewrite/kinda optimise - probably before/during Phys sys
 namespace Engine {
 namespace Graphics {
 struct MVertex {
@@ -232,10 +232,8 @@ inline void from_json(const nlohmann::json &j, SocketAttachment &s) {
     s.offsetRotation =
         glm::vec3(j["rotation"][0], j["rotation"][1], j["rotation"][2]);
   }
-  if (j.contains("scale") && j["scale"].is_array() &&
-      j["scale"].size() >= 3) {
-    s.offsetScale =
-        glm::vec3(j["scale"][0], j["scale"][1], j["scale"][2]);
+  if (j.contains("scale") && j["scale"].is_array() && j["scale"].size() >= 3) {
+    s.offsetScale = glm::vec3(j["scale"][0], j["scale"][1], j["scale"][2]);
   }
   if (j.contains("enabled"))
     j.at("enabled").get_to(s.enabled);

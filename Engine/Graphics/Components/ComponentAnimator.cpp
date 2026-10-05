@@ -42,8 +42,8 @@ void Engine::Graphics::ComponentAnimator::FromJson(json &js) {
 }
 void Engine::Graphics::ComponentAnimator::Update() {
   ZoneScoped;
-  if (isPlaying && animation) {
-    animation->UpdateAnimation(GetDeltaTime());
+  if (isPlaying && animator) {
+    animator->UpdateAnimation(GetDeltaTime());
   }
 }
 void Engine::Graphics::ComponentAnimator::Setup() {
@@ -81,7 +81,8 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
   }
 
   if (!animations.empty()) {
-    m_DefaultBoneMatrices = animations.begin()->second->GetDefaultBoneMatrices();
+    m_DefaultBoneMatrices =
+        animations.begin()->second->GetDefaultBoneMatrices();
   }
 
   if (!current_animation.empty() && animators.contains(current_animation)) {
@@ -101,7 +102,8 @@ void Engine::Graphics::ComponentAnimator::SetSockets(
     anim->SetSockets(sockets);
   }
   if (!animations.empty()) {
-    m_DefaultBoneMatrices = animations.begin()->second->GetDefaultBoneMatrices();
+    m_DefaultBoneMatrices =
+        animations.begin()->second->GetDefaultBoneMatrices();
   }
 }
 
@@ -120,8 +122,8 @@ void Engine::Graphics::ComponentAnimator::RemoveSocket(size_t index) {
 
 glm::mat4 Engine::Graphics::ComponentAnimator::GetBoneGlobalTransform(
     const std::string &boneName) const {
-  if (animation) {
-    return animation->GetBoneGlobalTransform(boneName);
+  if (animator) {
+    return animator->GetBoneGlobalTransform(boneName);
   }
   return glm::mat4(1.0f);
 }
@@ -131,9 +133,8 @@ glm::mat4 Engine::Graphics::ComponentAnimator::GetBoneWorldTransform(
   glm::mat4 localBone = GetBoneGlobalTransform(boneName);
   auto obj = object.lock();
   if (obj) {
-    glm::mat4 modelMatrix =
-        glm::translate(glm::mat4(1.0f), obj->_position) *
-        glm::mat4_cast(obj->_rotation);
+    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), obj->_position) *
+                            glm::mat4_cast(obj->_rotation);
     return modelMatrix * localBone;
   }
   return localBone;
@@ -150,10 +151,10 @@ Engine::Graphics::ComponentAnimator::GetNodeNames() const {
 void Engine::Graphics::ComponentAnimator::SetAnimation(std::string path) {
   if (animators.contains(path)) {
     current_animation = path;
-    animation = animators[path];
+    animator->PlayAnimation(animations[path]);
   } else if (path == "") {
     current_animation = path;
-    animation = nullptr;
+    animator->PlayAnimation(nullptr);
   } else {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Tried to set a non existent animation");
@@ -166,7 +167,7 @@ void Engine::Graphics::ComponentAnimator::SetIsPlaying(bool state) {
 bool Engine::Graphics::ComponentAnimator::GetIsPlaying() { return isPlaying; }
 std::shared_ptr<Engine::Graphics::Animator>
 Engine::Graphics::ComponentAnimator::GetAnimator() {
-  return animation;
+  return animator;
 }
 
 std::string Engine::Graphics::ComponentAnimator::GetCurrentAnimation() {
@@ -177,12 +178,11 @@ static const std::vector<glm::mat4> s_defaultBoneMatrices(500, glm::mat4(1.0f));
 
 const std::vector<glm::mat4> &
 Engine::Graphics::ComponentAnimator::GetFinalBoneMatrices() const {
-  if (animation) {
-    return animation->GetFinalBoneMatrices();
+  if (animator) {
+    return animator->GetFinalBoneMatrices();
   }
   if (!m_DefaultBoneMatrices.empty()) {
     return m_DefaultBoneMatrices;
   }
   return s_defaultBoneMatrices;
 }
-

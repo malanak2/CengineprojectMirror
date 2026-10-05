@@ -508,10 +508,8 @@ void Engine::Graphics::Animator::CalculateBoneTransform(
     }
   }
 
-  // Pass 1: unsocketed hierarchy
   CalculateBoneTransformInternal(node, parentTransform, activeSockets);
 
-  // Pass 2: socket attachments (iterative in case of chaining)
   if (m_CurrentAnimation) {
     std::vector<const SocketAttachment *> pendingSockets;
     for (const auto &s : m_Sockets) {

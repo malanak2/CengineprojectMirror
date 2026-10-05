@@ -40,7 +40,7 @@ public:
 private:
   bool isPlaying = true;
   std::string current_animation = "";
-  std::shared_ptr<Animator> animation = nullptr;
+  std::shared_ptr<Animator> animator = std::make_shared<Animator>(nullptr);
   std::vector<glm::mat4> m_DefaultBoneMatrices;
 };
 } // namespace Graphics

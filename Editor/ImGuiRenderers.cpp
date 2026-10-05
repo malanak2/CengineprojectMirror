@@ -474,6 +474,8 @@ void ImGuiRenderer::RenderObjectInspector() {
       if (ImGui::CollapsingHeader(comp->GetName().data())) {
         ImGuiComponentRenderer::instance->Render(comp);
       }
+    ImGui::Separator();
+    ImGui::Separator();
     names.insert(names.end(), std::string(comp->GetName()));
   }
   ImGui::Text("Add components");

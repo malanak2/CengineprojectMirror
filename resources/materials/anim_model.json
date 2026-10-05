@@ -1,0 +1,27 @@
+{
+  "object_type": "material",
+  "name": "Animated Material",
+  "uses_camera": true,
+  "uses_translate": false,
+  "texture_path": "",
+  "uses_animations": true,
+  "shaders": [
+    {
+      "type": "vertex",
+      "path": "generated/shaders/spirv/texture_boned.spv",
+      "entrypoint": "mainVertex"
+    },
+    {
+      "type": "fragment",
+      "path": "generated/shaders/spirv/texture_boned.spv",
+      "entrypoint": "mainPixel"
+    }
+  ],
+  "uniforms": [
+    {
+      "name": "camera",
+      "bind_point": 0,
+      "size": 0
+    }
+  ]
+}

@@ -50,6 +50,7 @@ json Object::ToJson() {
   js.position = {_position[0], _position[1], _position[2]};
   js.rotation = {_rotation.w, _rotation.x, _rotation.y, _rotation.z};
   js.name = _name;
+  js.scale = scale;
   ret.data = js;
   json r = ret;
   return r;
