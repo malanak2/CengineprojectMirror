@@ -519,14 +519,24 @@ void ImGuiRenderer::RenderInputMaps() {
   ImGui::End();
 }
 void ImGuiRenderer::RenderInputMap(
-    std::string name, std::map<int, std::shared_ptr<Engine::Keybind>> *map) {
+    std::string name,
+    std::map<int, std::vector<std::shared_ptr<Engine::Keybind>>> *map) {
   if (ImGui::CollapsingHeader(("KeyMap: " + name).c_str())) {
-    for (auto const &[scancode, keybind] : *map) {
-      ImGui::Text("ID: %s, Key: %s", keybind->name.c_str(),
-                  glfwGetKeyName(keybind->key, scancode));
-      // TODO: Fix
-      ImGui::Checkbox(("Enabled##" + keybind->name).c_str(),
-                      &keybind->isEnabled);
+    for (auto const &[scancode, kvec] : *map) {
+      if (kvec.size() == 0)
+        continue;
+      ImGui::Indent(10);
+      if (ImGui::TreeNode(glfwGetKeyName(kvec[0]->key, scancode))) {
+        for (auto keybind : kvec) {
+          ImGui::Text("ID: %s, Default key: %s", keybind->name.c_str(),
+                      glfwGetKeyName(keybind->default_key,
+                                     glfwGetKeyScancode(keybind->default_key)));
+          ImGui::Checkbox(("Enabled##" + keybind->name).c_str(),
+                          &keybind->isEnabled);
+        }
+        ImGui::TreePop();
+      }
+      ImGui::Unindent(10);
     }
   }
 

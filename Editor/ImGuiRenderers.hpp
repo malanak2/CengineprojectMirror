@@ -96,9 +96,9 @@ public:
   static std::shared_ptr<Engine::SceneObject> newObjectParent;
 
   static void RenderInputMaps();
-  static void
-  RenderInputMap(std::string name,
-                 std::map<int, std::shared_ptr<Engine::Keybind>> *map);
+  static void RenderInputMap(
+      std::string name,
+      std::map<int, std::vector<std::shared_ptr<Engine::Keybind>>> *map);
 
   static bool wasSavePressedThisFrame;
   static char namebuf[64];

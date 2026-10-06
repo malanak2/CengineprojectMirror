@@ -66,31 +66,42 @@ void Engine::InputSystem::Init() {
 }
 void Engine::InputSystem::Save() {
   InputSystemJson js = {};
-  for (auto const &[sc, j] : instance->keybind_map_press) {
-    js.keybindsPress.insert(
-        js.keybindsPress.end(),
-        KeybindJson{j->name, j->default_key, j->key, j->scancode});
+  for (auto const &[sc, jvec] : instance->keybind_map_press) {
+    for (auto const &j : jvec) {
+      js.keybindsPress.insert(
+          js.keybindsPress.end(),
+          KeybindJson{j->name, j->default_key, j->key, j->scancode});
+    }
   }
-  for (auto const &[sc, j] : instance->keybind_map_hold) {
-    js.keybindsHold.insert(
-        js.keybindsHold.end(),
-        KeybindJson{j->name, j->default_key, j->key, j->scancode});
+  for (auto const &[sc, jvec] : instance->keybind_map_hold) {
+
+    for (auto const &j : jvec) {
+      js.keybindsHold.insert(
+          js.keybindsHold.end(),
+          KeybindJson{j->name, j->default_key, j->key, j->scancode});
+    }
   }
-  for (auto const &[sc, j] : instance->keybind_map_hold_text) {
-    js.keybindsHoldText.insert(
-        js.keybindsHoldText.end(),
-        KeybindJson{j->name, j->default_key, j->key, j->scancode});
+  for (auto const &[sc, jvec] : instance->keybind_map_hold_text) {
+
+    for (auto const &j : jvec) {
+      js.keybindsHoldText.insert(
+          js.keybindsHoldText.end(),
+          KeybindJson{j->name, j->default_key, j->key, j->scancode});
+    }
   }
-  for (auto const &[sc, j] : instance->keybind_map_release) {
-    js.keybindsRelease.insert(
-        js.keybindsRelease.end(),
-        KeybindJson{j->name, j->default_key, j->key, j->scancode});
+  for (auto const &[sc, jvec] : instance->keybind_map_release) {
+
+    for (auto const &j : jvec) {
+      js.keybindsRelease.insert(
+          js.keybindsRelease.end(),
+          KeybindJson{j->name, j->default_key, j->key, j->scancode});
+    }
   }
 }
 
 void Engine::InputSystem::ProcessEvents() {
   for (auto event : instance->events) {
-    std::map<int, std::shared_ptr<Keybind>> *m = nullptr;
+    std::map<int, std::vector<std::shared_ptr<Keybind>>> *m = nullptr;
     switch (event.type) {
     case PRESS: {
       m = &instance->keybind_map_press;
@@ -107,20 +118,24 @@ void Engine::InputSystem::ProcessEvents() {
     case RELEASE: {
       m = &instance->keybind_map_release;
       break;
+    }
     case INVALID: {
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "INVALID event for {}",
                           event.scancode);
       return;
     }
     }
-    }
     if ((*m).contains(event.scancode)) {
-      auto kb = (*m)[event.scancode];
-      if (!kb->isEnabled)
-        continue;
-      auto f = kb->f;
-      if (f != nullptr)
-        f();
+      for (auto kb : (*m)[event.scancode]) {
+        if (!kb->isEnabled)
+          continue;
+        auto f = kb->f;
+        if (f != nullptr)
+          f();
+        else
+          SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Function is nullptr for {}",
+                              kb->name);
+      }
     }
   }
   instance->events.clear();
@@ -145,7 +160,7 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
     instance->keybinds[id] = k;
   }
 
-  std::map<int, std::shared_ptr<Keybind>> *m = nullptr;
+  std::map<int, std::vector<std::shared_ptr<Keybind>>> *m = nullptr;
   switch (type) {
   case PRESS:
     m = &instance->keybind_map_press;
@@ -168,7 +183,7 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
                         (int)type);
     return nullptr;
   }
-  (*m)[glfwGetKeyScancode(key)] = k;
+  (*m)[glfwGetKeyScancode(key)].insert((*m)[glfwGetKeyScancode(key)].end(), k);
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New keybind with id {}", id);
   return k;
 }

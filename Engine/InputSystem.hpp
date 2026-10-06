@@ -97,10 +97,11 @@ public:
   // TODO: Should make it so that one scancode can be assigned to multiple
   // keybinds - probably through
   // std::map<int, std::vector<std::shared_ptr<Keybind>>>
-  std::map<int, std::shared_ptr<Keybind>> keybind_map_press = {};
-  std::map<int, std::shared_ptr<Keybind>> keybind_map_hold = {};
-  std::map<int, std::shared_ptr<Keybind>> keybind_map_hold_text = {};
-  std::map<int, std::shared_ptr<Keybind>> keybind_map_release = {};
+  std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_press = {};
+  std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_hold = {};
+  std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_hold_text =
+      {};
+  std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_release = {};
 };
 class InputSystemJson {
 public:
