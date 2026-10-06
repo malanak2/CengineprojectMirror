@@ -501,6 +501,8 @@ void ImGuiRenderer::RenderObjectInspector() {
       }
     }
     if (ImGui::Button(name.c_str())) {
+      TracyMessage(("Added component " + name).c_str(),
+                   ("Added component " + name).size());
       sceneObject->instance->AddComponent(name);
     }
   }
@@ -518,11 +520,16 @@ void ImGuiRenderer::RenderInputMaps() {
 }
 void ImGuiRenderer::RenderInputMap(
     std::string name, std::map<int, std::shared_ptr<Engine::Keybind>> *map) {
-  ImGui::Text("KeyMap: %s", name.c_str());
-  for (auto const &[scancode, keybind] : *map) {
-    ImGui::Text("ID: %s, Key: %s", keybind->name.c_str(),
-                glfwGetKeyName(keybind->key, scancode));
+  if (ImGui::CollapsingHeader(("KeyMap: " + name).c_str())) {
+    for (auto const &[scancode, keybind] : *map) {
+      ImGui::Text("ID: %s, Key: %s", keybind->name.c_str(),
+                  glfwGetKeyName(keybind->key, scancode));
+      // TODO: Fix
+      ImGui::Checkbox(("Enabled##" + keybind->name).c_str(),
+                      &keybind->isEnabled);
+    }
   }
+
   ImGui::Separator();
 }
 

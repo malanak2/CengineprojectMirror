@@ -11,6 +11,7 @@
 using namespace Engine;
 void callback_key(GLFWwindow *window, int key, int scancode, int action,
                   int mods) {
+  ZoneScoped;
   auto instance = InputSystem::instance;
   if (action == GLFW_RELEASE) {
     // Assume it had to have been pressed for it to be released - in the other
@@ -47,20 +48,20 @@ void Engine::InputSystem::Init() {
   }
   InputSystemJson ijs = js;
   for (auto j : ijs.keybindsPress) {
-    auto k =
-        NewKeybind(j.name, j.default_key, j.key, KeypressType::PRESS, nullptr);
+    auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::PRESS,
+                        nullptr, true);
   }
   for (auto j : ijs.keybindsHold) {
-    auto k =
-        NewKeybind(j.name, j.default_key, j.key, KeypressType::HOLD, nullptr);
+    auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::HOLD,
+                        nullptr, true);
   }
   for (auto j : ijs.keybindsHoldText) {
     auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::HOLD_TEXT,
-                        nullptr);
+                        nullptr, true);
   }
   for (auto j : ijs.keybindsRelease) {
     auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::RELEASE,
-                        nullptr);
+                        nullptr, true);
   }
 }
 void Engine::InputSystem::Save() {
@@ -106,10 +107,18 @@ void Engine::InputSystem::ProcessEvents() {
     case RELEASE: {
       m = &instance->keybind_map_release;
       break;
+    case INVALID: {
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "INVALID event for {}",
+                          event.scancode);
+      return;
+    }
     }
     }
     if ((*m).contains(event.scancode)) {
-      auto f = (*m)[event.scancode]->f;
+      auto kb = (*m)[event.scancode];
+      if (!kb->isEnabled)
+        continue;
+      auto f = kb->f;
       if (f != nullptr)
         f();
     }
@@ -123,25 +132,53 @@ void Engine::InputSystem::ProcessEvents() {
 
 std::shared_ptr<Keybind>
 Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
-                                KeypressType type, std::function<void()> func) {
-  auto k = std::make_shared<Keybind>(id, default_key, key, type, func);
+                                KeypressType type, std::function<void()> func,
+                                bool isInit) {
+  std::shared_ptr<Keybind> k;
+  if (instance->keybinds.contains(id)) {
+    if (instance->keybinds[id]->f != nullptr)
+      return GetKeybind(id);
+    k = GetKeybind(id);
+    k->f = func;
+  } else {
+    k = std::make_shared<Keybind>(id, default_key, key, type, func);
+    instance->keybinds[id] = k;
+  }
+
+  std::map<int, std::shared_ptr<Keybind>> *m = nullptr;
   switch (type) {
   case PRESS:
-    instance->keybind_map_press[glfwGetKeyScancode(key)] = k;
+    m = &instance->keybind_map_press;
     break;
   case HOLD:
-    instance->keybind_map_hold[glfwGetKeyScancode(key)] = k;
+    m = &instance->keybind_map_hold;
     break;
   case HOLD_TEXT:
-    instance->keybind_map_hold_text[glfwGetKeyScancode(key)] = k;
+    m = &instance->keybind_map_hold_text;
     break;
   case RELEASE:
-    instance->keybind_map_release[glfwGetKeyScancode(key)] = k;
+    m = &instance->keybind_map_release;
+    break;
+  case INVALID:
+    m = nullptr;
     break;
   }
+  if (m == nullptr) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Map ptr is nullptr! type is {}",
+                        (int)type);
+    return nullptr;
+  }
+  (*m)[glfwGetKeyScancode(key)] = k;
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New keybind with id {}", id);
   return k;
 }
+
+std::shared_ptr<Keybind> Engine::InputSystem::GetKeybind(std::string id) {
+  if (instance->keybinds.contains(id))
+    return instance->keybinds[id];
+  return nullptr;
+}
+
 Engine::Keybind::Keybind(std::string name, int default_key, int key,
                          KeypressType type, std::function<void()> func) {
   this->name = name;
@@ -150,6 +187,7 @@ Engine::Keybind::Keybind(std::string name, int default_key, int key,
   this->isEnabled = false;
   this->f = func;
   this->scancode = glfwGetKeyScancode(key);
+  this->type = type;
 }
 void Engine::Keybind::Trigger() {
   if (isEnabled) {
