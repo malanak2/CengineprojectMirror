@@ -6,13 +6,42 @@
 #include <GLFW/glfw3.h>
 #include <exception>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 
 using namespace Engine;
+constexpr int MODIFIER_MASK =
+    GLFW_MOD_SHIFT | GLFW_MOD_CONTROL | GLFW_MOD_ALT | GLFW_MOD_SUPER;
+
+inline int SanitizeMods(int mods) { return mods & MODIFIER_MASK; }
+int GetKeyModifierBit(int key) {
+  switch (key) {
+  case GLFW_KEY_LEFT_SHIFT:
+  case GLFW_KEY_RIGHT_SHIFT:
+    return GLFW_MOD_SHIFT;
+  case GLFW_KEY_LEFT_CONTROL:
+  case GLFW_KEY_RIGHT_CONTROL:
+    return GLFW_MOD_CONTROL;
+  case GLFW_KEY_LEFT_ALT:
+  case GLFW_KEY_RIGHT_ALT:
+    return GLFW_MOD_ALT;
+  case GLFW_KEY_LEFT_SUPER:
+  case GLFW_KEY_RIGHT_SUPER:
+    return GLFW_MOD_SUPER;
+  default:
+    return 0;
+  }
+}
 void callback_key(GLFWwindow *window, int key, int scancode, int action,
                   int mods) {
   ZoneScoped;
   auto instance = InputSystem::instance;
+  if (action != 2) {
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
+                       "Key: {}, Scancode: {}, mods: {}, action: {}, name: {}",
+                       key, scancode, mods, action,
+                       glfwGetKeyName(key, scancode));
+  }
   if (action == GLFW_RELEASE) {
     // Assume it had to have been pressed for it to be released - in the other
     // case it crashed the program, buut whatever
@@ -20,12 +49,12 @@ void callback_key(GLFWwindow *window, int key, int scancode, int action,
                                        instance->heldKeys.end(), scancode));
     instance->events.erase(
         std::find(instance->events.begin(), instance->events.end(),
-                  KeybindEvent{scancode, KeypressType::HOLD}));
+                  KeybindEvent{scancode, mods, KeypressType::HOLD}));
   } else if (action == GLFW_PRESS) {
     instance->heldKeys.insert(instance->heldKeys.end(), scancode);
   }
   instance->events.insert(instance->events.end(),
-                          KeybindEvent{scancode, (KeypressType)action});
+                          KeybindEvent{scancode, mods, (KeypressType)action});
 }
 std::shared_ptr<InputSystem> InputSystem::instance =
     std::make_shared<InputSystem>();
@@ -48,20 +77,20 @@ void Engine::InputSystem::Init() {
   }
   InputSystemJson ijs = js;
   for (auto j : ijs.keybindsPress) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::PRESS,
-                        nullptr, true);
+    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
+                        KeypressType::PRESS, nullptr, true);
   }
   for (auto j : ijs.keybindsHold) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::HOLD,
-                        nullptr, true);
+    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
+                        KeypressType::HOLD, nullptr, true);
   }
   for (auto j : ijs.keybindsHoldText) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::HOLD_TEXT,
-                        nullptr, true);
+    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
+                        KeypressType::HOLD_TEXT, nullptr, true);
   }
   for (auto j : ijs.keybindsRelease) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, KeypressType::RELEASE,
-                        nullptr, true);
+    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
+                        KeypressType::RELEASE, nullptr, true);
   }
 }
 void Engine::InputSystem::Save() {
@@ -127,28 +156,25 @@ void Engine::InputSystem::ProcessEvents() {
     }
     if ((*m).contains(event.scancode)) {
       for (auto kb : (*m)[event.scancode]) {
-        if (!kb->isEnabled)
-          continue;
-        auto f = kb->f;
-        if (f != nullptr)
-          f();
-        else
-          SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Function is nullptr for {}",
-                              kb->name);
+        int effectiveMods = SanitizeMods(event.mods);
+        effectiveMods &= ~GetKeyModifierBit(kb->key);
+        if (effectiveMods == SanitizeMods(kb->mods)) {
+          kb->Trigger();
+        }
       }
     }
   }
   instance->events.clear();
   for (int scode : instance->heldKeys) {
     instance->events.insert(instance->events.end(),
-                            KeybindEvent{scode, KeypressType::HOLD});
+                            KeybindEvent{scode, 0, KeypressType::HOLD});
   }
 }
 
 std::shared_ptr<Keybind>
 Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
-                                KeypressType type, std::function<void()> func,
-                                bool isInit) {
+                                int mods, KeypressType type,
+                                std::function<void()> func, bool isInit) {
   std::shared_ptr<Keybind> k;
   if (instance->keybinds.contains(id)) {
     if (instance->keybinds[id]->f != nullptr)
@@ -156,7 +182,7 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
     k = GetKeybind(id);
     k->f = func;
   } else {
-    k = std::make_shared<Keybind>(id, default_key, key, type, func);
+    k = std::make_shared<Keybind>(id, default_key, key, mods, type, func);
     instance->keybinds[id] = k;
   }
 
@@ -194,19 +220,20 @@ std::shared_ptr<Keybind> Engine::InputSystem::GetKeybind(std::string id) {
   return nullptr;
 }
 
-Engine::Keybind::Keybind(std::string name, int default_key, int key,
+Engine::Keybind::Keybind(std::string name, int default_key, int key, int mods,
                          KeypressType type, std::function<void()> func) {
   this->name = name;
   this->default_key = key;
   this->key = key;
   this->isEnabled = false;
   this->f = func;
+  this->mods = mods;
   this->scancode = glfwGetKeyScancode(key);
   this->type = type;
 }
 void Engine::Keybind::Trigger() {
   if (isEnabled) {
-    if (f)
+    if (f != nullptr)
       f();
   }
 }
@@ -215,6 +242,7 @@ json Engine::Keybind::ToJson() {
   js.default_key = this->default_key;
   js.scancode = glfwGetKeyScancode(this->key);
   js.name = this->name;
+  js.mods = mods;
   return js;
 }
 void Engine::Keybind::FromJson(json &js) {
@@ -222,4 +250,5 @@ void Engine::Keybind::FromJson(json &js) {
   this->default_key = kjs.default_key;
   this->key = kjs.key;
   this->scancode = kjs.scancode;
+  this->mods = kjs.mods;
 }

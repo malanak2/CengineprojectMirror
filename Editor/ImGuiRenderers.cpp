@@ -531,6 +531,18 @@ void ImGuiRenderer::RenderInputMap(
           ImGui::Text("ID: %s, Default key: %s", keybind->name.c_str(),
                       glfwGetKeyName(keybind->default_key,
                                      glfwGetKeyScancode(keybind->default_key)));
+          if (ImGui::TreeNode(("Mods##" + keybind->name).c_str())) {
+            IMGUI_CHECKBOX(("Mods##" + keybind->name).c_str(),
+                           keybind->mods & GLFW_MOD_SHIFT,
+                           [keybind](bool state) {
+                             if (state) {
+                               keybind->mods = keybind->mods ^ GLFW_MOD_SHIFT;
+                             } else {
+                               keybind->mods = keybind->mods | GLFW_MOD_SHIFT;
+                             }
+                           });
+            ImGui::TreePop();
+          }
           ImGui::Checkbox(("Enabled##" + keybind->name).c_str(),
                           &keybind->isEnabled);
         }

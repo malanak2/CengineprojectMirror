@@ -25,8 +25,8 @@ public:
   //! @param[in] type If the function should be called on press, release, ...
   //! @param[in] func the function to call
   //!
-  Keybind(std::string name, int default_key, int key, KeypressType type,
-          std::function<void()> func);
+  Keybind(std::string name, int default_key, int key, int mods,
+          KeypressType type, std::function<void()> func);
   void Trigger();
   json ToJson() override;
 
@@ -36,6 +36,7 @@ public:
   int key;
   int scancode;
   int default_key;
+  int mods;
   KeypressType type;
   std::function<void()> f;
   std::string name;
@@ -47,14 +48,16 @@ public:
   int default_key;
   int key;
   int scancode;
+  int mods;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindJson, name, default_key, key,
-                                   scancode)
+                                   scancode, mods)
 
 struct KeybindEvent {
 public:
   int scancode;
+  int mods;
   KeypressType type;
   bool operator==(const KeybindEvent &rhs) {
     return scancode == rhs.scancode && type == rhs.type;
@@ -79,7 +82,8 @@ public:
   //! keybinds)
   //!
   static std::shared_ptr<Keybind> NewKeybind(std::string id, int default_key,
-                                             int key, KeypressType type,
+                                             int key, int mods,
+                                             KeypressType type,
                                              std::function<void()> func,
                                              bool isInit = false);
   static std::shared_ptr<Keybind> GetKeybind(std::string id);
