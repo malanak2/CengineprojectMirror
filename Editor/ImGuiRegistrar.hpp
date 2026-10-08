@@ -47,13 +47,13 @@ inline void Register() {
         }
         //           ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
         //           ImGuiDockNodeFlags_PassthruCentralNode);
-        // DEMO:
-        //         ImGui::ShowDemoWindow();
-        //       ImPlot::ShowDemoWindow();
-        Editor::ImGuiR::ImGuiRenderer::RenderSceneView(
-            Engine::Engine::instance->current_scene);
-        Editor::ImGuiR::ImGuiRenderer::RenderObjectInspector();
-        Editor::ImGuiR::ImGuiRenderer::RenderInputMaps();
+        {
+          ZoneScopedN("ImGui build up frame");
+          Editor::ImGuiR::ImGuiRenderer::RenderSceneView(
+              Engine::Engine::instance->current_scene);
+          Editor::ImGuiR::ImGuiRenderer::RenderObjectInspector();
+          Editor::ImGuiR::ImGuiRenderer::RenderInputMaps();
+        }
       });
   Engine::Graphics::Main::instance->postRender->insert(
       Engine::Graphics::Main::instance->postRender->end(), []() {

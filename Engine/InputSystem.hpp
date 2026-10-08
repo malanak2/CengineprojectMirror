@@ -9,6 +9,44 @@
 #include <memory>
 #include <nlohmann/detail/macro_scope.hpp>
 namespace Engine {
+
+constexpr int MODIFIER_MASK = GLFW_MOD_SHIFT | GLFW_MOD_CONTROL | GLFW_MOD_ALT;
+
+inline int SanitizeMods(int mods) { return mods & MODIFIER_MASK; }
+
+inline int GetKeyModifierBit(int key) {
+  switch (key) {
+  case GLFW_KEY_LEFT_SHIFT:
+  case GLFW_KEY_RIGHT_SHIFT:
+    return GLFW_MOD_SHIFT;
+  case GLFW_KEY_LEFT_CONTROL:
+  case GLFW_KEY_RIGHT_CONTROL:
+    return GLFW_MOD_CONTROL;
+  case GLFW_KEY_LEFT_ALT:
+  case GLFW_KEY_RIGHT_ALT:
+    return GLFW_MOD_ALT;
+  default:
+    return 0;
+  }
+}
+
+inline int QueryCurrentMods(GLFWwindow *window) {
+  int mods = 0;
+  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+      glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+    mods |= GLFW_MOD_SHIFT;
+  }
+  if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+      glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
+    mods |= GLFW_MOD_CONTROL;
+  }
+  if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+      glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) {
+    mods |= GLFW_MOD_ALT;
+  }
+  return mods;
+}
+
 enum KeypressType {
   PRESS = GLFW_PRESS,
   HOLD = 10,
@@ -33,6 +71,7 @@ public:
   void FromJson(json &js) override;
 
   bool isEnabled;
+  bool isHeld = false;
   int key;
   int scancode;
   int default_key;
@@ -59,8 +98,9 @@ public:
   int scancode;
   int mods;
   KeypressType type;
-  bool operator==(const KeybindEvent &rhs) {
-    return scancode == rhs.scancode && type == rhs.type;
+  bool operator==(const KeybindEvent &rhs) const {
+    return scancode == rhs.scancode && type == rhs.type &&
+           SanitizeMods(mods) == SanitizeMods(rhs.mods);
   };
 };
 
@@ -97,10 +137,8 @@ public:
   //!
   std::vector<KeybindEvent> events = {};
   std::vector<int> heldKeys = {};
+  int currentMods = 0;
   std::map<std::string, std::shared_ptr<Keybind>> keybinds = {};
-  // TODO: Should make it so that one scancode can be assigned to multiple
-  // keybinds - probably through
-  // std::map<int, std::vector<std::shared_ptr<Keybind>>>
   std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_press = {};
   std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_hold = {};
   std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_hold_text =

@@ -532,15 +532,30 @@ void ImGuiRenderer::RenderInputMap(
                       glfwGetKeyName(keybind->default_key,
                                      glfwGetKeyScancode(keybind->default_key)));
           if (ImGui::TreeNode(("Mods##" + keybind->name).c_str())) {
-            IMGUI_CHECKBOX(("Mods##" + keybind->name).c_str(),
-                           keybind->mods & GLFW_MOD_SHIFT,
-                           [keybind](bool state) {
-                             if (state) {
-                               keybind->mods = keybind->mods ^ GLFW_MOD_SHIFT;
-                             } else {
-                               keybind->mods = keybind->mods | GLFW_MOD_SHIFT;
-                             }
-                           });
+            bool shift = (keybind->mods & GLFW_MOD_SHIFT) != 0;
+            if (ImGui::Checkbox(("Shift##" + keybind->name).c_str(), &shift)) {
+              if (shift) {
+                keybind->mods |= GLFW_MOD_SHIFT;
+              } else {
+                keybind->mods &= ~GLFW_MOD_SHIFT;
+              }
+            }
+            bool ctrl = (keybind->mods & GLFW_MOD_CONTROL) != 0;
+            if (ImGui::Checkbox(("Ctrl##" + keybind->name).c_str(), &ctrl)) {
+              if (ctrl) {
+                keybind->mods |= GLFW_MOD_CONTROL;
+              } else {
+                keybind->mods &= ~GLFW_MOD_CONTROL;
+              }
+            }
+            bool alt = (keybind->mods & GLFW_MOD_ALT) != 0;
+            if (ImGui::Checkbox(("Alt##" + keybind->name).c_str(), &alt)) {
+              if (alt) {
+                keybind->mods |= GLFW_MOD_ALT;
+              } else {
+                keybind->mods &= ~GLFW_MOD_ALT;
+              }
+            }
             ImGui::TreePop();
           }
           ImGui::Checkbox(("Enabled##" + keybind->name).c_str(),
