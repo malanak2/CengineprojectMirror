@@ -32,7 +32,7 @@ find_package(spdlog CONFIG REQUIRED)
 
 find_package(imgui CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
-add_executable(cengineeditor main.cpp Editor/ImGuiRenderers.cpp Editor/ImGuiRenderers.hpp Editor/ImGuiMacros.hpp Editor/ImGuiRegistrar.hpp Editor/Components/Registrar.hpp Editor/Components/Registrar.cpp Editor/Components/TestInputComponent.hpp Editor/Components/TestInputComponent.cpp)
+add_executable(cengineeditor main.cpp Editor/ImGuiRenderers.cpp Editor/ImGuiRenderers.hpp Editor/ImGuiMacros.hpp Editor/ImGuiRegistrar.hpp Editor/Components/Registrar.hpp Editor/Components/Registrar.cpp Editor/Components/TestInputComponent.hpp Editor/Components/TestInputComponent.cpp Editor/ImGui/Window.hpp Editor/ImGui/WindowScene.hpp)
 add_compile_definitions(DEBUG=1 )
 if(IMGUI)
   add_compile_definitions(IMGUI=1 )
@@ -40,6 +40,8 @@ endif()
 if(EDITOR)
   add_compile_definitions(EDITOR=1 )
 endif()
+
+target_include_directories(cengineeditor PUBLIC Editor)
 add_subdirectory(Engine)
 
 target_link_libraries(cengineeditor PRIVATE cengine spdlog::spdlog imgui::imgui implot::implot)
