@@ -53,14 +53,14 @@ public:
   static std::shared_ptr<Texture> FallbackTexture;
 
   std::map<int, std::vector<std::function<void(int, int)>>> keyMap = {};
-  std::shared_ptr<std::vector<void (*)()>> init =
-      std::make_shared<std::vector<void (*)()>>();
-  std::shared_ptr<std::vector<void (*)()>> terminate =
-      std::make_shared<std::vector<void (*)()>>();
-  std::shared_ptr<std::vector<void (*)()>> preRender =
-      std::make_shared<std::vector<void (*)()>>();
-  std::shared_ptr<std::vector<void (*)()>> postRender =
-      std::make_shared<std::vector<void (*)()>>();
+  std::shared_ptr<std::vector<std::function<void()>>> init =
+      std::make_shared<std::vector<std::function<void()>>>();
+  std::shared_ptr<std::vector<std::function<void()>>> terminate =
+      std::make_shared<std::vector<std::function<void()>>>();
+  std::shared_ptr<std::vector<std::function<void()>>> preRender =
+      std::make_shared<std::vector<std::function<void()>>>();
+  std::shared_ptr<std::vector<std::function<void()>>> postRender =
+      std::make_shared<std::vector<std::function<void()>>>();
 
   GLFWwindow *window = nullptr;
 

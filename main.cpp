@@ -24,10 +24,12 @@ void operator delete(void *ptr) noexcept {
 #endif
 
 int main() {
+  Editor::ImGuiR::ImGuiRegistrar rg;
   ZoneScopedNS("main", 64);
   /// Inject functions
   {
-    ZoneScopedN("Register ImGui") Editor::ImGuiR::Register();
+    ZoneScopedN("Register ImGui");
+    rg.Register();
   }
   /// Init engine
   {

@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Graphics/Interfaces/IUniform.hpp"
-#include "InputSystem.hpp"
 #include "Interfaces/IComponent.hpp"
-#include "Scene.hpp"
 #include "implot.h" // IWYU pragma: keep
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -68,43 +66,6 @@ private:
   std::map<std::string_view, void (*)(std::shared_ptr<Engine::IComponent>)>
       funcs = std::map<std::string_view,
                        void (*)(std::shared_ptr<Engine::IComponent>)>();
-};
-//!
-//! @brief Class for containing genreal imgui renderers
-//!
-class ImGuiRenderer {
-public:
-  static std::shared_ptr<Engine::SceneObject> sceneObject;
-  static void ShowSceneObjectMenu(
-      std::vector<std::shared_ptr<Engine::SceneObject>> *sceneObjects);
-  //!
-  //! @brief Renderes the scene view using ImGui
-  //!
-  //! @param[in] scene scene ptr to render the view
-  //!
-  static void RenderSceneView(std::shared_ptr<Engine::Scene> scene);
-
-  //!
-  //! @brief Renders the object inspector using ImGui
-  //!
-  //!
-  static void RenderObjectInspector();
-
-  //!
-  //! @newObjectParent Variable for changing hierarchy
-  //!
-  static std::shared_ptr<Engine::SceneObject> newObjectParent;
-
-  static void RenderInputMaps();
-  static void RenderInputMap(
-      std::string name,
-      std::map<int, std::vector<std::shared_ptr<Engine::Keybind>>> *map);
-
-  static bool wasSavePressedThisFrame;
-  static char namebuf[64];
-  static char matbuf[64];
-  static float coords[3];
-  static float rotation[4];
 };
 } // namespace ImGuiR
 } // namespace Editor
