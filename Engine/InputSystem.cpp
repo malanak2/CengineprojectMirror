@@ -6,21 +6,75 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <exception>
+#include <fmt/base.h>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 
 using namespace Engine;
-
+std::vector<std::function<void(GLFWwindow *, int, int, int, int)>>
+    InputSystem::onCallback = {};
+void mouse_button_callback(GLFWwindow *window, int button, int action,
+                           int mods) {
+  ZoneScoped;
+  auto instance = InputSystem::instance;
+  for (auto f : InputSystem::onMouseButton) {
+    f(window, button, action, mods);
+  }
+  auto v = &InputSystem::instance->keybind_mouse_events;
+  v->push_back(KeybindMouseEvent{
+      KeybindMouseEventType::CLICK,
+      button,
+      action,
+      QueryCurrentMods(window),
+      0,
+      0,
+      0,
+      0,
+  });
+}
+void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+  ZoneScoped;
+  auto instance = InputSystem::instance;
+  for (auto f : InputSystem::onCursorMove) {
+    f(window, xpos, ypos);
+  }
+  auto v = &InputSystem::instance->keybind_mouse_events;
+  v->push_back(KeybindMouseEvent{
+      KeybindMouseEventType::MOVE,
+      0,
+      0,
+      QueryCurrentMods(window),
+      0,
+      0,
+      xpos,
+      ypos,
+  });
+}
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  ZoneScoped;
+  auto instance = InputSystem::instance;
+  for (auto f : InputSystem::onMouseScroll) {
+    f(window, xoffset, yoffset);
+  }
+  auto v = &InputSystem::instance->keybind_mouse_events;
+  v->push_back(KeybindMouseEvent{
+      KeybindMouseEventType::SCROLL,
+      0,
+      0,
+      QueryCurrentMods(window),
+      xoffset,
+      yoffset,
+      0,
+      0,
+  });
+}
 void callback_key(GLFWwindow *window, int key, int scancode, int action,
                   int mods) {
   ZoneScoped;
   auto instance = InputSystem::instance;
-  if (action != 2) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
-                       "Key: {}, Scancode: {}, mods: {}, action: {}, name: {}",
-                       key, scancode, mods, action,
-                       glfwGetKeyName(key, scancode));
+  for (auto f : InputSystem::onCallback) {
+    f(window, key, scancode, action, mods);
   }
   instance->currentMods = QueryCurrentMods(window);
 
@@ -30,11 +84,11 @@ void callback_key(GLFWwindow *window, int key, int scancode, int action,
     if (it != instance->heldKeys.end()) {
       instance->heldKeys.erase(it);
     }
-    auto evIt = std::find_if(
-        instance->events.begin(), instance->events.end(),
-        [scancode](const KeybindEvent &ev) {
-          return ev.scancode == scancode && ev.type == KeypressType::HOLD;
-        });
+    auto evIt = std::find_if(instance->events.begin(), instance->events.end(),
+                             [scancode](const KeybindEvent &ev) {
+                               return ev.scancode == scancode &&
+                                      ev.type == KeypressType::HOLD;
+                             });
     if (evIt != instance->events.end()) {
       instance->events.erase(evIt);
     }
@@ -59,8 +113,11 @@ void Engine::InputSystem::Init() {
   instance = std::make_shared<InputSystem>();
   std::string jsstr;
   auto res = FileUtil::ReadFile(Config::inst->defaults->InputPath, &jsstr);
-
-  glfwSetKeyCallback(Engine::Graphics::Main::instance->window, callback_key);
+  auto window = Engine::Graphics::Main::instance->window;
+  glfwSetKeyCallback(window, callback_key);
+  glfwSetCursorPosCallback(window, cursor_position_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
+  glfwSetScrollCallback(window, scroll_callback);
   if (res != 0) {
     return;
   }
@@ -117,7 +174,10 @@ void Engine::InputSystem::Save() {
   }
   nlohmann::json j = js;
   std::string s = j.dump(2);
-  FileUtil::SaveFile(Config::inst->defaults->InputPath, &s);
+  if (FileUtil::SaveFile(Config::inst->defaults->InputPath, &s) != 0) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to save input map to {}",
+                        Config::inst->defaults->InputPath);
+  }
 }
 
 void Engine::InputSystem::ProcessEvents() {
@@ -182,12 +242,49 @@ void Engine::InputSystem::ProcessEvents() {
     instance->events.push_back(
         KeybindEvent{scode, instance->currentMods, KeypressType::HOLD});
   }
+
+  /// Mouse
+  for (auto e : instance->keybind_mouse_events) {
+    instance->mouseXScrollOffset += e.xscrolloffset;
+    instance->mouseYScrollOffset += e.yscrolloffset;
+    std::vector<std::shared_ptr<KeybindMouse>> *vec = nullptr;
+    switch (e.type) {
+    case MOVE_CLICKED:
+    case MOVE: {
+      vec = &(instance->keybind_vector_mouse_move);
+      break;
+    }
+    case CLICK: {
+      if (e.action == GLFW_PRESS) {
+        instance->held_mouse_buttons.push_back(e.mbutton);
+      } else {
+        auto p = std::find(instance->held_mouse_buttons.begin(),
+                           instance->held_mouse_buttons.end(), e.mbutton);
+        if (p != instance->held_mouse_buttons.end()) {
+          instance->held_mouse_buttons.erase(p);
+        }
+      }
+      vec = &(instance->keybind_vector_mouse_move);
+      break;
+    }
+    case SCROLL: {
+      vec = &(instance->keybind_vector_mouse_scroll);
+      break;
+    }
+    }
+    for (auto &kb : *vec) {
+      kb->CallFunc(e.xpos, e.ypos, e.mbutton, e.action, e.mods, e.xscrolloffset,
+                   e.yscrolloffset, instance->mouseXScrollOffset,
+                   instance->mouseYScrollOffset);
+    }
+  }
 }
 
 std::shared_ptr<Keybind>
 Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
                                 int mods, KeypressType type,
                                 std::function<void()> func, bool isInit) {
+  bool isnew = false;
   std::shared_ptr<Keybind> k;
   if (instance->keybinds.contains(id)) {
     if (instance->keybinds[id]->f != nullptr)
@@ -197,6 +294,7 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
   } else {
     k = std::make_shared<Keybind>(id, default_key, key, mods, type, func);
     instance->keybinds[id] = k;
+    isnew = true;
   }
 
   std::map<int, std::vector<std::shared_ptr<Keybind>>> *m = nullptr;
@@ -227,7 +325,51 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
     vec.push_back(k);
   }
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New keybind with id {}", id);
+  if (isnew) {
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Keybind {} is completly new", id);
+    Save();
+  }
   return k;
+}
+std::shared_ptr<Keybind> Engine::InputSystem::ChangeKeybind(std::string id,
+                                                            int old_key,
+                                                            int new_key,
+                                                            int mods) {
+  auto kb = GetKeybind(id);
+  if (kb == nullptr) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Tried to edit a non existing keybind");
+    return nullptr;
+  }
+  std::map<int, std::vector<std::shared_ptr<Keybind>>> *mp = nullptr;
+  switch (kb->type) {
+
+  case PRESS:
+    mp = &instance->keybind_map_press;
+    break;
+  case HOLD:
+    mp = &instance->keybind_map_hold;
+    break;
+  case HOLD_TEXT:
+    mp = &instance->keybind_map_hold_text;
+    break;
+  case RELEASE:
+    mp = &instance->keybind_map_release;
+    break;
+  case INVALID:
+    mp = nullptr;
+    break;
+  }
+  (*mp)[glfwGetKeyScancode(old_key)].erase(
+      std::find((*mp)[glfwGetKeyScancode(old_key)].begin(),
+                (*mp)[glfwGetKeyScancode(old_key)].end(), kb));
+  (*mp)[glfwGetKeyScancode(new_key)].insert(
+      (*mp)[glfwGetKeyScancode(new_key)].end(), kb);
+  kb->key = new_key;
+  kb->scancode = glfwGetKeyScancode(new_key);
+  kb->mods = mods;
+  Save();
+  return kb;
 }
 
 std::shared_ptr<Keybind> Engine::InputSystem::GetKeybind(std::string id) {
@@ -273,4 +415,22 @@ void Engine::Keybind::FromJson(json &js) {
   this->key = kjs.key;
   this->scancode = kjs.scancode;
   this->mods = kjs.mods;
+}
+void Engine::KeybindMouseMove::CallFunc(double xposmouse, double yposmouse,
+                                        int mbutton, int maction, int mmods,
+                                        double xscrolloffset,
+                                        double yscrolloffset, double positionX,
+                                        double positionY) {
+  if (func == nullptr || !isEnabled)
+    return;
+  if (mmods != this->mmods)
+    return;
+  if (mtype != NORMAL) {
+    auto hmb = &InputSystem::instance->held_mouse_buttons;
+    if (std::find(hmb->begin(), hmb->end(), mbutton) != hmb->end()) {
+      func(xposmouse, yposmouse);
+    }
+  } else {
+    func(xposmouse, yposmouse);
+  }
 }

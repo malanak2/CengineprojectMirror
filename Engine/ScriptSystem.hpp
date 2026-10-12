@@ -26,6 +26,11 @@ public:
       return std::make_shared<T>();
     };
   }
+  template <typename T> void UnregisterScript() {
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Unregistering script {}",
+                       T::GetNameS());
+    map_comp.erase(std::string(T::GetNameS()));
+  }
   std::shared_ptr<IComponent> GetScript(std::string_view key);
 
   std::map<std::string, std::function<std::shared_ptr<IComponent>()>,

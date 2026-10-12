@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Config/Config.hpp"
-#include "Engine.hpp"
-#include "ImGuiMacros.hpp"
+#include "ImGui/WindowChangeKeybind.hpp"
 #include "InputSystem.hpp"
-#include "Util/FileUtil.hpp"
 #include "Window.hpp"
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
@@ -39,6 +36,9 @@ protected:
                 "ID: %s, Default key: %s", keybind->name.c_str(),
                 glfwGetKeyName(keybind->default_key,
                                glfwGetKeyScancode(keybind->default_key)));
+            if (ImGui::Button(("Change##" + keybind->name).c_str())) {
+              Editor::WindowChangeKeybind::OpenFor(keybind);
+            }
             if (ImGui::TreeNode(("Mods##" + keybind->name).c_str())) {
               bool shift = (keybind->mods & GLFW_MOD_SHIFT) != 0;
               if (ImGui::Checkbox(("Shift##" + keybind->name).c_str(),

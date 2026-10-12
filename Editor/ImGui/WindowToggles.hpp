@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ImGui/Window.hpp"
-#include "ImGuiMacros.hpp"
 #include <imgui.h>
 #include <memory>
 #include <vector>

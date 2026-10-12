@@ -1,11 +1,12 @@
 #pragma once
-#include "Engine.hpp"
 #include "ImGui/Window.hpp"
+#include "ImGui/WindowChangeKeybind.hpp"
 #include "ImGui/WindowInputMaps.hpp"
 #include "ImGui/WindowObjectInspector.hpp"
 #include "ImGui/WindowScene.hpp"
 #include "ImGui/WindowToggles.hpp"
 #include "ImGuiRenderers.hpp"
+#include "InputSystem.hpp"
 #include <imgui.h>
 #include <implot.h>
 #include <memory>
@@ -24,6 +25,9 @@ public:
                    std::make_shared<WindowObjectInspector>(
                        std::static_pointer_cast<WindowScene>(windows[0])));
     windows.insert(windows.end(), std::make_shared<WindowInputMaps>());
+    auto a = std::make_shared<WindowChangeKeybind>();
+    windows.insert(windows.end(), a);
+    a->isOpen = false;
     wtgles = std::make_shared<WindowToggles>();
     wtgles->windows = &windows;
     Engine::Graphics::Main::instance->init->insert(
@@ -90,6 +94,11 @@ public:
           ImGui_ImplGlfw_Shutdown();
           ImPlot::DestroyContext();
           ImGui::DestroyContext();
+        });
+    Engine::InputSystem::onCallback.insert(
+        Engine::InputSystem::onCallback.end(),
+        [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+          ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
         });
   }
 };

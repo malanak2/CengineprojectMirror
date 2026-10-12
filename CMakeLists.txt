@@ -48,6 +48,3 @@ target_link_libraries(cengineeditor PRIVATE cengine spdlog::spdlog imgui::imgui 
 if (PROFILE)
 target_link_libraries(cengineeditor PRIVATE Tracy::TracyClient)
 endif()
-if(IMGUI)
-  # Add imgui
-endif()
