@@ -5,11 +5,13 @@
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <GLFW/glfw3.h>
 #include <fmt/base.h>
-#include <imgui_impl_glfw.h>
+#include <functional>
 #include <map>
 #include <memory>
 #include <nlohmann/detail/macro_scope.hpp>
 #include <string>
+#include <type_traits>
+#include <vector>
 namespace Engine {
 
 constexpr int MODIFIER_MASK = GLFW_MOD_SHIFT | GLFW_MOD_CONTROL | GLFW_MOD_ALT;
@@ -112,17 +114,48 @@ public:
            SanitizeMods(mods) == SanitizeMods(rhs.mods);
   };
 };
+inline std::string GetGlfwMouseButtonName(int button) {
+  switch (button) {
+  case GLFW_MOUSE_BUTTON_LEFT:
+    return "Mouse Left";
+  case GLFW_MOUSE_BUTTON_RIGHT:
+    return "Mouse Right";
+  case GLFW_MOUSE_BUTTON_MIDDLE:
+    return "Mouse Middle";
+  case GLFW_MOUSE_BUTTON_4:
+    return "Mouse 4";
+  case GLFW_MOUSE_BUTTON_5:
+    return "Mouse 5";
+  case GLFW_MOUSE_BUTTON_6:
+    return "Mouse 6";
+  case GLFW_MOUSE_BUTTON_7:
+    return "Mouse 7";
+  case GLFW_MOUSE_BUTTON_8:
+    return "Mouse 8";
+  default:
+    return "Mouse " + std::to_string(button);
+  }
+}
+
 enum KeybindMouseEventType {
   MOVE,
   CLICK,
   MOVE_CLICKED,
   SCROLL,
 };
+
 class KeybindMouse : public IJson {
 public:
+  KeybindMouse() = default;
+  virtual ~KeybindMouse() = default;
+
   std::string name;
-  int button;
-  bool isEnabled;
+  int default_button = 0;
+  int button = 0;
+  int mods = 0;
+  bool isEnabled = true;
+  bool isHeld = false;
+
   virtual void CallFunc(double xposmouse, double yposmouse, int mbutton,
                         int maction, int mmods, double xscrolloffset,
                         double yscrolloffset, double positionX,
@@ -130,108 +163,90 @@ public:
   bool operator==(const KeybindMouse &rhs) const { return name == rhs.name; };
   virtual KeybindMouseEventType GetType() = 0;
 };
+
 enum MOVE_TYPE {
   NORMAL,
   BUTTON_HELD,
 };
+
 class KeybindMouseMove : public KeybindMouse {
 public:
+  KeybindMouseMove() = default;
+  KeybindMouseMove(std::string name, MOVE_TYPE mtype, int default_button,
+                   int button, int mods,
+                   std::function<void(double, double)> func);
+
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::MOVE;
   }
 
-  json ToJson() override { return {}; }
+  json ToJson() override;
+  void FromJson(json &js) override;
 
-  void FromJson(json &js) override {}
-  MOVE_TYPE mtype;
-  int keyMove;
-  int mmods;
-
+  MOVE_TYPE mtype = NORMAL;
   // xpos, ypos
   std::function<void(double, double)> func;
   void CallFunc(double xposmouse, double yposmouse, int mbutton, int maction,
                 int mmods, double xscrolloffset, double yscrolloffset,
                 double positionX, double positionY) override;
 };
+
 enum CLICK_TYPE { CLICK_PRESS, CLICK_RELEASE };
+
 class KeybindMouseClick : public KeybindMouse {
 public:
+  KeybindMouseClick() = default;
+  KeybindMouseClick(std::string name, int default_button, int button, int mods,
+                    CLICK_TYPE ctype, std::function<void()> func);
+
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::CLICK;
   }
 
-  json ToJson() override { return {}; }
+  void Trigger();
+  json ToJson() override;
+  void FromJson(json &js) override;
 
-  void FromJson(json &js) override {}
   std::function<void()> func;
-  CLICK_TYPE ctype;
-  int mmods;
+  CLICK_TYPE ctype = CLICK_PRESS;
 
   void CallFunc(double xposmouse, double yposmouse, int mbutton, int maction,
                 int mmods, double xscrolloffset, double yscrolloffset,
-                double positionX, double positionY) override {
-    if (func == nullptr || !isEnabled)
-      return;
-    if (ctype == CLICK_PRESS && maction == GLFW_PRESS && this->mmods == mmods) {
-      func();
-    } else if (ctype == CLICK_RELEASE && maction == GLFW_RELEASE) {
-      func();
-    }
-  }
+                double positionX, double positionY) override;
 };
+
 enum SCROLL_TYPE {
   SCROLL_X_TYPE_UP,
   SCROLL_X_TYPE_DOWN,
   SCROLL_Y_TYPE_UP,
   SCROLL_Y_TYPE_DOWN,
+  SCROLL_ANY,
 };
+
 class KeybindMouseScroll : public KeybindMouse {
 public:
+  KeybindMouseScroll() = default;
+  KeybindMouseScroll(std::string name, SCROLL_TYPE scrolltype, int mods,
+                     std::function<void(double, double)> func);
+
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::SCROLL;
   }
 
-  json ToJson() override { return {}; }
+  json ToJson() override;
+  void FromJson(json &js) override;
 
-  void FromJson(json &js) override {}
   //!
-  //! @func Xposoffset/yposoffset, posx/posy
+  //! @func (xposoffset/yposoffset, posx/posy) or (xoffset, yoffset)
   //!
   std::function<void(double, double)> func;
-  SCROLL_TYPE scrolltype;
+  SCROLL_TYPE scrolltype = SCROLL_Y_TYPE_UP;
+
   void CallFunc(double xposmouse, double yposmouse, int mbutton, int maction,
                 int mmods, double xscrolloffset, double yscrolloffset,
-                double positionX, double positionY) override {
-    if (func == nullptr || !isEnabled)
-      return;
-    switch (scrolltype) {
-    case SCROLL_X_TYPE_UP: {
-      if (xscrolloffset > 0) {
-        func(xscrolloffset, positionX);
-      }
-      break;
-    }
-    case SCROLL_X_TYPE_DOWN: {
-      if (xscrolloffset < 0) {
-        func(xscrolloffset, positionX);
-      }
-      break;
-    }
-    case SCROLL_Y_TYPE_UP: {
-      if (yscrolloffset > 0) {
-        func(yscrolloffset, positionY);
-      }
-      break;
-    }
-    case SCROLL_Y_TYPE_DOWN: {
-      if (yscrolloffset < 0) {
-        func(yscrolloffset, positionY);
-      }
-      break;
-    }
-    }
-  }
+                double positionX, double positionY) override;
 };
+
 struct KeybindMouseEvent {
 public:
   KeybindMouseEventType type;
@@ -243,13 +258,88 @@ public:
   double yscrolloffset;
   double xpos;
   double ypos;
-  bool operator==(const KeybindMouseEvent &rhs) {
+  bool operator==(const KeybindMouseEvent &rhs) const {
     return type == rhs.type && mbutton == rhs.mbutton &&
            xscrolloffset == rhs.xscrolloffset &&
            yscrolloffset == rhs.yscrolloffset && xpos == rhs.xpos &&
            ypos == rhs.ypos && action == rhs.action && mods == rhs.mods;
   };
 };
+
+class KeybindMouseMoveJson {
+public:
+  std::string name;
+  int mtype;
+  int default_button;
+  int button;
+  int mods;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindMouseMoveJson, name, mtype,
+                                   default_button, button, mods)
+
+class KeybindMouseClickJson {
+public:
+  std::string name;
+  int ctype;
+  int default_button;
+  int button;
+  int mods;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindMouseClickJson, name, ctype,
+                                   default_button, button, mods)
+
+class KeybindMouseScrollJson {
+public:
+  std::string name;
+  int scrolltype;
+  int mods;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindMouseScrollJson, name, scrolltype,
+                                   mods)
+
+class InputSystemJson {
+public:
+  std::vector<KeybindJson> keybindsPress;
+  std::vector<KeybindJson> keybindsHold;
+  std::vector<KeybindJson> keybindsHoldText;
+  std::vector<KeybindJson> keybindsRelease;
+  std::vector<KeybindMouseMoveJson> mouseMove;
+  std::vector<KeybindMouseClickJson> mouseClick;
+  std::vector<KeybindMouseClickJson> mouseRelease;
+  std::vector<KeybindMouseScrollJson> mouseScroll;
+};
+
+inline void to_json(nlohmann::json &j, const InputSystemJson &p) {
+  j = nlohmann::json{
+      {"keybindsPress", p.keybindsPress},
+      {"keybindsHold", p.keybindsHold},
+      {"keybindsHoldText", p.keybindsHoldText},
+      {"keybindsRelease", p.keybindsRelease},
+      {"mouseMove", p.mouseMove},
+      {"mouseClick", p.mouseClick},
+      {"mouseRelease", p.mouseRelease},
+      {"mouseScroll", p.mouseScroll},
+  };
+}
+
+inline void from_json(const nlohmann::json &j, InputSystemJson &p) {
+  if (j.contains("keybindsPress"))
+    j.at("keybindsPress").get_to(p.keybindsPress);
+  if (j.contains("keybindsHold"))
+    j.at("keybindsHold").get_to(p.keybindsHold);
+  if (j.contains("keybindsHoldText"))
+    j.at("keybindsHoldText").get_to(p.keybindsHoldText);
+  if (j.contains("keybindsRelease"))
+    j.at("keybindsRelease").get_to(p.keybindsRelease);
+  if (j.contains("mouseMove"))
+    j.at("mouseMove").get_to(p.mouseMove);
+  if (j.contains("mouseClick"))
+    j.at("mouseClick").get_to(p.mouseClick);
+  if (j.contains("mouseRelease"))
+    j.at("mouseRelease").get_to(p.mouseRelease);
+  if (j.contains("mouseScroll"))
+    j.at("mouseScroll").get_to(p.mouseScroll);
+}
 
 class InputSystem {
 public:
@@ -277,9 +367,51 @@ public:
                                                 int new_key, int mods);
   static std::shared_ptr<Keybind> GetKeybind(std::string id);
 
-  static std::shared_ptr<InputSystem> instance;
+  static std::shared_ptr<KeybindMouseClick>
+  NewKeybindMouseClick(std::string id, int default_button, int button, int mods,
+                       CLICK_TYPE type, std::function<void()> func,
+                       bool isInit = false);
 
-  template <typename T> std::shared_ptr<T> NewKeybindMouse() {};
+  static std::shared_ptr<KeybindMouseMove>
+  NewKeybindMouseMove(std::string id, MOVE_TYPE mtype, int default_button,
+                      int button, int mods,
+                      std::function<void(double, double)> func,
+                      bool isInit = false);
+
+  static std::shared_ptr<KeybindMouseScroll>
+  NewKeybindMouseScroll(std::string id, SCROLL_TYPE scrolltype, int mods,
+                        std::function<void(double, double)> func,
+                        bool isInit = false);
+
+  template <typename T, typename... Args>
+  static std::shared_ptr<T> NewKeybindMouse(Args &&...args) {
+    if constexpr (sizeof...(Args) == 0) {
+      return std::make_shared<T>();
+    } else if constexpr (std::is_same_v<T, KeybindMouseClick>) {
+      return NewKeybindMouseClick(std::forward<Args>(args)...);
+    } else if constexpr (std::is_same_v<T, KeybindMouseMove>) {
+      return NewKeybindMouseMove(std::forward<Args>(args)...);
+    } else if constexpr (std::is_same_v<T, KeybindMouseScroll>) {
+      return NewKeybindMouseScroll(std::forward<Args>(args)...);
+    } else {
+      static_assert(sizeof(T) == 0, "Unsupported KeybindMouse type");
+    }
+  }
+
+  static std::shared_ptr<KeybindMouse> GetKeybindMouse(std::string id);
+  static std::shared_ptr<KeybindMouse> ChangeKeybindMouse(std::string id,
+                                                          int new_button,
+                                                          int mods);
+
+  static double GetMouseX();
+  static double GetMouseY();
+  static double GetMouseDeltaX();
+  static double GetMouseDeltaY();
+  static double GetMouseScrollX();
+  static double GetMouseScrollY();
+  static bool IsMouseButtonHeld(int button);
+
+  static std::shared_ptr<InputSystem> instance;
 
   //!
   //! @events The keybind event queue. Each frame, the callback populates it and
@@ -293,7 +425,8 @@ public:
       onCallback;
   static std::vector<std::function<void(GLFWwindow *, int, int, int)>>
       onMouseButton;
-  static std::vector<std::function<void(GLFWwindow *, int, int)>> onCursorMove;
+  static std::vector<std::function<void(GLFWwindow *, double, double)>>
+      onCursorMove;
   static std::vector<std::function<void(GLFWwindow *, double, double)>>
       onMouseScroll;
 
@@ -303,22 +436,23 @@ public:
   std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_hold_text =
       {};
   std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_release = {};
+
+  std::map<std::string, std::shared_ptr<KeybindMouse>> mouse_keybinds = {};
   std::vector<std::shared_ptr<KeybindMouse>> keybind_vector_mouse_click = {};
   std::vector<std::shared_ptr<KeybindMouse>> keybind_vector_mouse_move = {};
   std::vector<std::shared_ptr<KeybindMouse>> keybind_vector_mouse_release = {};
   std::vector<std::shared_ptr<KeybindMouse>> keybind_vector_mouse_scroll = {};
   std::vector<KeybindMouseEvent> keybind_mouse_events = {};
   std::vector<int> held_mouse_buttons = {};
+  double mouseX = 0;
+  double mouseY = 0;
+  double mouseDeltaX = 0;
+  double mouseDeltaY = 0;
+  double lastMouseX = 0;
+  double lastMouseY = 0;
+  bool firstMouseMove = true;
   double mouseXScrollOffset = 0;
   double mouseYScrollOffset = 0;
 };
-class InputSystemJson {
-public:
-  std::vector<KeybindJson> keybindsPress;
-  std::vector<KeybindJson> keybindsHold;
-  std::vector<KeybindJson> keybindsHoldText;
-  std::vector<KeybindJson> keybindsRelease;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(InputSystemJson, keybindsPress, keybindsHold,
-                                   keybindsHoldText, keybindsRelease);
+
 } // namespace Engine

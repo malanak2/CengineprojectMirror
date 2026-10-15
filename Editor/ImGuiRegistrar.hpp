@@ -100,6 +100,18 @@ public:
         [](GLFWwindow *window, int key, int scancode, int action, int mods) {
           ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
         });
+    Engine::InputSystem::onMouseButton.push_back(
+        [](GLFWwindow *window, int button, int action, int mods) {
+          ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+        });
+    Engine::InputSystem::onCursorMove.push_back(
+        [](GLFWwindow *window, double xpos, double ypos) {
+          ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+        });
+    Engine::InputSystem::onMouseScroll.push_back(
+        [](GLFWwindow *window, double xoffset, double yoffset) {
+          ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+        });
   }
 };
 } // namespace ImGuiR

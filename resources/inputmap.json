@@ -1,0 +1,68 @@
+{
+  "keybindsHold": [
+    {
+      "default_key": 87,
+      "key": 87,
+      "mods": 0,
+      "name": "test-keybind-w",
+      "scancode": 17
+    },
+    {
+      "default_key": 87,
+      "key": 87,
+      "mods": 0,
+      "name": "test-keybind-w-shift",
+      "scancode": 17
+    },
+    {
+      "default_key": 65,
+      "key": 65,
+      "mods": 0,
+      "name": "test-keybind-a",
+      "scancode": 30
+    },
+    {
+      "default_key": 83,
+      "key": 83,
+      "mods": 0,
+      "name": "test-keybind-s",
+      "scancode": 31
+    },
+    {
+      "default_key": 68,
+      "key": 68,
+      "mods": 0,
+      "name": "test-keybind-d",
+      "scancode": 32
+    }
+  ],
+  "keybindsHoldText": [],
+  "keybindsPress": [],
+  "keybindsRelease": [],
+  "mouseClick": [
+    {
+      "button": 0,
+      "ctype": 0,
+      "default_button": 0,
+      "mods": 0,
+      "name": "test-mouse-click"
+    }
+  ],
+  "mouseMove": [
+    {
+      "button": 1,
+      "default_button": 1,
+      "mods": 0,
+      "mtype": 1,
+      "name": "test-mouse-drag"
+    }
+  ],
+  "mouseRelease": [],
+  "mouseScroll": [
+    {
+      "mods": 0,
+      "name": "test-mouse-scroll",
+      "scrolltype": 4
+    }
+  ]
+}

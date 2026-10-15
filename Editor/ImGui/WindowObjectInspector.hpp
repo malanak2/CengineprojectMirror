@@ -45,8 +45,15 @@ protected:
         ImGui::InputFloat3("XYZ", &obj->_position[0]);
         ImGui::InputFloat("Scale", &obj->scale);
 
-        static glm::vec3 currentAngles =
-            glm::degrees(glm::eulerAngles(obj->_rotation));
+        static glm::vec3 currentAngles = glm::vec3(0.0f);
+        static glm::quat lastRotation = glm::quat(1, 0, 0, 0);
+
+        // Sync display angles when rotation was changed externally
+        if (obj->_rotation != lastRotation) {
+          currentAngles = glm::degrees(glm::eulerAngles(obj->_rotation));
+          lastRotation = obj->_rotation;
+        }
+
         glm::vec3 newAngles = currentAngles;
 
         if (ImGui::DragFloat3("Rotation", &newAngles[0], 1.0f)) {
@@ -70,6 +77,7 @@ protected:
 
           obj->_rotation = glm::normalize(obj->_rotation);
           currentAngles = newAngles;
+          lastRotation = obj->_rotation;
         }
       }
     }

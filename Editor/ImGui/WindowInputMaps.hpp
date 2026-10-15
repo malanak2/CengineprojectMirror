@@ -20,6 +20,18 @@ protected:
                    &(Engine::InputSystem::instance->keybind_map_hold_text));
     RenderInputMap("Release",
                    &(Engine::InputSystem::instance->keybind_map_release));
+    RenderMouseInputMap(
+        "Mouse: Move",
+        &(Engine::InputSystem::instance->keybind_vector_mouse_move));
+    RenderMouseInputMap(
+        "Mouse: Click",
+        &(Engine::InputSystem::instance->keybind_vector_mouse_click));
+    RenderMouseInputMap(
+        "Mouse: Release",
+        &(Engine::InputSystem::instance->keybind_vector_mouse_release));
+    RenderMouseInputMap(
+        "Mouse: Scroll",
+        &(Engine::InputSystem::instance->keybind_vector_mouse_scroll));
     ImGui::End();
   }
   void RenderInputMap(
@@ -77,6 +89,51 @@ protected:
     }
 
     ImGui::Separator();
+  }
+
+  void RenderMouseInputMap(
+      std::string name,
+      std::vector<std::shared_ptr<Engine::KeybindMouse>> *vec) {
+    if (ImGui::CollapsingHeader(name.c_str())) {
+      ImGui::Indent(10);
+      for (auto &keybind : *vec) {
+        if (!keybind)
+          continue;
+        ImGui::Text("ID: %s, Button: %s", keybind->name.c_str(),
+                    Engine::GetGlfwMouseButtonName(keybind->button).c_str());
+        if (ImGui::TreeNode(("Mods##" + keybind->name).c_str())) {
+          bool shift = (keybind->mods & GLFW_MOD_SHIFT) != 0;
+          if (ImGui::Checkbox(("Shift##" + keybind->name).c_str(), &shift)) {
+            if (shift) {
+              keybind->mods |= GLFW_MOD_SHIFT;
+            } else {
+              keybind->mods &= ~GLFW_MOD_SHIFT;
+            }
+          }
+          bool ctrl = (keybind->mods & GLFW_MOD_CONTROL) != 0;
+          if (ImGui::Checkbox(("Ctrl##" + keybind->name).c_str(), &ctrl)) {
+            if (ctrl) {
+              keybind->mods |= GLFW_MOD_CONTROL;
+            } else {
+              keybind->mods &= ~GLFW_MOD_CONTROL;
+            }
+          }
+          bool alt = (keybind->mods & GLFW_MOD_ALT) != 0;
+          if (ImGui::Checkbox(("Alt##" + keybind->name).c_str(), &alt)) {
+            if (alt) {
+              keybind->mods |= GLFW_MOD_ALT;
+            } else {
+              keybind->mods &= ~GLFW_MOD_ALT;
+            }
+          }
+          ImGui::TreePop();
+        }
+        ImGui::Checkbox(("Enabled##" + keybind->name).c_str(),
+                        &keybind->isEnabled);
+      }
+      ImGui::Unindent(10);
+      ImGui::Separator();
+    }
   }
 };
 } // namespace Editor
