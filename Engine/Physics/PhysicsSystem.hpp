@@ -7,7 +7,7 @@ namespace Physics {
 class PhysicsSystem {
 public:
   static glm::dvec3 world_direction;
-  static double gravity_scale;
+  static glm::dvec3 gravity_scale;
   static double gravity_accel;
 
 private:

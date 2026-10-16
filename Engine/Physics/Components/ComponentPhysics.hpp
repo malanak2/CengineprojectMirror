@@ -21,7 +21,7 @@ public:
 private:
   glm::dvec3 velocities = {0, 0, 0};
   glm::dvec3 world_direction = PhysicsSystem::world_direction;
-  double gravity_scale = PhysicsSystem::gravity_scale;
+  glm::dvec3 gravity_scale = PhysicsSystem::gravity_scale;
 };
 } // namespace Physics
 } // namespace Engine

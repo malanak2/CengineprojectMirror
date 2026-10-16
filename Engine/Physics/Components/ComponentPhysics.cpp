@@ -14,7 +14,7 @@ void ComponentPhysics::Update() {
     auto target =
         (world_direction * gravity_scale * PhysicsSystem::gravity_accel);
     auto target_set =
-        PhysicsSystem::gravity_accel * GetDeltaTime() * gravity_scale;
+        PhysicsSystem::gravity_accel * GetDeltaTime() * gravity_scale[i];
     if (velocities[i] < target[i]) {
       velocities[i] += target_set;
       if (velocities[i] > target[i]) {
