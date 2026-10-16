@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 namespace Engine {
 namespace Physics {
+using json = nlohmann::json;
 class ComponentPhysics : public IComponent {
   REGISTER_CLASS(ComponentPhysics);
 
@@ -14,6 +15,7 @@ public:
 
   void FromJson(json &js) override;
   void Update() override;
+  void Setup() override;
   void SetVelocities(glm::dvec3 newv) { velocities = newv; }
   glm::dvec3 GetVelocities() { return velocities; }
   void Impulse(glm::dvec3 newv) { velocities += newv; }
