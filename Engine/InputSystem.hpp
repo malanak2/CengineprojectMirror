@@ -153,7 +153,7 @@ public:
   int default_button = 0;
   int button = 0;
   int mods = 0;
-  bool isEnabled = true;
+  bool isEnabled = false;
   bool isHeld = false;
 
   virtual void CallFunc(double xposmouse, double yposmouse, int mbutton,
@@ -372,11 +372,9 @@ public:
                        CLICK_TYPE type, std::function<void()> func,
                        bool isInit = false);
 
-  static std::shared_ptr<KeybindMouseMove>
-  NewKeybindMouseMove(std::string id, MOVE_TYPE mtype, int default_button,
-                      int button, int mods,
-                      std::function<void(double, double)> func,
-                      bool isInit = false);
+  static std::shared_ptr<KeybindMouseMove> NewKeybindMouseMove(
+      std::string id, MOVE_TYPE mtype, int default_button, int button, int mods,
+      std::function<void(double, double)> func, bool isInit = false);
 
   static std::shared_ptr<KeybindMouseScroll>
   NewKeybindMouseScroll(std::string id, SCROLL_TYPE scrolltype, int mods,
@@ -399,9 +397,8 @@ public:
   }
 
   static std::shared_ptr<KeybindMouse> GetKeybindMouse(std::string id);
-  static std::shared_ptr<KeybindMouse> ChangeKeybindMouse(std::string id,
-                                                          int new_button,
-                                                          int mods);
+  static std::shared_ptr<KeybindMouse>
+  ChangeKeybindMouse(std::string id, int new_button, int mods);
 
   static double GetMouseX();
   static double GetMouseY();

@@ -4,6 +4,7 @@
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Components/ComponentSocket.hpp"
+#include "Physics/Components/ComponentPhysics.hpp"
 #include "ScriptSystem.hpp"
 void Engine::ScriptRegistrar::RegisterCommonComponents() {
   REGISTER_SCRIPT(TestComponent);
@@ -14,7 +15,9 @@ void Engine::ScriptRegistrar::RegisterGraphicComponents() {
   REGISTER_SCRIPT(Graphics::ComponentAnimator);
   REGISTER_SCRIPT(Graphics::ComponentSocket);
 }
-void Engine::ScriptRegistrar::RegisterPhysicsComponents() {}
+void Engine::ScriptRegistrar::RegisterPhysicsComponents() {
+  REGISTER_SCRIPT(Physics::ComponentPhysics);
+}
 
 void Engine::ScriptRegistrar::RegisterComponents() {
   RegisterCommonComponents();

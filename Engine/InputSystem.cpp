@@ -539,18 +539,16 @@ InputSystem::NewKeybindMouseClick(std::string id, int default_button,
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New mouse click keybind with id {}",
                      id);
   if (isnew) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
-                       "Mouse keybind {} is completely new", id);
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Mouse keybind {} is completely new",
+                       id);
     Save();
   }
   return k;
 }
 
-std::shared_ptr<KeybindMouseMove>
-InputSystem::NewKeybindMouseMove(std::string id, MOVE_TYPE mtype,
-                                 int default_button, int button, int mods,
-                                 std::function<void(double, double)> func,
-                                 bool isInit) {
+std::shared_ptr<KeybindMouseMove> InputSystem::NewKeybindMouseMove(
+    std::string id, MOVE_TYPE mtype, int default_button, int button, int mods,
+    std::function<void(double, double)> func, bool isInit) {
   bool isnew = false;
   std::shared_ptr<KeybindMouseMove> k;
   if (instance->mouse_keybinds.contains(id)) {
@@ -577,18 +575,16 @@ InputSystem::NewKeybindMouseMove(std::string id, MOVE_TYPE mtype,
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New mouse move keybind with id {}",
                      id);
   if (isnew) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
-                       "Mouse keybind {} is completely new", id);
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Mouse keybind {} is completely new",
+                       id);
     Save();
   }
   return k;
 }
 
-std::shared_ptr<KeybindMouseScroll>
-InputSystem::NewKeybindMouseScroll(std::string id, SCROLL_TYPE scrolltype,
-                                   int mods,
-                                   std::function<void(double, double)> func,
-                                   bool isInit) {
+std::shared_ptr<KeybindMouseScroll> InputSystem::NewKeybindMouseScroll(
+    std::string id, SCROLL_TYPE scrolltype, int mods,
+    std::function<void(double, double)> func, bool isInit) {
   bool isnew = false;
   std::shared_ptr<KeybindMouseScroll> k;
   if (instance->mouse_keybinds.contains(id)) {
@@ -614,8 +610,8 @@ InputSystem::NewKeybindMouseScroll(std::string id, SCROLL_TYPE scrolltype,
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New mouse scroll keybind with id {}",
                      id);
   if (isnew) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
-                       "Mouse keybind {} is completely new", id);
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Mouse keybind {} is completely new",
+                       id);
     Save();
   }
   return k;
@@ -681,10 +677,10 @@ void KeybindMouseMove::FromJson(json &js) {
   mods = kjs.mods;
 }
 
-void KeybindMouseMove::CallFunc(double xposmouse, double yposmouse,
-                                int mbutton, int maction, int mmods,
-                                double xscrolloffset, double yscrolloffset,
-                                double positionX, double positionY) {
+void KeybindMouseMove::CallFunc(double xposmouse, double yposmouse, int mbutton,
+                                int maction, int mmods, double xscrolloffset,
+                                double yscrolloffset, double positionX,
+                                double positionY) {
   if (func == nullptr || !isEnabled)
     return;
   if (SanitizeMods(mmods) != SanitizeMods(this->mods))

@@ -8,6 +8,7 @@
 #include "Graphics/Components/ComponentSocket.hpp"
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
+#include "Physics/Components/ComponentPhysics.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -261,5 +262,24 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(Editor::TestInputComponent, {
 
                                                        });
+  IMGUI_REGISTER_COMPONENT(Engine::Physics::ComponentPhysics, {
+    auto o = component->object.lock();
+    auto vel = component->GetVelocities();
+    ImGui::Text("VelX %f", vel.x);
+    ImGui::Text("VelY %f", vel.y);
+    ImGui::Text("VelZ %f", vel.z);
+    static double joltx = 0;
+    static double jolty = 0;
+    static double joltz = 0;
+    ImGui::InputDouble("Jolt input X", &joltx);
+    ImGui::InputDouble("Jolt input Y", &jolty);
+    ImGui::InputDouble("Jolt input Z", &joltz);
+    if (ImGui::Button("Jolt")) {
+      component->Impulse(glm::dvec3{joltx, jolty, joltz});
+    }
+    if (ImGui::Button("Set")) {
+      component->SetVelocities(glm::dvec3{joltx, jolty, joltz});
+    }
+  });
 }
 } // namespace Editor::ImGuiR

@@ -1,6 +1,7 @@
 #include "TestInputComponent.hpp"
 #include "InputSystem.hpp"
 #include "Object.hpp" // IWYU pragma: keep
+#include "Util/LoggerUtil.hpp"
 #include <glm/gtc/quaternion.hpp>
 
 using namespace Editor;
