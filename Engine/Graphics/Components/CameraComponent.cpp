@@ -13,26 +13,25 @@ namespace Graphics {
 
 // TODO:
 using json = nlohmann::json;
-void CameraComponent::Setup() { Update(); }
+void CameraComponent::Setup() {
+  ZoneScoped;
+  auto obj = object.lock();
+  if (!obj)
+    return;
+  recalculateMatrixes();
+  w = Engine::Engine::width;
+  h = Engine::Engine::height;
+  oldrot = obj->_rotation;
+}
 
 void CameraComponent::Update() {
   ZoneScoped;
   auto obj = object.lock();
   if (!obj)
     return;
-  glm::vec3 front;
-  front.x = glm::cos(glm::radians(obj->_rotation.y)) *
-            glm::cos(glm::radians(obj->_rotation.x));
-  front.y = glm::sin(glm::radians(obj->_rotation.x));
-  front.z = glm::sin(glm::radians(obj->_rotation.y)) *
-            glm::cos(glm::radians(obj->_rotation.x));
-
-  glm::vec3 frontnormal = glm::normalize(front);
-  projmat = glm::perspective(
-      glm::radians(45.0f),
-      (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
-  viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
-                        glm::vec3(0, 1, 0));
+  if (oldrot != obj->_rotation || w != Engine::Engine::width ||
+      h != Engine::Engine::height)
+    recalculateMatrixes();
 }
 
 CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
@@ -43,44 +42,7 @@ CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
   // fromParams(name, comps, position, rotation);
 }
 
-/*void CameraComponent::fromParams(std::string name,
-                              std::vector<std::shared_ptr<IComponent> > comps,
-                              std::vector<float> position,
-                              std::vector<float> rotation) {
-    _name = name;
-    for (auto cmp: comps) {
-        _components[cmp->GetType()] = cmp;
-    }
-    this->_position = position;
-    this->_rotation = rotation;
-}*/
-/*
-CameraComponent::CameraComponent*/
-
 CameraComponent::~CameraComponent() {}
-/*
-json CameraComponent::ToJson() {
-    JsonFileBase ret;
-    ret.object_type = ObjectType::Object;
-    CameraComponentJson js;
-    std::vector<ComponentJson> cmps = {};
-    int i = 0;
-    for (const auto &[key, val]: this->_components) {
-        ComponentJson j;
-        j.object_type = ObjectType::Component;
-        j.data = val->ToJson();
-        j.type = val->GetType();
-        cmps.insert(cmps.end(), static_cast<ComponentJson>(j));
-    }
-    js.components = cmps;
-    js.position = _position;
-    js.rotation = _rotation;
-    js.name = _name;
-    ret.data = js;
-    json r = ret;
-    return r;
-}
-*/
 
 // TODO:
 void CameraComponent::FromJson(json &js) {
@@ -101,5 +63,21 @@ CameraComponent::CameraComponent(json &js, std::shared_ptr<Object> object) {
 } //
 glm::mat4 CameraComponent::GetProjMatrix() { return projmat; }
 glm::mat4 CameraComponent::GetViewMatrix() { return viewmat; }
+void CameraComponent::recalculateMatrixes() {
+  ZoneScoped;
+  auto obj = object.lock();
+  if (!obj)
+    return;
+  glm::vec3 frontnormal = glm::normalize(obj->_rotation * glm::vec3(0, 0, -1));
+  this->front = frontnormal;
+  this->right = glm::normalize(glm::cross(this->front, glm::vec3(0, 1, 0)));
+  this->up = glm::normalize(glm::cross(this->right, this->front));
+  projmat = glm::perspective(
+      glm::radians(45.0f),
+      (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
+  viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
+                        glm::vec3(0, 1, 0));
+}
+
 } // namespace Graphics
 } // namespace Engine

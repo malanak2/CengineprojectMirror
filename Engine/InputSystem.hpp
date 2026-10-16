@@ -426,6 +426,7 @@ public:
       onCursorMove;
   static std::vector<std::function<void(GLFWwindow *, double, double)>>
       onMouseScroll;
+  static void SetMouseEnabled(bool enabled);
 
   std::map<std::string, std::shared_ptr<Keybind>> keybinds = {};
   std::map<int, std::vector<std::shared_ptr<Keybind>>> keybind_map_press = {};

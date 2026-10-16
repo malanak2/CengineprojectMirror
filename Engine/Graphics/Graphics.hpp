@@ -64,8 +64,9 @@ public:
 
   GLFWwindow *window = nullptr;
 
-private:
   std::unique_ptr<Engine::Object> camera = nullptr;
+
+private:
   std::shared_ptr<Config> config = nullptr;
 };
 }; // namespace Engine::Graphics

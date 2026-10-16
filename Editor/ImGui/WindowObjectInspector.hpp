@@ -47,11 +47,14 @@ protected:
 
         static glm::vec3 currentAngles = glm::vec3(0.0f);
         static glm::quat lastRotation = glm::quat(1, 0, 0, 0);
+        static Engine::Object *lastObject = nullptr;
 
-        // Sync display angles when rotation was changed externally
-        if (obj->_rotation != lastRotation) {
+        // Reset display angles when a different object is selected or when
+        // the rotation was changed externally (e.g. by another system).
+        if (lastObject != obj.get() || obj->_rotation != lastRotation) {
           currentAngles = glm::degrees(glm::eulerAngles(obj->_rotation));
           lastRotation = obj->_rotation;
+          lastObject = obj.get();
         }
 
         glm::vec3 newAngles = currentAngles;

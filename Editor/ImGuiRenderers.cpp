@@ -1,4 +1,5 @@
 #include "ImGuiRenderers.hpp"
+#include "Components/ComponentControllable.hpp"
 #include "Components/InvalidComponent.hpp"
 #include "Components/TestComponent.hpp"
 #include "Components/TestInputComponent.hpp"
@@ -280,6 +281,10 @@ void ImGuiComponentRenderer::Init() {
     if (ImGui::Button("Set")) {
       component->SetVelocities(glm::dvec3{joltx, jolty, joltz});
     }
+  });
+  IMGUI_REGISTER_COMPONENT(ComponentControllable, {
+    ImGui::InputFloat("Movespeed", &component->movespeed);
+    ImGui::InputFloat("Sensitivity", &component->sensitivity);
   });
 }
 } // namespace Editor::ImGuiR

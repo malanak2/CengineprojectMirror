@@ -6,6 +6,7 @@
 #include "nlohmann/json.hpp" // IWYU pragma: keep
 #include <glm/detail/qualifier.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 using json = nlohmann::json;
 
@@ -44,9 +45,19 @@ public:
   glm::mat4 GetProjMatrix();
   glm::mat4 GetViewMatrix();
 
+  float near, far;
+
   glm::mat4 projmat;
   glm::mat4 viewmat;
-  float near, far;
+  glm::vec3 front;
+  glm::vec3 right;
+  glm::vec3 up;
+
+private:
+  void recalculateMatrixes();
+
+  glm::quat oldrot = {};
+  int w, h;
 };
 } // namespace Graphics
 } // namespace Engine

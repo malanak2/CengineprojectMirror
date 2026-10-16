@@ -648,6 +648,15 @@ bool InputSystem::IsMouseButtonHeld(int button) {
                    instance->held_mouse_buttons.end(),
                    button) != instance->held_mouse_buttons.end();
 }
+void Engine::InputSystem::SetMouseEnabled(bool enabled) {
+
+  auto window = Engine::Graphics::Main::instance->window;
+  if (enabled) {
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  } else {
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  }
+}
 
 // KeybindMouseMove implementation
 KeybindMouseMove::KeybindMouseMove(std::string name, MOVE_TYPE mtype,
