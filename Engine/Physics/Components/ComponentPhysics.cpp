@@ -10,7 +10,7 @@ json ComponentPhysics::ToJson() {
       {"gravity_scale", {gravity_scale.x, gravity_scale.y, gravity_scale.z}},
       {"world_direction",
        {world_direction.x, world_direction.y, world_direction.z}},
-      {"velicities", {velocities.x, velocities.y, velocities.z}}};
+      {"velocities", {velocities.x, velocities.y, velocities.z}}};
 }
 void ComponentPhysics::FromJson(json &js) {
   gravity_scale.x = js["gravity_scale"][0].get<double>();
@@ -24,13 +24,24 @@ void ComponentPhysics::FromJson(json &js) {
   velocities.z = js["velocities"][2].get<double>();
 }
 void ComponentPhysics::Update() {
+  // If process physics is disabled, reutrn early
+  if (!processPhysics)
+    return;
+  // No need to process velocities if we are already at the target
   if (velocities == (world_direction * gravity_scale))
     return;
+  auto wrld_dir = world_direction;
+  if (useGlobalDirection) {
+    wrld_dir = PhysicsSystem::world_direction;
+  }
+  auto grv_scl = gravity_scale;
+  if (useGlobalGravity) {
+    grv_scl = PhysicsSystem::gravity_scale;
+  }
   for (int i = 0; i < velocities.length(); i++) {
-    auto target =
-        (world_direction * gravity_scale * PhysicsSystem::gravity_accel);
+    auto target = (wrld_dir * grv_scl * PhysicsSystem::gravity_accel);
     auto target_set =
-        PhysicsSystem::gravity_accel * GetDeltaTime() * gravity_scale[i];
+        PhysicsSystem::gravity_accel * GetDeltaTime() * grv_scl[i];
     if (velocities[i] < target[i]) {
       velocities[i] += target_set;
       if (velocities[i] > target[i]) {
@@ -42,17 +53,23 @@ void ComponentPhysics::Update() {
         velocities[i] = target[i];
       }
     }
-    auto o = object.lock();
-    o->_position += velocities * (double)GetDeltaTime();
-
-    if (o->_position.y > 0) {
-      world_direction = {0, -1, 0};
-    } else if (o->_position.y < 0) {
-      world_direction = {0, 1, 0};
-    }
   }
+  // Apply
+  auto o = object.lock();
+  o->_position += velocities * (double)GetDeltaTime();
+  /*    if (o->_position.y > 0) {
+        world_direction = {0, -1, 0};
+      } else if (o->_position.y < 0) {
+        world_direction = {0, 1, 0};
+      }*/
 }
 void Engine::Physics::ComponentPhysics::Setup() {
-  velocities = {0, 4, 1};
-  gravity_scale = {0, 1, 0};
+  PhysicsSystem::RegisterCPhysics(this->shared_from_this());
+  world_direction = PhysicsSystem::world_direction;
+  gravity_scale = PhysicsSystem::gravity_scale;
+  // velocities = {0, 4, 1};
+  // gravity_scale = {0, 1, 0};
+}
+void Engine::Physics::ComponentPhysics::End() {
+  PhysicsSystem::UnregisterCPhysics(this->shared_from_this());
 }
