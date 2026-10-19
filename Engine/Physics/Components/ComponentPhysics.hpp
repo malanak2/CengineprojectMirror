@@ -20,19 +20,21 @@ public:
   void Setup() override;
   void End() override;
   void SetVelocities(glm::dvec3 newv) { velocities = newv; }
-  void SetVelocityX(double newx) { velocities.x = newx; }
-  void SetVelocityY(double newy) { velocities.y = newy; }
-  void SetVelocityZ(double newz) { velocities.z = newz; }
-  glm::dvec3 GetVelocities() { return velocities; }
+  void SetVelocityX(float newx) { velocities.x = newx; }
+  void SetVelocityY(float newy) { velocities.y = newy; }
+  void SetVelocityZ(float newz) { velocities.z = newz; }
+  glm::vec3 GetVelocities() { return velocities; }
   void Impulse(glm::dvec3 newv) { velocities += newv; }
   bool processPhysics = true;
   bool useGlobalGravity = true;
   bool useGlobalDirection = true;
+  glm::vec3 oldPos;
+  float bounce = 0;
 
 private:
-  glm::dvec3 velocities = {0, 0, 0};
-  glm::dvec3 world_direction;
-  glm::dvec3 gravity_scale;
+  glm::vec3 velocities = {0, 0, 0};
+  glm::vec3 world_direction;
+  glm::vec3 gravity_scale;
 };
 } // namespace Physics
 } // namespace Engine

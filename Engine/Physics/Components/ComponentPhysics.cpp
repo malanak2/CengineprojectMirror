@@ -56,12 +56,8 @@ void ComponentPhysics::Update() {
   }
   // Apply
   auto o = object.lock();
-  o->_position += velocities * (double)GetDeltaTime();
-  /*    if (o->_position.y > 0) {
-        world_direction = {0, -1, 0};
-      } else if (o->_position.y < 0) {
-        world_direction = {0, 1, 0};
-      }*/
+  oldPos = o->_position;
+  o->_position += velocities * GetDeltaTime();
 }
 void Engine::Physics::ComponentPhysics::Setup() {
   PhysicsSystem::RegisterCPhysics(this->shared_from_this());

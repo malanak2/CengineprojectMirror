@@ -1,4 +1,5 @@
 #include "ComponentBoundingBox.hpp"
+#include "Physics/PhysicsSystem.hpp"
 std::pair<double, double> Engine::Physics::OBB::GetInterval(glm::vec3 axis) {
   glm::vec3 vertex[8];
   glm::vec3 C = this->position; // OBB Center
@@ -63,12 +64,25 @@ bool Engine::Physics::OBB::Collides(std::shared_ptr<OBB> other) {
   }
   return true; // Seperating axis not found
 };
+void Engine::Physics::ComponentBoundingBox::Setup() {
+
+  PhysicsSystem::RegisterBBox(this->shared_from_this());
+}
+void Engine::Physics::ComponentBoundingBox::End() {
+
+  PhysicsSystem::UnregisterBBox(this->shared_from_this());
+}
+void Engine::Physics::ComponentBoundingBox::Update() { obb = nullptr; }
+
 std::shared_ptr<Engine::Physics::OBB>
 Engine::Physics::ComponentBoundingBox::GetOBB() {
+  if (obb != nullptr)
+    return obb;
   auto o = object.lock();
   auto obb = std::make_shared<OBB>();
   obb->position = o->_position;
   obb->size = glm::vec3(o->scale, o->scale, o->scale);
   obb->orientation = glm::transpose(glm::toMat3(o->_rotation));
+  this->obb = obb;
   return obb;
 }

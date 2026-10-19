@@ -3,7 +3,6 @@
 #include "Graphics.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
-#include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"

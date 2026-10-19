@@ -10,6 +10,7 @@
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Object.hpp"
+#include "Physics/PhysicsSystem.hpp"
 #include "Scene.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -124,6 +125,7 @@ void Engine::Engine::Run() {
       ZoneScopedN("Update");
       current_scene->Update();
     }
+    Physics::PhysicsSystem::ProcessPhysics();
     auto cur = std::chrono::steady_clock::now();
     auto dur_other = cur - current_time;
     last_tick_begin = cur;

@@ -5,7 +5,7 @@
 #include "Object.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <type_traits>
+#include <imgui.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <memory>
@@ -38,11 +38,16 @@ public:
   json ToJson() override { return {}; }
 
   void FromJson(json &js) override { return; }
-
+  void Setup() override;
+  void End() override;
+  void Update() override;
   std::shared_ptr<OBB> GetOBB();
   bool Collides(std::shared_ptr<ComponentBoundingBox> other) {
     return GetOBB()->Collides(other->GetOBB());
   }
+
+private:
+  std::shared_ptr<OBB> obb = nullptr;
 };
 
 } // namespace Physics
