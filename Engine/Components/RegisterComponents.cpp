@@ -4,7 +4,7 @@
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Components/ComponentSocket.hpp"
-#include "Physics/Components/ComponentCollider.hpp"
+#include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Physics/Components/ComponentPhysics.hpp"
 #include "ScriptSystem.hpp"
 void Engine::ScriptRegistrar::RegisterCommonComponents() {
@@ -18,7 +18,7 @@ void Engine::ScriptRegistrar::RegisterGraphicComponents() {
 }
 void Engine::ScriptRegistrar::RegisterPhysicsComponents() {
   REGISTER_SCRIPT(Physics::ComponentPhysics);
-  REGISTER_SCRIPT(Physics::ComponentCollider);
+  REGISTER_SCRIPT(Physics::ComponentBoundingBox);
 }
 
 void Engine::ScriptRegistrar::RegisterComponents() {

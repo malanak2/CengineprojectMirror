@@ -85,14 +85,22 @@ protected:
       }
     }
     std::vector<std::string> names = std::vector<std::string>();
-    for (auto [type, comp] : sceneObject->instance->_components) {
+    std::string todel = "";
+    for (auto &[type, comp] : sceneObject->instance->_components) {
       if (comp != nullptr)
         if (ImGui::CollapsingHeader(comp->GetName().data())) {
           ImGuiR::ImGuiComponentRenderer::instance->Render(comp);
+          if (ImGui::Button(
+                  ("Remove##" + (std::string)comp->GetName().data()).c_str())) {
+            todel = comp->GetName().data();
+          }
         }
       ImGui::Separator();
       ImGui::Separator();
       names.insert(names.end(), std::string(comp->GetName()));
+    }
+    if (todel != "") {
+      sceneObject->instance->RemoveComponent(todel);
     }
     ImGui::Text("Add components");
     static char search[256] = "";

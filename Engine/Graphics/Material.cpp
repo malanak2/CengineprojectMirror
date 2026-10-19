@@ -3,6 +3,8 @@
 #include "Graphics.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "Graphics/Uniforms/UniformFloatVector.hpp"
+#include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 #include "Util/FileUtil.hpp"
@@ -218,7 +220,6 @@ void Material::RenderObjects() {
         }
       }
     }
-
     {
       ZoneScopedN("DrawModel");
       TracyGpuZone("DrawModel");
@@ -230,6 +231,116 @@ void Material::RenderObjects() {
                            static_cast<unsigned int>(transforms.size()),
                            enabledMeshes);
       CHECK_GL_ERROR();
+    }
+    {
+      ZoneScopedN("BoundingBoxRender");
+      static auto debugmat = Material::Create("materials/bounding_box.json");
+
+      static GLuint combinedUBO = 0;
+      if (combinedUBO == 0) {
+        glGenBuffers(1, &combinedUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, combinedUBO);
+        glBufferData(GL_UNIFORM_BUFFER, 144, nullptr, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+      }
+
+      if (debugmat->vao == 0) {
+        glGenVertexArrays(1, &debugmat->vao);
+        glBindVertexArray(debugmat->vao);
+
+        float vertices[] = {-1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
+                            1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+                            -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,
+                            1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f};
+
+        unsigned int indices[] = {
+            0, 1, 1, 2, 2, 3, 3, 0, // Bottom face
+            4, 5, 5, 6, 6, 7, 7, 4, // Top face
+            0, 4, 1, 5, 2, 6, 3, 7  // Vertical edges
+        };
+
+        GLuint vbo, ebo;
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
+                     GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                     GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                              (void *)0);
+
+        glBindVertexArray(0);
+      }
+
+      debugmat->SetupMaterial();
+      auto scene = Engine::Engine::instance
+                       ? Engine::Engine::instance->current_scene
+                       : nullptr;
+      if (scene && scene->camera) {
+        auto proj = scene->camera->GetProjMatrix();
+        auto view = scene->camera->GetViewMatrix();
+        float color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+
+        glBindBuffer(GL_UNIFORM_BUFFER, combinedUBO);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                        glm::value_ptr(proj));
+        glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
+                        glm::value_ptr(view));
+        glBufferSubData(GL_UNIFORM_BUFFER, 128, sizeof(color), color);
+
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, combinedUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+      }
+
+      for (auto cr : renderableObjects) {
+        if (!cr->renderBoundingBox)
+          continue;
+
+        auto o = cr->object.lock();
+        if (!o)
+          continue;
+
+        auto bb = o->GetComponent<Physics::ComponentBoundingBox>();
+        if (bb == nullptr) {
+          SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                             "Object {} had renderBoundingBox enabled, but "
+                             "does not have a bounding box. Disabling",
+                             o->_name);
+          cr->renderBoundingBox = false;
+          continue;
+        }
+
+        auto obb = bb->GetOBB();
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), obb->position);
+        glm::mat4 rotation = glm::mat4(obb->orientation);
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), obb->size);
+        glm::mat4 modelMatrix = translation * rotation * scale;
+
+        if (debugmat->instanceSSBO == 0) {
+          glGenBuffers(1, &debugmat->instanceSSBO);
+          glBindBuffer(GL_SHADER_STORAGE_BUFFER, debugmat->instanceSSBO);
+          glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::mat4), nullptr,
+                       GL_DYNAMIC_DRAW);
+        } else {
+          glBindBuffer(GL_SHADER_STORAGE_BUFFER, debugmat->instanceSSBO);
+        }
+
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::mat4),
+                        glm::value_ptr(modelMatrix));
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, debugmat->instanceSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        // Draw Wireframe Box
+        glBindVertexArray(debugmat->vao);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, nullptr);
+        glBindVertexArray(0);
+      }
     }
   }
 }

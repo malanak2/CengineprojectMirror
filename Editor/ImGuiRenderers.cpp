@@ -104,6 +104,7 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
     ImGui::InputText("Model path", &component->_model_path[0], 100);
     ImGui::InputText("Material path", &component->_material_path[0], 100);
+    ImGui::Checkbox("Render Bounding Box", &component->renderBoundingBox);
 
     if (ImGui::CollapsingHeader("Uniforms")) {
       for (auto &[key, val] : component->_uniforms) {

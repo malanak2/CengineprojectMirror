@@ -130,7 +130,7 @@ public:
     }
     auto component = GetComponent(key);
     component->End();
-    _components.erase(key);
+    _components.erase(_components.find(key));
   }
   //!
   //! @brief Return the component specified if present, otherwise nullptr
