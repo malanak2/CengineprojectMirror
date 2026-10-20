@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Physics/Ray.hpp"
 #include <glm/glm.hpp>
 namespace Engine {

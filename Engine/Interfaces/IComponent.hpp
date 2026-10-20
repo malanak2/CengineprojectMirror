@@ -42,7 +42,7 @@ public:
   //!
   virtual void End();
 
-  float GetDeltaTime();
+  virtual float GetDeltaTime();
 
   void SetObject(std::shared_ptr<Object> object);
 
@@ -50,6 +50,12 @@ public:
   //! @object Pointer to the object this is assigned to
   //!
   std::weak_ptr<Object> object;
-  //  static std::map<ENGINE_COMPONENT_TYPE, void(json &js)> constructors;
+  //!
+  //! @brief Returns if follows paused execution. This is intended to only
+  //! really be used in Editor stuff - camera etc.
+  //!
+  //! @return wheter follows
+  //!
+  virtual bool FollowsPausedExecution() { return true; }
 };
 } // namespace Engine

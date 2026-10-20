@@ -86,6 +86,7 @@ Config::Config(std::string file_path) {
     cfg["Graphics"]["MaterialPath"] = "materials";
     cfg["Graphics"]["TexturePath"] = "textures/metadata";
     cfg["Graphics"]["ScenePath"] = "scenes";
+    cfg["Graphics"]["RenderBoundingBoxes"] = false;
     cfg.save(file_path);
   }
   window->title = cfg["Window"]["Title"].as<std::string>();
@@ -99,5 +100,7 @@ Config::Config(std::string file_path) {
   graphics->materialPath = cfg["Graphics"]["MaterialPath"].as<std::string>();
   graphics->texturePath = cfg["Graphics"]["TexturePath"].as<std::string>();
   graphics->scenePath = cfg["Graphics"]["ScenePath"].as<std::string>();
+  graphics->renderBoundingBox =
+      cfg["Graphics"]["RenderBoundingBoxes"].as<bool>();
   SPDLOG_LOGGER_INFO(logger, "Loaded config!");
 }

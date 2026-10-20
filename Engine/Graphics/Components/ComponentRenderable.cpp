@@ -83,8 +83,8 @@ std::vector<bool> ComponentRenderable::GetEnabledMeshes() const {
 }
 
 bool ComponentRenderable::IsMeshEnabled(const std::string &meshName) const {
-  return std::find(disabled_meshes.begin(), disabled_meshes.end(),
-                   meshName) == disabled_meshes.end();
+  return std::find(disabled_meshes.begin(), disabled_meshes.end(), meshName) ==
+         disabled_meshes.end();
 }
 
 void ComponentRenderable::SetMeshEnabled(const std::string &meshName,

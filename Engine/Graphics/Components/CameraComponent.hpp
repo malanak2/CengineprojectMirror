@@ -40,6 +40,9 @@ public:
   // IJson
   json ToJson() override;
 
+  // We do not need our camera to pause during execution paused - it only
+  // updates its vectors
+  bool FollowsPausedExecution() override { return false; }
   void FromJson(json &js) override;
 
   glm::mat4 GetProjMatrix();

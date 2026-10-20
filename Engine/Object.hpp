@@ -23,7 +23,7 @@ class Scene;
 struct ObjectJson {
   std::vector<float> position;
   std::vector<float> rotation;
-  float scale;
+  std::vector<float> scale;
   std::vector<ComponentJson> components;
   std::string name;
 };
@@ -43,13 +43,13 @@ public:
   //! @_position The position of the object
   //!
   glm::vec3 _position;
-  // TODO:Quaternion support for La(e)rp
   //!
   //! @_rotation The rotation of the object
   //!
   glm::quat _rotation;
-  float scale;
+  glm::vec3 scale;
   Object(std::string path, std::shared_ptr<Scene> scene);
+
   Object(std::shared_ptr<Scene> scene);
   std::string _name;
   //!
@@ -78,7 +78,8 @@ public:
   void fromParams(std::string name,
                   std::vector<std::shared_ptr<IComponent>> comps = {},
                   std::vector<float> position = {0, 0, 0},
-                  std::vector<float> rotation = {0, 0, 0, 0}, float scale = 1);
+                  std::vector<float> rotation = {0, 0, 0, 0},
+                  glm::vec3 scale = {1, 1, 1});
   //!
   //! @brief Adds component to object unless already present
   //!

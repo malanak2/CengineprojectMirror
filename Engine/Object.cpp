@@ -1,4 +1,5 @@
 #include "Object.hpp"
+#include "Engine.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
@@ -50,7 +51,7 @@ json Object::ToJson() {
   js.position = {_position[0], _position[1], _position[2]};
   js.rotation = {_rotation.w, _rotation.x, _rotation.y, _rotation.z};
   js.name = _name;
-  js.scale = scale;
+  js.scale = std::vector<float>{scale.x, scale.y, scale.z};
   ret.data = js;
   json r = ret;
   return r;
@@ -90,14 +91,15 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
       cc = std::static_pointer_cast<Graphics::CameraComponent>(script);
     }
   }
-  fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation, jsobj.scale);
+  fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation,
+             glm::vec3(jsobj.scale[0], jsobj.scale[1], jsobj.scale[2]));
   return cc;
 }
 
 void Object::fromParams(std::string name,
                         std::vector<std::shared_ptr<IComponent>> comps,
                         std::vector<float> position,
-                        std::vector<float> rotation, float scale) {
+                        std::vector<float> rotation, glm::vec3 scale) {
   _name = name;
   _name.reserve(50);
   for (auto cmp : comps) {
@@ -136,6 +138,8 @@ void Object::Setup() {
 }
 void Object::Update() {
   for (auto &[key, comp] : this->_components) {
+    if (comp->FollowsPausedExecution() && !Engine::Engine::isSimulationEnabled)
+      continue;
     comp->Update();
   }
 }

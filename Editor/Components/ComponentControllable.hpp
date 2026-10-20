@@ -19,6 +19,7 @@ public:
   void Setup() override;
   float movespeed = 1;
   float sensitivity = 1;
+  bool FollowsPausedExecution() override { return false; }
 
 private:
   std::shared_ptr<Engine::Keybind> keybindMoveForward;

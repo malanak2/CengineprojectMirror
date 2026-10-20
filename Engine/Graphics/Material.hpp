@@ -40,6 +40,7 @@ public:
   std::shared_ptr<Program> program;
   unsigned int vao = 0;
   unsigned int instanceSSBO = 0;
+  size_t instanceSSBOAllocatedSize = 0;
   unsigned int boneSSBO = 0;
   std::string path = "";
   std::string name = "";

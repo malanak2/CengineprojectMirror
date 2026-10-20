@@ -31,6 +31,10 @@ public:
     //! @scenePath Root path of scenes
     //!
     std::string scenePath;
+    //!
+    //! @renderBoundingBox Render bouding boxes?
+    //!
+    bool renderBoundingBox;
   };
   class Defaults {
   public:

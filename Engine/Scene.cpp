@@ -105,9 +105,7 @@ JsonFileBase SceneObject::ToJson() {
   return retbase;
 }
 
-void Scene::FromJson(json &js) {
-  FromJson(js, shared_from_this());
-}
+void Scene::FromJson(json &js) { FromJson(js, shared_from_this()); }
 
 void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
   SceneJson ojs;
@@ -170,6 +168,7 @@ void Scene::Update() {
 void SceneObject::Update() {
   instance->Update();
   for (auto var : this->Children) {
+
     var->Update();
   }
 }

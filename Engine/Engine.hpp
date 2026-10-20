@@ -47,6 +47,7 @@ public:
   static float GetDeltaTime();
   float deltaTime = 0;
   float lastTime = 0;
+  static bool isSimulationEnabled;
 
 private:
   //!

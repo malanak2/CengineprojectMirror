@@ -68,7 +68,8 @@ public:
   //! @param[in] func the function to call
   //!
   Keybind(std::string name, int default_key, int key, int mods,
-          KeypressType type, std::function<void()> func);
+          KeypressType type, std::function<void()> func,
+          bool followsPausedExecution);
   void Trigger();
   json ToJson() override;
 
@@ -87,6 +88,7 @@ public:
   int scancode;
   int default_key;
   int mods;
+  bool followsPausedExecution;
   KeypressType type;
   std::function<void()> f;
   std::string name;
@@ -99,16 +101,18 @@ public:
   int key;
   int scancode;
   int mods;
+  bool followsPausedExecution;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindJson, name, default_key, key,
-                                   scancode, mods)
+                                   scancode, mods, followsPausedExecution)
 
 struct KeybindEvent {
 public:
   int scancode;
   int mods;
   KeypressType type;
+  bool followsPausedExecution;
   bool operator==(const KeybindEvent &rhs) const {
     return scancode == rhs.scancode && type == rhs.type &&
            SanitizeMods(mods) == SanitizeMods(rhs.mods);
@@ -156,6 +160,7 @@ public:
   bool isEnabled = false;
   bool isHeld = false;
 
+  bool followsPausedExecution = true;
   virtual void CallFunc(double xposmouse, double yposmouse, int mbutton,
                         int maction, int mmods, double xscrolloffset,
                         double yscrolloffset, double positionX,
@@ -174,7 +179,8 @@ public:
   KeybindMouseMove() = default;
   KeybindMouseMove(std::string name, MOVE_TYPE mtype, int default_button,
                    int button, int mods,
-                   std::function<void(double, double)> func);
+                   std::function<void(double, double)> func,
+                   bool followsPausedExecution);
 
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::MOVE;
@@ -197,7 +203,8 @@ class KeybindMouseClick : public KeybindMouse {
 public:
   KeybindMouseClick() = default;
   KeybindMouseClick(std::string name, int default_button, int button, int mods,
-                    CLICK_TYPE ctype, std::function<void()> func);
+                    CLICK_TYPE ctype, std::function<void()> func,
+                    bool followsPausedExecution);
 
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::CLICK;
@@ -209,7 +216,7 @@ public:
 
   std::function<void()> func;
   CLICK_TYPE ctype = CLICK_PRESS;
-
+  bool followsPausedExecution;
   void CallFunc(double xposmouse, double yposmouse, int mbutton, int maction,
                 int mmods, double xscrolloffset, double yscrolloffset,
                 double positionX, double positionY) override;
@@ -227,7 +234,8 @@ class KeybindMouseScroll : public KeybindMouse {
 public:
   KeybindMouseScroll() = default;
   KeybindMouseScroll(std::string name, SCROLL_TYPE scrolltype, int mods,
-                     std::function<void(double, double)> func);
+                     std::function<void(double, double)> func,
+                     bool followsPausedExecution);
 
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::SCROLL;
@@ -273,9 +281,11 @@ public:
   int default_button;
   int button;
   int mods;
+  bool followsPausedExecution;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindMouseMoveJson, name, mtype,
-                                   default_button, button, mods)
+                                   default_button, button, mods,
+                                   followsPausedExecution)
 
 class KeybindMouseClickJson {
 public:
@@ -284,18 +294,21 @@ public:
   int default_button;
   int button;
   int mods;
+  bool followsPausedExecution;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindMouseClickJson, name, ctype,
-                                   default_button, button, mods)
+                                   default_button, button, mods,
+                                   followsPausedExecution)
 
 class KeybindMouseScrollJson {
 public:
   std::string name;
   int scrolltype;
   int mods;
+  bool followsPausedExecution;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeybindMouseScrollJson, name, scrolltype,
-                                   mods)
+                                   mods, followsPausedExecution)
 
 class InputSystemJson {
 public:
@@ -358,11 +371,10 @@ public:
   //! this makes it NOT ADD to all the keymaps (used for saving user changes to
   //! keybinds)
   //!
-  static std::shared_ptr<Keybind> NewKeybind(std::string id, int default_key,
-                                             int key, int mods,
-                                             KeypressType type,
-                                             std::function<void()> func,
-                                             bool isInit = false);
+  static std::shared_ptr<Keybind>
+  NewKeybind(std::string id, int default_key, int key, int mods,
+             KeypressType type, std::function<void()> func,
+             bool followsPausedExecution = true, bool isInit = false);
   static std::shared_ptr<Keybind> ChangeKeybind(std::string id, int old,
                                                 int new_key, int mods);
   static std::shared_ptr<Keybind> GetKeybind(std::string id);
@@ -370,15 +382,18 @@ public:
   static std::shared_ptr<KeybindMouseClick>
   NewKeybindMouseClick(std::string id, int default_button, int button, int mods,
                        CLICK_TYPE type, std::function<void()> func,
-                       bool isInit = false);
+                       bool followsPausedExecution = true, bool isInit = false);
 
-  static std::shared_ptr<KeybindMouseMove> NewKeybindMouseMove(
-      std::string id, MOVE_TYPE mtype, int default_button, int button, int mods,
-      std::function<void(double, double)> func, bool isInit = false);
+  static std::shared_ptr<KeybindMouseMove>
+  NewKeybindMouseMove(std::string id, MOVE_TYPE mtype, int default_button,
+                      int button, int mods,
+                      std::function<void(double, double)> func,
+                      bool followsPausedExecution = true, bool isInit = false);
 
   static std::shared_ptr<KeybindMouseScroll>
   NewKeybindMouseScroll(std::string id, SCROLL_TYPE scrolltype, int mods,
                         std::function<void(double, double)> func,
+                        bool followsPausedExecution = true,
                         bool isInit = false);
 
   template <typename T, typename... Args>

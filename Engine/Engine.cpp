@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <tracy/Tracy.hpp>
 namespace Engine {
-
+bool Engine::isSimulationEnabled = true;
 std::shared_ptr<Engine> Engine::instance = nullptr;
 int Engine::width = 0;
 int Engine::height = 0;
@@ -108,6 +108,7 @@ void Engine::Engine::Run() {
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
   current_scene->Setup();
   while (true) {
+    ZoneScopedN("Frame");
     float currTime = glfwGetTime();
     if (lastTime == 0) {
       lastTime = currTime;
@@ -121,11 +122,15 @@ void Engine::Engine::Run() {
       ZoneScopedN("Inputs");
       InputSystem::ProcessEvents();
     }
+
     {
       ZoneScopedN("Update");
       current_scene->Update();
     }
-    Physics::PhysicsSystem::ProcessPhysics();
+
+    if (isSimulationEnabled) {
+      Physics::PhysicsSystem::ProcessPhysics();
+    }
     auto cur = std::chrono::steady_clock::now();
     auto dur_other = cur - current_time;
     last_tick_begin = cur;

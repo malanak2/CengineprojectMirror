@@ -9,9 +9,11 @@
 #include "Graphics/Components/ComponentSocket.hpp"
 #include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
+#include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Physics/Components/ComponentPhysics.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 #include <memory>
 #include <set>
@@ -104,7 +106,6 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
     ImGui::InputText("Model path", &component->_model_path[0], 100);
     ImGui::InputText("Material path", &component->_material_path[0], 100);
-    ImGui::Checkbox("Render Bounding Box", &component->renderBoundingBox);
 
     if (ImGui::CollapsingHeader("Uniforms")) {
       for (auto &[key, val] : component->_uniforms) {
@@ -270,6 +271,10 @@ void ImGuiComponentRenderer::Init() {
     ImGui::Text("VelX %f", vel.x);
     ImGui::Text("VelY %f", vel.y);
     ImGui::Text("VelZ %f", vel.z);
+    ImGui::InputFloat("Bounciness", &component->bounce);
+    ImGui::InputFloat("Friction", &component->friction);
+    ImGui::InputFloat("Mass", &component->mass);
+    ImGui::InputFloat("Cor", &component->cor);
     static double joltx = 0;
     static double jolty = 0;
     static double joltz = 0;
@@ -286,6 +291,31 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(ComponentControllable, {
     ImGui::InputFloat("Movespeed", &component->movespeed);
     ImGui::InputFloat("Sensitivity", &component->sensitivity);
+  });
+  IMGUI_REGISTER_COMPONENT(Engine::Physics::ComponentBoundingBox, {
+    ImGui::InputFloat3("Position offset", &component->position_offset[0]);
+    static glm::vec3 currentAngles = glm::vec3(0.0f);
+    static glm::quat lastRotation = glm::identity<glm::quat>();
+
+    if (component->orientation_offset != lastRotation) {
+      currentAngles =
+          glm::degrees(glm::eulerAngles(component->orientation_offset));
+      lastRotation = component->orientation_offset;
+    }
+
+    glm::vec3 newAngles = currentAngles;
+
+    if (ImGui::DragFloat3("Rotation##BoundingBox", &newAngles[0], 1.0f)) {
+      currentAngles = newAngles;
+
+      glm::vec3 radians = glm::radians(newAngles);
+      component->orientation_offset = glm::quat(radians);
+      component->orientation_offset =
+          glm::normalize(component->orientation_offset);
+
+      lastRotation = component->orientation_offset;
+    }
+    ImGui::InputFloat3("Size", &component->size[0]);
   });
 }
 } // namespace Editor::ImGuiR

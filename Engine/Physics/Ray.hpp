@@ -1,6 +1,10 @@
 #pragma once
 #include "glm/glm.hpp"
 #include <memory>
+#define CMP(x, y)                                                              \
+  (std::abs((x) - (y)) <=                                                      \
+   FLT_EPSILON * fmaxf(1.0f, std::max<float>(std::abs(x), std::abs(y))))
+
 namespace Engine {
 namespace Physics {
 class OBB;

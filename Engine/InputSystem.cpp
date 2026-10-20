@@ -1,5 +1,6 @@
 #include "InputSystem.hpp"
 #include "Config/Config.hpp"
+#include "Engine.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -117,12 +118,12 @@ void callback_key(GLFWwindow *window, int key, int scancode, int action,
 std::shared_ptr<InputSystem> InputSystem::instance =
     std::make_shared<InputSystem>();
 
-void Engine::InputSystem::Init() {
+void InputSystem::Init() {
   ZoneScoped;
   instance = std::make_shared<InputSystem>();
   std::string jsstr;
   auto res = FileUtil::ReadFile(Config::inst->defaults->InputPath, &jsstr);
-  auto window = Engine::Graphics::Main::instance->window;
+  auto window = Graphics::Main::instance->window;
   glfwSetKeyCallback(window, callback_key);
   glfwSetCursorPosCallback(window, cursor_position_callback);
   glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -149,40 +150,46 @@ void Engine::InputSystem::Init() {
   }
   InputSystemJson ijs = js;
   for (auto j : ijs.keybindsPress) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
-                        KeypressType::PRESS, nullptr, true);
+    auto k =
+        NewKeybind(j.name, j.default_key, j.key, j.mods, KeypressType::PRESS,
+                   nullptr, j.followsPausedExecution, true);
   }
   for (auto j : ijs.keybindsHold) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
-                        KeypressType::HOLD, nullptr, true);
+    auto k =
+        NewKeybind(j.name, j.default_key, j.key, j.mods, KeypressType::HOLD,
+                   nullptr, j.followsPausedExecution, true);
   }
   for (auto j : ijs.keybindsHoldText) {
     auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
-                        KeypressType::HOLD_TEXT, nullptr, true);
+                        KeypressType::HOLD_TEXT, nullptr,
+                        j.followsPausedExecution, true);
   }
   for (auto j : ijs.keybindsRelease) {
-    auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
-                        KeypressType::RELEASE, nullptr, true);
+    auto k =
+        NewKeybind(j.name, j.default_key, j.key, j.mods, KeypressType::RELEASE,
+                   nullptr, j.followsPausedExecution, true);
   }
   for (auto j : ijs.mouseMove) {
     NewKeybindMouseMove(j.name, (MOVE_TYPE)j.mtype, j.default_button, j.button,
-                        j.mods, nullptr, true);
+                        j.mods, nullptr, j.followsPausedExecution, true);
   }
   for (auto j : ijs.mouseClick) {
     NewKeybindMouseClick(j.name, j.default_button, j.button, j.mods,
-                         (CLICK_TYPE)j.ctype, nullptr, true);
+                         (CLICK_TYPE)j.ctype, nullptr, j.followsPausedExecution,
+                         true);
   }
   for (auto j : ijs.mouseRelease) {
     NewKeybindMouseClick(j.name, j.default_button, j.button, j.mods,
-                         (CLICK_TYPE)j.ctype, nullptr, true);
+                         (CLICK_TYPE)j.ctype, nullptr, j.followsPausedExecution,
+                         true);
   }
   for (auto j : ijs.mouseScroll) {
     NewKeybindMouseScroll(j.name, (SCROLL_TYPE)j.scrolltype, j.mods, nullptr,
-                          true);
+                          j.followsPausedExecution, true);
   }
 }
 
-void Engine::InputSystem::Save() {
+void InputSystem::Save() {
   if (!Config::inst || !Config::inst->defaults) {
     return;
   }
@@ -247,7 +254,7 @@ void Engine::InputSystem::Save() {
   }
 }
 
-void Engine::InputSystem::ProcessEvents() {
+void InputSystem::ProcessEvents() {
   for (auto event : instance->events) {
     std::map<int, std::vector<std::shared_ptr<Keybind>>> *m = nullptr;
     switch (event.type) {
@@ -373,9 +380,9 @@ void Engine::InputSystem::ProcessEvents() {
 }
 
 std::shared_ptr<Keybind>
-Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
-                                int mods, KeypressType type,
-                                std::function<void()> func, bool isInit) {
+InputSystem::NewKeybind(std::string id, int default_key, int key, int mods,
+                        KeypressType type, std::function<void()> func,
+                        bool followsPausedExecution, bool isInit) {
   bool isnew = false;
   std::shared_ptr<Keybind> k;
   if (instance->keybinds.contains(id)) {
@@ -384,7 +391,8 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
     k = GetKeybind(id);
     k->f = func;
   } else {
-    k = std::make_shared<Keybind>(id, default_key, key, mods, type, func);
+    k = std::make_shared<Keybind>(id, default_key, key, mods, type, func,
+                                  followsPausedExecution);
     instance->keybinds[id] = k;
     isnew = true;
   }
@@ -423,10 +431,8 @@ Engine::InputSystem::NewKeybind(std::string id, int default_key, int key,
   }
   return k;
 }
-std::shared_ptr<Keybind> Engine::InputSystem::ChangeKeybind(std::string id,
-                                                            int old_key,
-                                                            int new_key,
-                                                            int mods) {
+std::shared_ptr<Keybind> InputSystem::ChangeKeybind(std::string id, int old_key,
+                                                    int new_key, int mods) {
   auto kb = GetKeybind(id);
   if (kb == nullptr) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
@@ -464,14 +470,15 @@ std::shared_ptr<Keybind> Engine::InputSystem::ChangeKeybind(std::string id,
   return kb;
 }
 
-std::shared_ptr<Keybind> Engine::InputSystem::GetKeybind(std::string id) {
+std::shared_ptr<Keybind> InputSystem::GetKeybind(std::string id) {
   if (instance->keybinds.contains(id))
     return instance->keybinds[id];
   return nullptr;
 }
 
-Engine::Keybind::Keybind(std::string name, int default_key, int key, int mods,
-                         KeypressType type, std::function<void()> func) {
+Keybind::Keybind(std::string name, int default_key, int key, int mods,
+                 KeypressType type, std::function<void()> func,
+                 bool followsPausedExecution) {
   this->name = name;
   this->default_key = default_key;
   this->key = key;
@@ -481,9 +488,10 @@ Engine::Keybind::Keybind(std::string name, int default_key, int key, int mods,
   this->mods = mods;
   this->scancode = glfwGetKeyScancode(key);
   this->type = type;
+  this->followsPausedExecution = followsPausedExecution;
 }
 
-void Engine::Keybind::Trigger() {
+void Keybind::Trigger() {
   if (isEnabled) {
     isHeld = true;
     if (f != nullptr)
@@ -491,7 +499,7 @@ void Engine::Keybind::Trigger() {
   }
 }
 
-json Engine::Keybind::ToJson() {
+json Keybind::ToJson() {
   KeybindJson js = {};
   js.default_key = this->default_key;
   js.scancode = glfwGetKeyScancode(this->key);
@@ -501,17 +509,16 @@ json Engine::Keybind::ToJson() {
   return js;
 }
 
-void Engine::Keybind::FromJson(json &js) {
+void Keybind::FromJson(json &js) {
   KeybindJson kjs = js;
   this->default_key = kjs.default_key;
   this->key = kjs.key;
   this->scancode = kjs.scancode;
   this->mods = kjs.mods;
 }
-std::shared_ptr<KeybindMouseClick>
-InputSystem::NewKeybindMouseClick(std::string id, int default_button,
-                                  int button, int mods, CLICK_TYPE type,
-                                  std::function<void()> func, bool isInit) {
+std::shared_ptr<KeybindMouseClick> InputSystem::NewKeybindMouseClick(
+    std::string id, int default_button, int button, int mods, CLICK_TYPE type,
+    std::function<void()> func, bool followsPausedExecution, bool isInit) {
   bool isnew = false;
   std::shared_ptr<KeybindMouseClick> k;
   if (instance->mouse_keybinds.contains(id)) {
@@ -526,7 +533,7 @@ InputSystem::NewKeybindMouseClick(std::string id, int default_button,
   }
   if (!k) {
     k = std::make_shared<KeybindMouseClick>(id, default_button, button, mods,
-                                            type, func);
+                                            type, func, followsPausedExecution);
     instance->mouse_keybinds[id] = k;
     isnew = true;
   }
@@ -546,9 +553,11 @@ InputSystem::NewKeybindMouseClick(std::string id, int default_button,
   return k;
 }
 
-std::shared_ptr<KeybindMouseMove> InputSystem::NewKeybindMouseMove(
-    std::string id, MOVE_TYPE mtype, int default_button, int button, int mods,
-    std::function<void(double, double)> func, bool isInit) {
+std::shared_ptr<KeybindMouseMove>
+InputSystem::NewKeybindMouseMove(std::string id, MOVE_TYPE mtype,
+                                 int default_button, int button, int mods,
+                                 std::function<void(double, double)> func,
+                                 bool followsPausedExecution, bool isInit) {
   bool isnew = false;
   std::shared_ptr<KeybindMouseMove> k;
   if (instance->mouse_keybinds.contains(id)) {
@@ -563,7 +572,7 @@ std::shared_ptr<KeybindMouseMove> InputSystem::NewKeybindMouseMove(
   }
   if (!k) {
     k = std::make_shared<KeybindMouseMove>(id, mtype, default_button, button,
-                                           mods, func);
+                                           mods, func, followsPausedExecution);
     instance->mouse_keybinds[id] = k;
     isnew = true;
   }
@@ -582,9 +591,11 @@ std::shared_ptr<KeybindMouseMove> InputSystem::NewKeybindMouseMove(
   return k;
 }
 
-std::shared_ptr<KeybindMouseScroll> InputSystem::NewKeybindMouseScroll(
-    std::string id, SCROLL_TYPE scrolltype, int mods,
-    std::function<void(double, double)> func, bool isInit) {
+std::shared_ptr<KeybindMouseScroll>
+InputSystem::NewKeybindMouseScroll(std::string id, SCROLL_TYPE scrolltype,
+                                   int mods,
+                                   std::function<void(double, double)> func,
+                                   bool followsPausedExecution, bool isInit) {
   bool isnew = false;
   std::shared_ptr<KeybindMouseScroll> k;
   if (instance->mouse_keybinds.contains(id)) {
@@ -598,7 +609,8 @@ std::shared_ptr<KeybindMouseScroll> InputSystem::NewKeybindMouseScroll(
     }
   }
   if (!k) {
-    k = std::make_shared<KeybindMouseScroll>(id, scrolltype, mods, func);
+    k = std::make_shared<KeybindMouseScroll>(id, scrolltype, mods, func,
+                                             followsPausedExecution);
     instance->mouse_keybinds[id] = k;
     isnew = true;
   }
@@ -648,9 +660,9 @@ bool InputSystem::IsMouseButtonHeld(int button) {
                    instance->held_mouse_buttons.end(),
                    button) != instance->held_mouse_buttons.end();
 }
-void Engine::InputSystem::SetMouseEnabled(bool enabled) {
+void InputSystem::SetMouseEnabled(bool enabled) {
 
-  auto window = Engine::Graphics::Main::instance->window;
+  auto window = Graphics::Main::instance->window;
   if (enabled) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   } else {
@@ -661,7 +673,8 @@ void Engine::InputSystem::SetMouseEnabled(bool enabled) {
 // KeybindMouseMove implementation
 KeybindMouseMove::KeybindMouseMove(std::string name, MOVE_TYPE mtype,
                                    int default_button, int button, int mods,
-                                   std::function<void(double, double)> func) {
+                                   std::function<void(double, double)> func,
+                                   bool followsPausedExecution) {
   this->name = name;
   this->mtype = mtype;
   this->default_button = default_button;
@@ -670,6 +683,7 @@ KeybindMouseMove::KeybindMouseMove(std::string name, MOVE_TYPE mtype,
   this->func = func;
   this->isEnabled = true;
   this->isHeld = false;
+  this->followsPausedExecution = followsPausedExecution;
 }
 
 json KeybindMouseMove::ToJson() {
@@ -692,6 +706,8 @@ void KeybindMouseMove::CallFunc(double xposmouse, double yposmouse, int mbutton,
                                 double positionY) {
   if (func == nullptr || !isEnabled)
     return;
+  if (followsPausedExecution && !Engine::isSimulationEnabled)
+    return;
   if (SanitizeMods(mmods) != SanitizeMods(this->mods))
     return;
   if (mtype == BUTTON_HELD) {
@@ -707,7 +723,8 @@ void KeybindMouseMove::CallFunc(double xposmouse, double yposmouse, int mbutton,
 // KeybindMouseClick implementation
 KeybindMouseClick::KeybindMouseClick(std::string name, int default_button,
                                      int button, int mods, CLICK_TYPE ctype,
-                                     std::function<void()> func) {
+                                     std::function<void()> func,
+                                     bool followsPausedExecution) {
   this->name = name;
   this->default_button = default_button;
   this->button = button;
@@ -716,6 +733,7 @@ KeybindMouseClick::KeybindMouseClick(std::string name, int default_button,
   this->func = func;
   this->isEnabled = true;
   this->isHeld = false;
+  this->followsPausedExecution = followsPausedExecution;
 }
 
 void KeybindMouseClick::Trigger() {
@@ -746,6 +764,8 @@ void KeybindMouseClick::CallFunc(double xposmouse, double yposmouse,
     return;
   if (mbutton != this->button)
     return;
+  if (followsPausedExecution && !Engine::isSimulationEnabled)
+    return;
 
   if (ctype == CLICK_PRESS && maction == GLFW_PRESS) {
     if (SanitizeMods(mmods) == SanitizeMods(this->mods)) {
@@ -761,15 +781,17 @@ void KeybindMouseClick::CallFunc(double xposmouse, double yposmouse,
 }
 
 // KeybindMouseScroll implementation
-KeybindMouseScroll::KeybindMouseScroll(
-    std::string name, SCROLL_TYPE scrolltype, int mods,
-    std::function<void(double, double)> func) {
+KeybindMouseScroll::KeybindMouseScroll(std::string name, SCROLL_TYPE scrolltype,
+                                       int mods,
+                                       std::function<void(double, double)> func,
+                                       bool followsPausedExecution) {
   this->name = name;
   this->scrolltype = scrolltype;
   this->mods = mods;
   this->func = func;
   this->isEnabled = true;
   this->isHeld = false;
+  this->followsPausedExecution = followsPausedExecution;
 }
 
 json KeybindMouseScroll::ToJson() {
@@ -791,6 +813,8 @@ void KeybindMouseScroll::CallFunc(double xposmouse, double yposmouse,
   if (func == nullptr || !isEnabled)
     return;
   if (SanitizeMods(mmods) != SanitizeMods(this->mods))
+    return;
+  if (followsPausedExecution && !Engine::isSimulationEnabled)
     return;
 
   switch (scrolltype) {

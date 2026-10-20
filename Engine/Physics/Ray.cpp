@@ -1,10 +1,8 @@
 #include "Ray.hpp"
 #include "Physics/Components/ComponentBoundingBox.hpp"
 #include <glm/geometric.hpp>
-#define CMP(x, y)                                                              \
-  (std::abs((x) - (y)) <=                                                      \
-   FLT_EPSILON * fmaxf(1.0f, std::max<float>(std::abs(x), std::abs(y))))
 Engine::Physics::RaycastResult
+
 Engine::Physics::Ray::Intersects(std::shared_ptr<OBB> obb) {
   auto o = glm::transpose(obb->orientation);
   auto size = obb->size;

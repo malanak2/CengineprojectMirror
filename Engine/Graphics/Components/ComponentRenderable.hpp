@@ -19,15 +19,13 @@ public:
   std::string material_path;
   std::map<std::string, std::shared_ptr<IUniform>> uniforms;
   std::vector<std::string> disabled_meshes;
-  bool render_bounding_box;
 };
 
 inline void to_json(json &j, const RenderableDataJson &p) {
   j = json{{"model_path", p.model_path},
            {"material_path", p.material_path},
            {"uniforms", p.uniforms},
-           {"disabled_meshes", p.disabled_meshes},
-           {"render_bounding_box", p.render_bounding_box}};
+           {"disabled_meshes", p.disabled_meshes}};
 }
 
 inline void from_json(const json &j, RenderableDataJson &p) {
@@ -38,11 +36,6 @@ inline void from_json(const json &j, RenderableDataJson &p) {
   }
   if (j.contains("disabled_meshes")) {
     j.at("disabled_meshes").get_to(p.disabled_meshes);
-  }
-  if (j.contains("render_bounding_box")) {
-    j.at("render_bounding_box").get_to(p.render_bounding_box);
-  } else {
-    p.render_bounding_box = false;
   }
 }
 
@@ -71,7 +64,6 @@ public:
   std::shared_ptr<Model> model;
   std::string _material_path;
   std::string _model_path;
-  bool renderBoundingBox = false;
   // Value storing the values of uniforms
   std::map<std::string, std::shared_ptr<IUniform>> _uniforms;
   std::vector<std::string> disabled_meshes;

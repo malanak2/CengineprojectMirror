@@ -26,30 +26,35 @@ protected:
     ZoneScoped;
     auto scene = Engine::Engine::instance->current_scene;
     ImGui::Begin("Scene");
-    ImGui::Text("Edit current scene");
-    IMGUI_CHECKBOX("Wireframe mode", false, [](bool state) {
-      if (state) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      } else {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      }
-    });
-    IMGUI_CHECKBOX("AntiAliasing", Config::inst->graphics->enableAntiAliasing,
-                   [](bool state) {
-                     if (state) {
-                       glEnable(GL_MULTISAMPLE);
-                     } else {
-                       glDisable(GL_MULTISAMPLE);
-                     }
-                   });
-    IMGUI_CHECKBOX("Vsync", Config::inst->graphics->enableVsync,
-                   [](bool state) {
-                     if (state) {
-                       glfwSwapInterval(1);
-                     } else {
-                       glfwSwapInterval(0);
-                     }
-                   });
+    if (ImGui::CollapsingHeader("Controls")) {
+      IMGUI_CHECKBOX("Wireframe mode", false, [](bool state) {
+        if (state) {
+          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+      });
+      IMGUI_CHECKBOX("AntiAliasing", Config::inst->graphics->enableAntiAliasing,
+                     [](bool state) {
+                       if (state) {
+                         glEnable(GL_MULTISAMPLE);
+                       } else {
+                         glDisable(GL_MULTISAMPLE);
+                       }
+                     });
+      IMGUI_CHECKBOX("Vsync", Config::inst->graphics->enableVsync,
+                     [](bool state) {
+                       if (state) {
+                         glfwSwapInterval(1);
+                       } else {
+                         glfwSwapInterval(0);
+                       }
+                     });
+      ImGui::Checkbox("Render bounding boxes",
+                      &Config::inst->graphics->renderBoundingBox);
+      ImGui::Checkbox("Enable simulation",
+                      &Engine::Engine::isSimulationEnabled);
+    }
     if (ImGui::CollapsingHeader("Objects")) {
       ShowSceneObjectMenu(&scene->objects);
     }
