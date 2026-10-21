@@ -81,8 +81,7 @@ void Engine::Physics::ComponentPhysics::ApplyImpulse(
 
   float e = B ? std::min(cor, B->cor) : cor;
 
-  // Threshold to turn off bounciness at low impact speeds
-  const float minBounceVel = 0.35f;
+  const float minBounceVel = 0.55f;
   if (std::abs(velAlongNormal) < minBounceVel) {
     e = 0.0f;
   }

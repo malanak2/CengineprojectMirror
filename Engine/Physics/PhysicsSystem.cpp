@@ -57,8 +57,7 @@ void Engine::Physics::PhysicsSystem::UnregisterBBox(
 void PhysicsSystem::ApplyStaticImpulse(std::shared_ptr<ComponentPhysics> body,
                                        std::shared_ptr<CollisionManifold> M,
                                        int) {
-  float invMass = (body->mass > 0.0f) ? 1.0f / body->mass : 0.0f;
-  if (invMass == 0.0f)
+  if (body->mass <= 0.0f)
     return;
 
   glm::vec3 v = body->GetVelocities();
@@ -68,15 +67,20 @@ void PhysicsSystem::ApplyStaticImpulse(std::shared_ptr<ComponentPhysics> body,
   if (vn <= 0.0f)
     return;
 
-  float e = body->cor;
-  if (vn < 0.35f)
-    e = 0.0f;
+  float e = (vn < 0.35f) ? 0.0f : body->cor;
 
-  if (e == 0.0f && vn < 0.1f) {
-    body->SetVelocities(v - n * vn);
-    return;
+  float dvn = (1.0f + e) * vn;
+  v -= n * dvn;
+
+  glm::vec3 vt = v - n * glm::dot(v, n);
+  float vtLen = glm::length(vt);
+  if (vtLen > 1e-5f) {
+    float maxDv = body->friction * dvn;
+    float dvt = std::min(vtLen, maxDv);
+    v -= (vt / vtLen) * dvt;
   }
-  body->SetVelocities(v - n * (1.0f + e) * vn);
+
+  body->SetVelocities(v);
 }
 
 void Engine::Physics::PhysicsSystem::ProcessPhysics() {
