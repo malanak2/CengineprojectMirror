@@ -60,6 +60,7 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
   auto o = std::make_shared<Object>(scene);
   auto ojsref = ((json)js.data);
   auto rr = o->FromJson(ojsref, nullptr);
+  o->sceneobject = shared_from_this();
   if (rr != nullptr) {
     camcomp = rr;
   }
@@ -145,6 +146,7 @@ void Scene::Instantiate(std::shared_ptr<Object> object,
     objects.insert(objects.end(), so);
   }
   object->scene = shared_from_this();
+  object->sceneobject = so;
   so->instance = object;
   so->Children = {};
 }

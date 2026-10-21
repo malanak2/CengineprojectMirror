@@ -8,6 +8,7 @@
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
+#include "Physics/PhysicsSystem.hpp"
 #include "Scene.hpp"
 #include "Texture.hpp"
 #include "Util/FileUtil.hpp"
@@ -16,6 +17,7 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <ctime>
+#include <glm/gtc/type_ptr.hpp>
 #ifdef IMGUI
 #include <imgui_impl_glfw.h>
 #endif
@@ -138,13 +140,6 @@ int Main::Tick(
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     CHECK_GL_ERROR();
   }
-#ifndef IMGUI
-  float total = 0;
-  for (auto var : frameTimes) {
-    total += var;
-  }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Fps: {}", frameTimes.size() / total);
-#endif
   {
     ZoneScopedN("PreRender");
     for (auto f : *instance->preRender) {
@@ -162,6 +157,7 @@ int Main::Tick(
       val->RenderObjects();
     }
   }
+  RenderBBOS();
   {
     ZoneScopedN("PostRender");
     for (auto f : *instance->postRender) {
@@ -202,6 +198,106 @@ void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
   if (instance->keyMap.contains(scancode)) {
     for (auto var : instance->keyMap[scancode]) {
       var(action, mods);
+    }
+  }
+}
+void Main::RenderBBOS() {
+  if (Config::inst->graphics->renderBoundingBox) {
+    ZoneScopedN("BoundingBoxRender");
+    static auto debugmat = Material::Create("materials/bounding_box.json");
+
+    static GLuint combinedUBO = 0;
+    if (combinedUBO == 0) {
+      glGenBuffers(1, &combinedUBO);
+      glBindBuffer(GL_UNIFORM_BUFFER, combinedUBO);
+      glBufferData(GL_UNIFORM_BUFFER, 144, nullptr, GL_DYNAMIC_DRAW);
+      glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+
+    if (debugmat->vao == 0) {
+      glGenVertexArrays(1, &debugmat->vao);
+      glBindVertexArray(debugmat->vao);
+
+      float vertices[] = {-1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f, 1.0f,
+                          -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
+                          -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f, 1.0f};
+
+      unsigned int indices[] = {
+          0, 1, 1, 2, 2, 3, 3, 0, // Bottom face
+          4, 5, 5, 6, 6, 7, 7, 4, // Top face
+          0, 4, 1, 5, 2, 6, 3, 7  // Vertical edges
+      };
+
+      GLuint vbo, ebo;
+      glGenBuffers(1, &vbo);
+      glGenBuffers(1, &ebo);
+
+      glBindBuffer(GL_ARRAY_BUFFER, vbo);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                   GL_STATIC_DRAW);
+
+      glEnableVertexAttribArray(0);
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                            (void *)0);
+    }
+
+    debugmat->SetupMaterial();
+
+    auto scene = Engine::Engine::instance
+                     ? Engine::Engine::instance->current_scene
+                     : nullptr;
+    if (scene && scene->camera) {
+      auto proj = scene->camera->GetProjMatrix();
+      auto view = scene->camera->GetViewMatrix();
+      float color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+
+      glBindBuffer(GL_UNIFORM_BUFFER, combinedUBO);
+      glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                      glm::value_ptr(proj));
+      glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
+                      glm::value_ptr(view));
+      glBufferSubData(GL_UNIFORM_BUFFER, 128, sizeof(color), color);
+
+      glBindBufferBase(GL_UNIFORM_BUFFER, 0, combinedUBO);
+      glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+
+    std::vector<glm::mat4> obbMatrices;
+    obbMatrices.reserve(Physics::PhysicsSystem::boundingBoxes.size());
+
+    for (auto bb : Physics::PhysicsSystem::boundingBoxes) {
+      if (!bb)
+        continue;
+      auto obb = bb->GetOBB();
+      if (!obb)
+        continue;
+      glm::mat4 translation = glm::translate(glm::mat4(1.0f), obb->position);
+      glm::mat4 rotation = glm::transpose(glm::mat4(obb->orientation));
+      glm::mat4 scale = glm::scale(glm::mat4(1.0f), obb->size);
+
+      obbMatrices.push_back(translation * rotation * scale);
+    }
+
+    if (!obbMatrices.empty()) {
+      if (debugmat->instanceSSBO == 0) {
+        glGenBuffers(1, &debugmat->instanceSSBO);
+      }
+
+      glBindBuffer(GL_SHADER_STORAGE_BUFFER, debugmat->instanceSSBO);
+      // Allocate/reallocate storage for all bounding boxes in this frame
+      glBufferData(GL_SHADER_STORAGE_BUFFER,
+                   obbMatrices.size() * sizeof(glm::mat4), obbMatrices.data(),
+                   GL_DYNAMIC_DRAW);
+      glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, debugmat->instanceSSBO);
+      glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+      glBindVertexArray(debugmat->vao);
+      glDrawElementsInstanced(GL_LINES, 24, GL_UNSIGNED_INT, nullptr,
+                              static_cast<GLsizei>(obbMatrices.size()));
+      glBindVertexArray(0);
     }
   }
 }

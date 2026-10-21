@@ -33,6 +33,13 @@ Object::Object(std::string path, std::shared_ptr<Scene> scene) {
   this->scene = scene;
   FromJson(j);
 }
+Object::Object() {
+  this->_components = {};
+  this->_position = {0, 0, 0};
+  this->_rotation = glm::identity<glm::quat>();
+  this->_name = "New Object";
+  this->scale = {1, 1, 1};
+}
 
 json Object::ToJson() {
   JsonFileBase ret;

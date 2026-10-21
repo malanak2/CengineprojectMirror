@@ -3,9 +3,12 @@
 #include "Config/Config.hpp"
 #include "Engine.hpp"
 #include "ImGuiMacros.hpp"
+#include "Object.hpp"
+#include "Scene.hpp"
 #include "Util/FileUtil.hpp"
 #include "Window.hpp"
 #include <imgui.h>
+#include <memory>
 #include <tracy/Tracy.hpp>
 namespace Editor {
 class WindowScene : public Window {
@@ -78,39 +81,6 @@ protected:
           ImGui::EndDragDropTarget();
         }
       }
-    } else {
-      ImGui::Text("New Scene Object");
-      ImGui::InputText("Name", namebuf, 64);
-      ImGui::InputText("Material path", matbuf, 64);
-      ImGui::InputFloat3("Position: ", coords);
-      ImGui::InputFloat4("Rotation: ", coords);
-      ImGui::Text("Parent: %s", newObjectParent
-                                    ? newObjectParent->instance->_name.c_str()
-                                    : "nullptr");
-      if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload *payload =
-                ImGui::AcceptDragDropPayload("OBJ_PARENT")) {
-          Engine::SceneObject *draggedObj =
-              *(Engine::SceneObject **)payload->Data;
-          newObjectParent = draggedObj->shared_from_this();
-        }
-        ImGui::EndDragDropTarget();
-      }
-      if (newObjectParent != nullptr) {
-        ImGui::SameLine();
-        if (ImGui::Button("Remove")) {
-          newObjectParent = nullptr;
-        }
-      }
-      if (ImGui::Button("Create")) {
-        auto o = std::make_shared<Engine::Object>(scene);
-        std::vector<float> pos = {};
-        std::vector<float> rot = {};
-        pos.assign(coords, coords + sizeof(coords) / sizeof(float));
-        rot.assign(rotation, rotation + sizeof(rotation) / sizeof(float));
-        o->fromParams(namebuf, {}, pos, rot);
-        scene->Instantiate(o, newObjectParent);
-      }
     }
     ImGui::Text("File scene controls");
     ImGui::InputText("Scene location", &scene->path[0], 100);
@@ -149,6 +119,7 @@ protected:
       }
 
       bool open = ImGui::TreeNodeEx(obj->instance->_name.c_str(), flags);
+      ContextMenu(obj->instance);
 
       if (ImGui::BeginDragDropSource()) {
         Engine::SceneObject *ptr = obj.get();
@@ -172,6 +143,16 @@ protected:
       }
 
       ImGui::PopID();
+    }
+  }
+  void ContextMenu(std::shared_ptr<Engine::Object> obj) {
+    if (ImGui::BeginPopupContextItem(("ContextMenu##" + obj->_name).c_str())) {
+      if (ImGui::MenuItem(("New Object##" + obj->_name).c_str())) {
+        auto o = std::make_shared<Engine::Object>();
+        Engine::Engine::instance->current_scene->Instantiate(
+            o, obj->sceneobject.lock());
+      }
+      ImGui::EndPopup();
     }
   }
 };

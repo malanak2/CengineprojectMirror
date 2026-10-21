@@ -68,5 +68,6 @@ public:
 
 private:
   std::shared_ptr<Config> config = nullptr;
+  static void RenderBBOS();
 };
 }; // namespace Engine::Graphics

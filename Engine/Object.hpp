@@ -17,6 +17,7 @@ using json = nlohmann::json;
 
 namespace Engine {
 class Scene;
+class SceneObject;
 //!
 //! struct ObjectJson - Json struct for saving objects
 //!
@@ -50,6 +51,7 @@ public:
   glm::vec3 scale;
   Object(std::string path, std::shared_ptr<Scene> scene);
 
+  Object();
   Object(std::shared_ptr<Scene> scene);
   std::string _name;
   //!
@@ -75,6 +77,7 @@ public:
   std::shared_ptr<Graphics::CameraComponent> FromJson(json &js,
                                                       std::string path);
   std::weak_ptr<Scene> scene;
+  std::weak_ptr<SceneObject> sceneobject;
   void fromParams(std::string name,
                   std::vector<std::shared_ptr<IComponent>> comps = {},
                   std::vector<float> position = {0, 0, 0},

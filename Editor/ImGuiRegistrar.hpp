@@ -3,6 +3,7 @@
 #include "ImGui/WindowChangeKeybind.hpp"
 #include "ImGui/WindowInputMaps.hpp"
 #include "ImGui/WindowObjectInspector.hpp"
+#include "ImGui/WindowPhysicsSystemDebug.hpp"
 #include "ImGui/WindowScene.hpp"
 #include "ImGui/WindowToggles.hpp"
 #include "ImGuiRenderers.hpp"
@@ -28,6 +29,7 @@ public:
     auto a = std::make_shared<WindowChangeKeybind>();
     windows.insert(windows.end(), a);
     a->isOpen = false;
+    windows.insert(windows.end(), std::make_shared<WindowPhysicsSystemDebug>());
     wtgles = std::make_shared<WindowToggles>();
     wtgles->windows = &windows;
     Engine::Graphics::Main::instance->init->insert(
