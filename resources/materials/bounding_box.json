@@ -1,0 +1,27 @@
+{
+  "object_type": "material",
+  "name": "Bounding Box Material",
+  "uses_camera": true,
+  "uses_translate": false,
+  "texture_path": "",
+  "uses_animations": false,
+  "shaders": [
+    {
+      "type": "vertex",
+      "path": "generated/shaders/spirv/bounding_box.spv",
+      "entrypoint": "mainVertex"
+    },
+    {
+      "type": "fragment",
+      "path": "generated/shaders/spirv/bounding_box.spv",
+      "entrypoint": "mainPixel"
+    }
+  ],
+  "uniforms": [
+    {
+      "name": "MaterialData",
+      "bind_point": 0,
+      "size": 144
+    }
+  ]
+}

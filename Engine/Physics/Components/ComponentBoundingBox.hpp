@@ -102,6 +102,7 @@ public:
       1,
       1,
   };
+  bool FollowsPausedExecution() override { return false; }
 
 private:
   std::shared_ptr<OBB> obb = nullptr;

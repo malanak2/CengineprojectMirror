@@ -2,67 +2,60 @@
   "keybindsHold": [
     {
       "default_key": 87,
+      "followsPausedExecution": false,
       "key": 87,
       "mods": 0,
-      "name": "test-keybind-w",
-      "scancode": 17
-    },
-    {
-      "default_key": 87,
-      "key": 87,
-      "mods": 0,
-      "name": "test-keybind-w-shift",
+      "name": "move-forward",
       "scancode": 17
     },
     {
       "default_key": 65,
+      "followsPausedExecution": false,
       "key": 65,
       "mods": 0,
-      "name": "test-keybind-a",
+      "name": "move-left",
       "scancode": 30
     },
     {
       "default_key": 83,
+      "followsPausedExecution": false,
       "key": 83,
       "mods": 0,
-      "name": "test-keybind-s",
+      "name": "move-backward",
       "scancode": 31
     },
     {
       "default_key": 68,
+      "followsPausedExecution": false,
       "key": 68,
       "mods": 0,
-      "name": "test-keybind-d",
+      "name": "move-right",
       "scancode": 32
     }
   ],
   "keybindsHoldText": [],
-  "keybindsPress": [],
-  "keybindsRelease": [],
-  "mouseClick": [
+  "keybindsPress": [
     {
-      "button": 0,
-      "ctype": 0,
-      "default_button": 0,
+      "default_key": 256,
+      "followsPausedExecution": false,
+      "key": 256,
       "mods": 0,
-      "name": "test-mouse-click"
+      "name": "keybind-control",
+      "scancode": 1
     }
   ],
+  "keybindsRelease": [],
+  "mouseClick": [],
   "mouseMove": [
     {
-      "button": 1,
-      "default_button": 1,
+      "button": 0,
+      "default_button": 0,
+      "followsPausedExecution": false,
       "mods": 0,
-      "mtype": 1,
-      "name": "test-mouse-drag"
+      "mtype": 0,
+      "name": "look"
     }
   ],
   "mouseRelease": [],
-  "mouseScroll": [
-    {
-      "mods": 0,
-      "name": "test-mouse-scroll",
-      "scrolltype": 4
-    }
-  ]
+  "mouseScroll": []
 }

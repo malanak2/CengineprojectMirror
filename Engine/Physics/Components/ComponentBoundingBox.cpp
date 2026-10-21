@@ -9,10 +9,9 @@ std::pair<double, double> Engine::Physics::OBB::GetInterval(glm::vec3 axis) {
   glm::vec3 vertex[8];
   glm::vec3 C = this->position; // OBB Center
   glm::vec3 E = this->size;     // OBB Extents
-  auto o1 = this->orientation;
-  glm::vec3 A[] = {glm::vec3(o1[0][0], o1[0][1], o1[0][2]),
-                   glm::vec3(o1[1][0], o1[1][1], o1[1][2]),
-                   glm::vec3(o1[2][0], o1[2][1], o1[2][2])};
+  auto o1 = glm::transpose(this->orientation);
+
+  glm::vec3 A[] = {o1[0], o1[1], o1[2]};
   // OBB Axis
   vertex[0] = C + A[0] * E[0] + A[1] * E[1] + A[2] * E[2];
   vertex[1] = C - A[0] * E[0] + A[1] * E[1] + A[2] * E[2];
@@ -76,12 +75,9 @@ std::vector<glm::vec3> Engine::Physics::OBB::GetVertices() {
   glm::vec3 C = position; // OBB Center
   glm::vec3 E = size;     // OBB Extents
   auto o = glm::transpose(orientation);
-  glm::vec3 A[] = {
-      // OBB Axis
-      glm::vec3(o[0][0], o[0][1], o[0][2]),
-      glm::vec3(o[1][0], o[1][1], o[1][2]),
-      glm::vec3(o[2][0], o[2][1], o[2][2]),
-  };
+
+  glm::vec3 A[] = {o[0], o[1], o[2]};
+
   v[0] = C + A[0] * E[0] + A[1] * E[1] + A[2] * E[2];
   v[1] = C - A[0] * E[0] + A[1] * E[1] + A[2] * E[2];
   v[2] = C + A[0] * E[0] - A[1] * E[1] + A[2] * E[2];
@@ -106,14 +102,11 @@ std::vector<Engine::Physics::Line> Engine::Physics::OBB::GetEdges() {
 }
 std::vector<Engine::Physics::Plane> Engine::Physics::OBB::GetPlanes() {
 
-  glm::vec3 c = position; // OBB Center
-  glm::vec3 e = size;     // OBB Extents
+  glm::vec3 c = position;
+  glm::vec3 e = size;
   auto o = glm::transpose(orientation);
-  glm::vec3 a[] = {
-      glm::vec3(o[0][0], o[0][1], o[0][2]),
-      glm::vec3(o[1][0], o[1][1], o[1][2]),
-      glm::vec3(o[2][0], o[2][1], o[2][2]),
-  };
+
+  glm::vec3 a[] = {o[0], o[1], o[2]};
   std::vector<Plane> result;
   result.resize(6);
   result[0] = Plane(a[0], glm::dot(a[0], (c + a[0] * e.x)));
@@ -288,10 +281,10 @@ Engine::Physics::ComponentBoundingBox::GetOBB() {
     return obb;
   auto o = object.lock();
   auto obb = std::make_shared<OBB>();
-  obb->position = o->_position + position_offset;
+  obb->position = o->_position + o->_rotation * position_offset;
   obb->size = size;
-  obb->orientation = glm::transpose(
-      glm::toMat3(glm::normalize(o->_rotation * orientation_offset)));
+  obb->orientation =
+      glm::toMat3(glm::normalize(o->_rotation * orientation_offset));
   this->obb = obb;
   return obb;
 }
