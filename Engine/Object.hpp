@@ -153,5 +153,19 @@ public:
       return nullptr;
     return _components[key];
   }
+  // TODO: Figure out why broken
+  //!
+  //! @brief Returns whether all components are valid
+  //!
+  //! @return .
+  //!
+  bool IsValid() {
+    for (auto &[id, co] : _components) {
+      if (!co->IsValid()) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 } // namespace Engine

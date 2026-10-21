@@ -72,14 +72,23 @@ protected:
     std::vector<std::string> names = std::vector<std::string>();
     std::string todel = "";
     for (auto &[type, comp] : sceneObject->instance->_components) {
-      if (comp != nullptr)
-        if (ImGui::CollapsingHeader(comp->GetName().data())) {
+      if (comp != nullptr) {
+        bool isCOpen;
+        if (comp->IsValid()) {
+          isCOpen = ImGui::CollapsingHeader(comp->GetName().data());
+        } else {
+          isCOpen = ImGui::CollapsingHeader(
+              ("ERROR " + (std::string)comp->GetName().data() + " ERROR")
+                  .c_str());
+        }
+        if (isCOpen) {
           ImGuiR::ImGuiComponentRenderer::instance->Render(comp);
           if (ImGui::Button(
                   ("Remove##" + (std::string)comp->GetName().data()).c_str())) {
             todel = comp->GetName().data();
           }
         }
+      }
       ImGui::Separator();
       ImGui::Separator();
       names.insert(names.end(), std::string(comp->GetName()));

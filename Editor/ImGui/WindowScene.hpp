@@ -155,7 +155,8 @@ protected:
         Engine::SceneObject *ptr = obj.get();
         ImGui::SetDragDropPayload("OBJ_PARENT", &ptr,
                                   sizeof(Engine::SceneObject *));
-        ImGui::Text("%s", obj->instance->_name.c_str());
+        ImGui::Text("%s%s", obj->instance->_name.c_str(),
+                    obj->instance->IsValid() ? "" : " ERROR");
         ImGui::EndDragDropSource();
       }
 

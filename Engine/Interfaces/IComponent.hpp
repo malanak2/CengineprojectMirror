@@ -57,5 +57,13 @@ public:
   //! @return wheter follows
   //!
   virtual bool FollowsPausedExecution() { return true; }
+
+  //!
+  //! @brief Returns whether a component is valid (whether any errors were
+  //! encountered)
+  //!
+  //! @return .
+  //!
+  virtual bool IsValid() { return true; }
 };
 } // namespace Engine

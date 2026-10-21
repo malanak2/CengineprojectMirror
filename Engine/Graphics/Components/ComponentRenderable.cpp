@@ -96,10 +96,14 @@ void ComponentRenderable::SetMeshEnabled(const std::string &meshName,
     disabled_meshes.erase(it);
   }
 }
+bool Engine::Graphics::ComponentRenderable::IsValid() {
+  bool valid = material->usable;
+  if (model != nullptr) {
+    valid = valid && model->isValid;
+  }
+  return valid;
+}
 
-void ComponentRenderable::Setup() {};
-void ComponentRenderable::Update() {};
-void ComponentRenderable::FixedUpdate() {}
 void Engine::Graphics::ComponentRenderable::SetObject(
     std::shared_ptr<Object> object) {
   this->object = object;

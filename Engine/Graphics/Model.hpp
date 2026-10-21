@@ -100,6 +100,7 @@ public:
 
   void ExtractBoneWeightForVertices(std::vector<MVertex> &vertices,
                                     aiMesh *mesh, const aiScene *scene);
+  bool isValid = true;
 
 private:
   // model data

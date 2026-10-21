@@ -153,6 +153,7 @@ void Engine::Graphics::Model::loadModel(std::string path) {
       !scene->mRootNode) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "ERROR::ASSIMP::{}",
                         import.GetErrorString());
+    isValid = false;
     return;
   }
   size_t last_slash = path.find_last_of("/\\");

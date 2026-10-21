@@ -51,9 +51,6 @@ public:
 
   static std::shared_ptr<ComponentRenderable>
   Create(json &js, std::shared_ptr<Object> object);
-  void Setup() override;
-  void Update() override;
-  void FixedUpdate() override;
   void SetObject(std::shared_ptr<Object> object);
   void FromJson(json &js) override;
 
@@ -71,6 +68,7 @@ public:
   std::vector<bool> GetEnabledMeshes() const;
   bool IsMeshEnabled(const std::string &meshName) const;
   void SetMeshEnabled(const std::string &meshName, bool enabled);
+  bool IsValid() override;
 
 private:
   void FromData(std::string model_path, std::string material_path,
