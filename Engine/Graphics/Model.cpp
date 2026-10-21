@@ -3,7 +3,6 @@
 #include "Util/LoggerUtil.hpp"
 #include "glad/glad.h"
 #include "tracy/TracyOpenGL.hpp"
-#include <filesystem>
 #include <memory>
 #include <tracy/Tracy.hpp>
 

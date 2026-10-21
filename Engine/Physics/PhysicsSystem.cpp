@@ -1,10 +1,7 @@
 #include "PhysicsSystem.hpp"
 #include "Components/ComponentPhysics.hpp"
-#include "Components/InvalidComponent.hpp"
 #include "Engine.hpp"
-#include "InputSystem.hpp"
 #include "Physics/Components/ComponentBoundingBox.hpp"
-#include "Physics/Line.hpp"
 #include "Util/LoggerUtil.hpp"
 using namespace Engine::Physics;
 

@@ -4,7 +4,6 @@
 #include "Physics/PhysicsSystem.hpp"
 #include "Physics/Plane.hpp"
 #include "Physics/Ray.hpp"
-#include "Util/LoggerUtil.hpp"
 std::pair<double, double> Engine::Physics::OBB::GetInterval(glm::vec3 axis) {
   glm::vec3 vertex[8];
   glm::vec3 C = this->position; // OBB Center

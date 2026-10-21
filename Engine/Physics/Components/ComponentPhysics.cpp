@@ -1,7 +1,6 @@
 #include "ComponentPhysics.hpp"
 #include "Object.hpp"
 #include "Physics/PhysicsSystem.hpp"
-#include "Physics/Ray.hpp"
 #include <glm/vector_relational.hpp>
 
 using namespace Engine::Physics;
