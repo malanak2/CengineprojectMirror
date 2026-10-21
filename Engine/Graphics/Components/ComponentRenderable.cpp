@@ -15,9 +15,6 @@ ComponentRenderable::ComponentRenderable(std::string model_path,
   ZoneScoped;
   this->object = object;
   FromData(model_path, material_path, {});
-  if (material) {
-    material->renderableObjects.push_back(shared_from_this());
-  }
 }
 
 void ComponentRenderable::FromData(
@@ -120,6 +117,19 @@ json ComponentRenderable::ToJson() {
   jb.data = j;
   return jb;
 }
+void Engine::Graphics::ComponentRenderable::Setup() {
+  if (!material)
+    return;
+  material->renderableObjects.push_back(shared_from_this());
+}
+
+void Engine::Graphics::ComponentRenderable::End() {
+  if (!material)
+    return;
+  material->renderableObjects.erase(
+      std::find(material->renderableObjects.begin(),
+                material->renderableObjects.end(), shared_from_this()));
+}
 
 std::shared_ptr<ComponentRenderable>
 ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
@@ -137,9 +147,7 @@ ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {
   cr->SetObject(object);
   cr->FromData(json_inst.model_path, json_inst.material_path,
                json_inst.uniforms, json_inst.disabled_meshes);
-  if (cr->material) {
-    cr->material->renderableObjects.push_back(cr);
-  }
+
   return cr;
 };
 
@@ -156,9 +164,6 @@ void ComponentRenderable::FromJson(json &js) {
   json_inst = js["data"];
   FromData(json_inst.model_path, json_inst.material_path, json_inst.uniforms,
            json_inst.disabled_meshes);
-  if (material) {
-    material->renderableObjects.push_back(shared_from_this());
-  }
 }
 
 ComponentRenderable::ComponentRenderable(json &js) { FromJson(js); }

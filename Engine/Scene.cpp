@@ -3,6 +3,7 @@
 //
 
 #include "Scene.hpp"
+#include "Engine.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
@@ -150,6 +151,48 @@ void Scene::Instantiate(std::shared_ptr<Object> object,
   so->instance = object;
   so->Children = {};
 }
+void Scene::RemoveObject(std::shared_ptr<SceneObject> so) {
+  so->End();
+  auto pos = std::find(objects.begin(), objects.end(), so);
+  if (pos != objects.end()) {
+    objects.erase(pos);
+    for (auto ch : so->Children) {
+      objects.insert(objects.end(), ch);
+      ch->SetParent(nullptr);
+    }
+    return;
+  }
+  auto parent = so->Parent.lock();
+  auto loc = std::find(parent->Children.begin(), parent->Children.end(), so);
+  if (loc != parent->Children.end()) {
+    parent->Children.erase(loc);
+  }
+  for (auto child : so->Children) {
+    child->SetParent(parent);
+  }
+}
+
+void Scene::RemoveObjectCascade(std::shared_ptr<SceneObject> so) {
+  for (auto child : so->Children) {
+    RemoveObjectCascade(child);
+  }
+  so->End();
+  if (auto p = so->Parent.lock()) {
+    auto pos = std::find(p->Children.begin(), p->Children.end(), so);
+    if (pos == p->Children.end()) {
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "What?");
+    } else {
+      p->Children.erase(pos);
+    }
+  }
+
+  auto pos = std::find(objects.begin(), objects.end(), so);
+  if (pos == objects.end()) {
+    return;
+  }
+  objects.erase(pos);
+}
+
 void Scene::Setup() {
   for (auto var : this->objects) {
     var->Setup();
@@ -174,9 +217,10 @@ void SceneObject::Update() {
     var->Update();
   }
 }
+void SceneObject::End() { instance->End(); }
 
-static std::shared_ptr<Engine::Object>
-FindObjectRecursive(const std::shared_ptr<Engine::SceneObject> &so,
+static std::shared_ptr<Object>
+FindObjectRecursive(const std::shared_ptr<SceneObject> &so,
                     const std::string &name) {
   if (so && so->instance && so->instance->_name == name)
     return so->instance;
@@ -190,7 +234,7 @@ FindObjectRecursive(const std::shared_ptr<Engine::SceneObject> &so,
   return nullptr;
 }
 
-std::shared_ptr<Engine::Object> Scene::FindObject(const std::string &name) {
+std::shared_ptr<Object> Scene::FindObject(const std::string &name) {
   for (const auto &rootSo : objects) {
     auto res = FindObjectRecursive(rootSo, name);
     if (res)

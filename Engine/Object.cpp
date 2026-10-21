@@ -132,6 +132,7 @@ void Object::fromParams(std::string name,
   }
   this->scale = scale;
 }
+
 Object::Object(std::shared_ptr<Scene> scene) {
   this->scene = scene;
   this->_components = {};
@@ -150,4 +151,12 @@ void Object::Update() {
     comp->Update();
   }
 }
+void Object::End() {
+  for (auto &[id, comp] : _components) {
+    if (comp->FollowsPausedExecution() && !Engine::Engine::isSimulationEnabled)
+      continue;
+    comp->End();
+  }
+}
+
 } // namespace Engine

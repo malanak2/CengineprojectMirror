@@ -110,7 +110,9 @@ void Material::SetupMaterial() {
 void Material::RenderObjects() {
   ZoneScopedN("Material::RenderObjects");
   TracyGpuZone("Material::RenderObjects");
-
+  if (renderableObjects.size() == 0) {
+    return;
+  }
   if (uses_camera) {
     ZoneScopedN("UploadCamera");
     TracyGpuZone("UploadCamera");

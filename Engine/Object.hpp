@@ -69,6 +69,12 @@ public:
   //!
   //!
   void FixedUpdate();
+
+  //!
+  //! @brief Call end on all components
+  //!
+  //!
+  void End();
   void Save();
   void Load();
   json ToJson() override;

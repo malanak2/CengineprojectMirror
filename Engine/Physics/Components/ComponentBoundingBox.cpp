@@ -208,17 +208,12 @@ Engine::Physics::OBB::FindCollisionFeatures(std::shared_ptr<OBB> B) {
     if (depth < result->depth) {
       result->depth = depth;
       bestAxis = i;
-      bestNormalizedAxis = axis;
+      bestNormalizedAxis = r.first ? -axis : axis;
     }
   }
 
   if (bestAxis == -1)
     return result;
-
-  glm::vec3 dirAB = B->position - position;
-  if (glm::dot(dirAB, bestNormalizedAxis) < 0.0f) {
-    bestNormalizedAxis = -bestNormalizedAxis;
-  }
 
   glm::vec3 axis = bestNormalizedAxis;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "ImGui/Window.hpp"
 #include "ImGui/WindowChangeKeybind.hpp"
+#include "ImGui/WindowGraphicsDebug.hpp"
 #include "ImGui/WindowInputMaps.hpp"
 #include "ImGui/WindowObjectInspector.hpp"
 #include "ImGui/WindowPhysicsSystemDebug.hpp"
@@ -30,6 +31,7 @@ public:
     windows.insert(windows.end(), a);
     a->isOpen = false;
     windows.insert(windows.end(), std::make_shared<WindowPhysicsSystemDebug>());
+    windows.insert(windows.end(), std::make_shared<WindowGraphicsDebug>());
     wtgles = std::make_shared<WindowToggles>();
     wtgles->windows = &windows;
     Engine::Graphics::Main::instance->init->insert(

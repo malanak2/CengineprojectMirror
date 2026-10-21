@@ -50,6 +50,11 @@ public:
   //!
   //!
   void Update();
+  //!
+  //! @brief Calls end on itself
+  //!
+  //!
+  void End();
 };
 
 class SceneJson {
@@ -79,7 +84,8 @@ public:
   //!
   void Instantiate(std::shared_ptr<Object> object,
                    std::shared_ptr<SceneObject> Parent = {});
-
+  void RemoveObject(std::shared_ptr<SceneObject> so);
+  void RemoveObjectCascade(std::shared_ptr<SceneObject> so);
   json ToJson() override;
   std::shared_ptr<Graphics::CameraComponent> camera = nullptr;
   void FromJson(json &js) override;

@@ -152,6 +152,14 @@ protected:
         Engine::Engine::instance->current_scene->Instantiate(
             o, obj->sceneobject.lock());
       }
+      if (ImGui::MenuItem(("Delete##" + obj->_name).c_str())) {
+        Engine::Engine::instance->current_scene->RemoveObject(
+            obj->sceneobject.lock());
+      }
+      if (ImGui::MenuItem(("Delete Cascade##" + obj->_name).c_str())) {
+        Engine::Engine::instance->current_scene->RemoveObjectCascade(
+            obj->sceneobject.lock());
+      }
       ImGui::EndPopup();
     }
   }
