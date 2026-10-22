@@ -26,8 +26,8 @@ public:
 
   void FromJson(json &js) override;
   void UpdatePhysics();
-  void Setup() override;
-  void End() override;
+  void EarlySetup() override;
+  void LateEnd() override;
   void SetVelocities(glm::dvec3 newv) { velocities = newv; }
   void SetVelocityX(float newx) { velocities.x = newx; }
   void SetVelocityY(float newy) { velocities.y = newy; }
@@ -38,20 +38,25 @@ public:
   bool useGlobalGravity = true;
   bool useGlobalDirection = true;
   glm::vec3 oldPos;
-  float bounce = 1;
   float mass = 1;
-  float cor; // Coefficient of restitution
+  float cor = 0; // Coefficient of restitution - essentially the bounciness
   float friction = 1;
   void ApplyForces();
 
   void ApplyImpulse(std::shared_ptr<ComponentPhysics> B,
                     std::shared_ptr<CollisionManifold> M, int c);
   float GetDeltaTime() override;
+  void BeginTick();
+  void EndTick();
+  glm::vec3 GetRenderPosition();
 
 private:
   glm::vec3 velocities = {0, 0, 0};
   glm::vec3 world_direction;
   glm::vec3 gravity_scale;
+  glm::vec3 prevPos = {0, 0, 0};
+  glm::vec3 currPos = {0, 0, 0};
+  bool hasTickState = false;
 };
 } // namespace Physics
 } // namespace Engine

@@ -286,6 +286,7 @@ void Engine::Graphics::Model::ExtractBoneWeightForVertices(
     } else {
       boneID = m_BoneInfoMap[boneName].id;
     }
+
     assert(boneID != -1);
     auto weights = mesh->mBones[boneIndex]->mWeights;
     int numWeights = mesh->mBones[boneIndex]->mNumWeights;
@@ -293,6 +294,9 @@ void Engine::Graphics::Model::ExtractBoneWeightForVertices(
     for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
       int vertexId = weights[weightIndex].mVertexId;
       float weight = weights[weightIndex].mWeight;
+      if (vertexId < 0 || static_cast<size_t>(vertexId) >= vertices.size())
+        continue;
+      SetVertexBoneData(vertices[vertexId], boneID, weight);
       assert(vertexId <= vertices.size());
       SetVertexBoneData(vertices[vertexId], boneID, weight);
     }
@@ -405,13 +409,16 @@ int Engine::Graphics::Bone::GetScaleIndex(float animationTime) {
 float Engine::Graphics::Bone::GetScaleFactor(float lastTimeStamp,
                                              float nextTimeStamp,
                                              float animationTime) {
-  float scaleFactor = 0.0f;
-  float midWayLength = animationTime - lastTimeStamp;
+
   float framesDiff = nextTimeStamp - lastTimeStamp;
-  scaleFactor = midWayLength / framesDiff;
-  return scaleFactor;
+  if (framesDiff <= 0.0f)
+    return 0.0f;
+  float midWayLength = animationTime - lastTimeStamp;
+  return std::clamp(midWayLength / framesDiff, 0.0f, 1.0f);
 }
 glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
+  if (m_NumPositions <= 0)
+    return glm::mat4(1.0f);
   if (1 == m_NumPositions)
     return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 
@@ -426,6 +433,8 @@ glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
   return glm::translate(glm::mat4(1.0f), finalPosition);
 }
 glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
+  if (m_NumRotations <= 0)
+    return glm::mat4(1.0f);
   if (1 == m_NumRotations) {
     auto rotation = glm::normalize(m_Rotations[0].orientation);
     return glm::mat4_cast(rotation);
@@ -443,6 +452,8 @@ glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
   return glm::mat4_cast(finalRotation);
 }
 glm::mat4 Engine::Graphics::Bone::InterpolateScaling(float animationTime) {
+  if (m_NumScalings <= 0)
+    return glm::mat4(1.0f);
   if (1 == m_NumScalings)
     return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 
@@ -471,8 +482,11 @@ void Engine::Graphics::Animator::UpdateAnimation(float dt) {
   m_DeltaTime = dt;
   if (m_CurrentAnimation) {
     m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
-    m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-    CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+    const float duration = m_CurrentAnimation->GetDuration();
+    if (duration > 0.0f)
+      m_CurrentTime = fmod(m_CurrentTime, duration);
+    else
+      m_CurrentTime = 0.0f;
   }
 }
 void Engine::Graphics::Animator::PlayAnimation(
@@ -607,15 +621,31 @@ Engine::Graphics::Animation::Animation(const std::string &animationPath,
   Assimp::Importer importer;
   const aiScene *scene =
       importer.ReadFile(sanitized_path, aiProcess_Triangulate);
-  assert(scene && scene->mRootNode);
-  assert(scene->mNumAnimations > (unsigned int)animationIndex);
+  if (!scene || !scene->mRootNode) {
+    throw std::runtime_error("Failed to load animation file " + sanitized_path +
+                             ": " + importer.GetErrorString());
+  }
+  if (animationIndex < 0 ||
+      static_cast<unsigned int>(animationIndex) >= scene->mNumAnimations) {
+    throw std::out_of_range("Animation index " +
+                            std::to_string(animationIndex) +
+                            " is out of range for " + sanitized_path);
+  }
   auto animation = scene->mAnimations[animationIndex];
   m_Name = animation->mName.C_Str();
   if (m_Name.empty()) {
     m_Name = "Animation_" + std::to_string(animationIndex);
   }
   m_Duration = animation->mDuration;
-  m_TicksPerSecond = animation->mTicksPerSecond;
+  if (animation->mTicksPerSecond > 0.0) {
+    m_TicksPerSecond = static_cast<float>(animation->mTicksPerSecond);
+  } else {
+    m_TicksPerSecond = 25.0f;
+    SPDLOG_LOGGER_WARN(
+        ENGINE_UTIL_LOGGER,
+        "Animation '{}' in {} has no ticks per second, assuming {}", m_Name,
+        sanitized_path, m_TicksPerSecond);
+  }
   ReadHeirarchyData(m_RootNode, scene->mRootNode);
   ReadMissingBones(animation, *model);
   SetupNodeHierarchy(m_RootNode);
@@ -662,7 +692,8 @@ void Engine::Graphics::Animation::ReadMissingBones(const aiAnimation *animation,
 }
 void Engine::Graphics::Animation::ReadHeirarchyData(AssimpNodeData &dest,
                                                     const aiNode *src) {
-  assert(src);
+  if (!src)
+    throw std::invalid_argument("ReadHeirarchyData: null node");
 
   dest.name = src->mName.data;
   for (int i = 0; i < 4; i++) {

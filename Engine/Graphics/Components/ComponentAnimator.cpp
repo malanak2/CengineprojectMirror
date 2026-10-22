@@ -32,7 +32,7 @@ void Engine::Graphics::ComponentAnimator::FromJson(json &js) {
   }
   if (js.contains("current_animation") && js["current_animation"].is_string()) {
     current_animation = js["current_animation"];
-    if (animators.contains(current_animation) || current_animation.empty()) {
+    if (animations.contains(current_animation) || current_animation.empty()) {
       SetAnimation(current_animation);
     }
   }
@@ -46,12 +46,13 @@ void Engine::Graphics::ComponentAnimator::Update() {
     animator->UpdateAnimation(GetDeltaTime());
   }
 }
-void Engine::Graphics::ComponentAnimator::Setup() {
+void Engine::Graphics::ComponentAnimator::EarlySetup() {
   auto obj = object.lock();
+  if (!obj)
+    return;
   auto renderable = obj->GetComponent<Engine::Graphics::ComponentRenderable>();
-  if (renderable && renderable->model) {
+  if (renderable && renderable->model)
     LoadAnimationsFromModel(renderable->_model_path, renderable->model);
-  }
 }
 
 void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
@@ -69,42 +70,40 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
                        importer.GetErrorString());
     return;
   }
-
+  animations.clear();
   for (unsigned int i = 0; i < scene->mNumAnimations; ++i) {
-    auto anim = std::make_shared<Animation>(sanitized_path, model, i);
+    std::shared_ptr<Animation> anim;
+    try {
+      anim = std::make_shared<Animation>(sanitized_path, model, i);
+    } catch (const std::exception &e) {
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Skipping animation {} of {}: {}",
+                          i, sanitized_path, e.what());
+      continue;
+    }
     anim->SetSockets(sockets);
-    std::string name = anim->GetName();
-    animations[name] = anim;
-    auto animator = std::make_shared<Animator>(anim);
-    animator->SetSockets(sockets);
-    animators[name] = animator;
+    animations[anim->GetName()] = anim;
   }
+  animator->SetSockets(sockets); // the animator that actually plays
 
-  if (!animations.empty()) {
+  if (!animations.empty())
     m_DefaultBoneMatrices =
         animations.begin()->second->GetDefaultBoneMatrices();
-  }
-
-  if (!current_animation.empty() && animators.contains(current_animation)) {
+  if (!current_animation.empty() && animations.contains(current_animation))
     SetAnimation(current_animation);
-  } else if (!animations.empty()) {
+  else if (!animations.empty())
     SetAnimation(animations.begin()->first);
-  }
 }
 
 void Engine::Graphics::ComponentAnimator::SetSockets(
     const std::vector<SocketAttachment> &newSockets) {
+
   sockets = newSockets;
-  for (auto &[name, anim] : animations) {
+  for (auto &[name, anim] : animations)
     anim->SetSockets(sockets);
-  }
-  for (auto &[name, anim] : animators) {
-    anim->SetSockets(sockets);
-  }
-  if (!animations.empty()) {
+  animator->SetSockets(sockets);
+  if (!animations.empty())
     m_DefaultBoneMatrices =
         animations.begin()->second->GetDefaultBoneMatrices();
-  }
 }
 
 void Engine::Graphics::ComponentAnimator::AddSocket(
@@ -134,7 +133,8 @@ glm::mat4 Engine::Graphics::ComponentAnimator::GetBoneWorldTransform(
   auto obj = object.lock();
   if (obj) {
     glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), obj->_position) *
-                            glm::mat4_cast(obj->_rotation);
+                            glm::mat4_cast(obj->_rotation) *
+                            glm::scale(glm::mat4(1.0f), obj->scale);
     return modelMatrix * localBone;
   }
   return localBone;
@@ -149,15 +149,17 @@ Engine::Graphics::ComponentAnimator::GetNodeNames() const {
 }
 
 void Engine::Graphics::ComponentAnimator::SetAnimation(std::string path) {
-  if (animators.contains(path)) {
+
+  auto it = animations.find(path);
+  if (it != animations.end()) {
     current_animation = path;
-    animator->PlayAnimation(animations[path]);
-  } else if (path == "") {
+    animator->PlayAnimation(it->second);
+  } else if (path.empty()) {
     current_animation = path;
     animator->PlayAnimation(nullptr);
   } else {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                        "Tried to set a non existent animation");
+                        "Tried to set a non existent animation: {}", path);
   }
 }
 

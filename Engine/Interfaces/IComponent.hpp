@@ -21,6 +21,12 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentJson, name, data);
 class IComponent : public IJson, public IIdentifiable {
 public:
   virtual ~IComponent() = default;
+
+  //!
+  //! @brief Pre-Setup, allways runs
+  //!
+  //!
+  virtual void EarlySetup();
   //!
   //! @brief Called on setup
   //!
@@ -41,6 +47,11 @@ public:
   //!
   //!
   virtual void End();
+  //!
+  //! @brief Post-End, allways runs
+  //!
+  //!
+  virtual void LateEnd();
 
   virtual float GetDeltaTime();
 

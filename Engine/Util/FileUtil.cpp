@@ -6,7 +6,7 @@
 #include <regex>
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC push_options
-#pragma GCC optimize ("O3")
+#pragma GCC optimize("O3")
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -66,7 +66,8 @@ std::shared_ptr<FileUtil::ImageFile> FileUtil::LoadImage(std::string path) {
   int comp = 0;
   if (stbi_info(path.c_str(), &ret->width, &ret->height, &comp)) {
     int desired = (comp == 1) ? 1 : 4;
-    ret->data = stbi_load(path.c_str(), &ret->width, &ret->height, &ret->nrChannels, desired);
+    ret->data = stbi_load(path.c_str(), &ret->width, &ret->height,
+                          &ret->nrChannels, desired);
     if (ret->data) {
       ret->nrChannels = desired;
     }
@@ -76,16 +77,34 @@ std::shared_ptr<FileUtil::ImageFile> FileUtil::LoadImage(std::string path) {
   }
   return ret;
 }
-
 std::string FileUtil::sanitizePath(std::string path) {
-  stbi_set_flip_vertically_on_load(true);
-  if (!path.starts_with("resources/") && !path.starts_with("resources\\")) {
-    path = "resources/" + path;
+  std::replace(path.begin(), path.end(), '\\', '/');
+
+  std::vector<std::string> parts;
+  size_t pos = 0;
+  while (pos <= path.size()) {
+    size_t next = path.find('/', pos);
+    if (next == std::string::npos)
+      next = path.size();
+    std::string_view seg(path.data() + pos, next - pos);
+    if (seg.empty() || seg == ".") {
+    } else if (seg == "..") {
+      if (!parts.empty())
+        parts.pop_back();
+    } else {
+      parts.emplace_back(seg);
+    }
+    pos = next + 1;
   }
-  // Everything should be in the resources directory. if it is not, then move it
-  // there!
-  path = std::regex_replace(path, std::regex("\\.\\."), ".");
-  return path;
+
+  // accept both "textures/a.png" and "resources/textures/a.png"
+  size_t first = (!parts.empty() && parts.front() == "resources") ? 1 : 0;
+  std::string result = "resources";
+  for (size_t i = first; i < parts.size(); ++i) {
+    result += '/';
+    result += parts[i];
+  }
+  return result;
 }
 FileUtil::ImageFile::~ImageFile() {
   if (data) {

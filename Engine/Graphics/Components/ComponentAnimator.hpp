@@ -13,7 +13,7 @@ public:
 
   void FromJson(json &js) override;
   void Update() override;
-  void Setup() override;
+  void EarlySetup() override;
   void LoadAnimationsFromModel(const std::string &modelPath,
                                std::shared_ptr<Model> model);
 
@@ -35,7 +35,6 @@ public:
 
   std::vector<SocketAttachment> sockets;
   std::map<std::string, std::shared_ptr<Animation>> animations;
-  std::map<std::string, std::shared_ptr<Animator>> animators;
 
 private:
   bool isPlaying = true;

@@ -21,7 +21,7 @@ public:
           bool uses_camera = false);
   ~Program();
   void SetUniform(std::string uniform, float value, bool camera);
-  void SetUniform(std::string uniform, int value);
+  void SetUniform(std::string uniform, int value, bool camera);
   void SetUniform(std::string uniform, float v1, float v2, float v3, float v4,
                   bool camera);
   void SetUniform(std::string uniform, std::vector<float> values, bool camera);
@@ -41,6 +41,6 @@ public:
   std::shared_ptr<Texture> tex = nullptr;
 
 private:
-  unsigned int ubo;
+  unsigned int ubo = 0;
 };
 } // namespace Engine::Graphics

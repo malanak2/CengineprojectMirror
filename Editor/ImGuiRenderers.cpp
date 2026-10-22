@@ -149,7 +149,7 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentAnimator, {
     if (ImGui::BeginCombo("Animation",
                           component->GetCurrentAnimation().c_str())) {
-      for (const auto &[name, anim] : component->animators) {
+      for (const auto &[name, anim] : component->animations) {
         bool isSelected = (component->GetCurrentAnimation() == name);
         if (ImGui::Selectable(name.c_str(), isSelected)) {
           component->SetAnimation(name);
@@ -271,7 +271,6 @@ void ImGuiComponentRenderer::Init() {
     ImGui::Text("VelX %f", vel.x);
     ImGui::Text("VelY %f", vel.y);
     ImGui::Text("VelZ %f", vel.z);
-    ImGui::InputFloat("Bounciness", &component->bounce);
     ImGui::InputFloat("Friction", &component->friction);
     ImGui::InputFloat("Mass", &component->mass);
     ImGui::InputFloat("Cor", &component->cor);
@@ -316,6 +315,7 @@ void ImGuiComponentRenderer::Init() {
       lastRotation = component->orientation_offset;
     }
     ImGui::InputFloat3("Size", &component->size[0]);
+    ImGui::Checkbox("Trigger", &component->isTrigger);
   });
 }
 } // namespace Editor::ImGuiR

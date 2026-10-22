@@ -1,4 +1,5 @@
 #include "ComponentPhysics.hpp"
+#include "Engine.hpp"
 #include "Object.hpp"
 #include "Physics/PhysicsSystem.hpp"
 #include <glm/vector_relational.hpp>
@@ -11,9 +12,34 @@ json ComponentPhysics::ToJson() {
       {"gravity_scale", {gravity_scale.x, gravity_scale.y, gravity_scale.z}},
       {"world_direction",
        {world_direction.x, world_direction.y, world_direction.z}},
-      {"velocities", {velocities.x, velocities.y, velocities.z}}};
+      {"velocities", {velocities.x, velocities.y, velocities.z}},
+      {"cor", cor},
+      {"mass", mass},
+      {"friction", friction}};
+}
+void Physics::ComponentPhysics::BeginTick() {
+  if (auto o = object.lock())
+    prevPos = o->_position;
 }
 
+void Physics::ComponentPhysics::EndTick() {
+  if (auto o = object.lock()) {
+    currPos = o->_position;
+    hasTickState = true;
+  }
+}
+
+glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
+  auto o = object.lock();
+  if (!o)
+    return glm::vec3(0.0f);
+  if (!hasTickState || !PhysicsSystem::interpolateRendering ||
+      !Engine::Engine::isSimulationEnabled)
+    return o->_position;
+  if (o->_position != currPos)
+    return o->_position;
+  return glm::mix(prevPos, currPos, PhysicsSystem::GetInterpolationAlpha());
+}
 void ComponentPhysics::FromJson(json &js) {
   gravity_scale.x = js["gravity_scale"][0].get<double>();
   gravity_scale.y = js["gravity_scale"][1].get<double>();
@@ -24,6 +50,9 @@ void ComponentPhysics::FromJson(json &js) {
   velocities.x = js["velocities"][0].get<double>();
   velocities.y = js["velocities"][1].get<double>();
   velocities.z = js["velocities"][2].get<double>();
+  cor = js["cor"].get<float>();
+  mass = js["mass"].get<float>();
+  friction = js["friction"].get<float>();
 }
 void ComponentPhysics::UpdatePhysics() {
   if (!processPhysics)
@@ -41,25 +70,27 @@ void ComponentPhysics::UpdatePhysics() {
   }
 }
 
-void Engine::Physics::ComponentPhysics::Setup() {
+void Physics::ComponentPhysics::EarlySetup() {
   PhysicsSystem::RegisterCPhysics(this->shared_from_this());
   world_direction = PhysicsSystem::world_direction;
   gravity_scale = PhysicsSystem::gravity_scale;
 }
 
-void Engine::Physics::ComponentPhysics::End() {
+void Physics::ComponentPhysics::LateEnd() {
   PhysicsSystem::UnregisterCPhysics(this->shared_from_this());
 }
 
-void Engine::Physics::ComponentPhysics::ApplyForces() {
+void Physics::ComponentPhysics::ApplyForces() {
   auto o = object.lock();
   if (!o)
     return;
 
   oldPos = o->_position;
   o->_position += velocities * GetDeltaTime();
+  auto obb = o->GetComponent<ComponentBoundingBox>();
+  obb->InvalidateBB();
 }
-void Engine::Physics::ComponentPhysics::ApplyImpulse(
+void Physics::ComponentPhysics::ApplyImpulse(
     std::shared_ptr<ComponentPhysics> B, std::shared_ptr<CollisionManifold> M,
     int c) {
 
@@ -86,7 +117,6 @@ void Engine::Physics::ComponentPhysics::ApplyImpulse(
     e = 0.0f;
   }
 
-  // Prevent tiny low-speed micro-impulses from causing jitter
   if (e == 0.0f && std::abs(velAlongNormal) < 0.1f) {
     glm::vec3 v1 = GetVelocities();
     glm::vec3 normVel = relativeNorm * glm::dot(v1, relativeNorm);
@@ -124,11 +154,11 @@ void Engine::Physics::ComponentPhysics::ApplyImpulse(
     }
   }
 }
-float Engine::Physics::ComponentPhysics::GetDeltaTime() {
-  return PhysicsSystem::accumulator;
+float Physics::ComponentPhysics::GetDeltaTime() {
+  return 1 / PhysicsSystem::physics_framerate;
 }
 
-void Engine::Physics::CollisionManifold::ResetCollisionManifold() {
+void Physics::CollisionManifold::ResetCollisionManifold() {
   colliding = false;
   normal = glm::vec3(0, 0, 1);
   depth = FLT_MAX;

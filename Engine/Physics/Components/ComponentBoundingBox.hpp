@@ -47,54 +47,41 @@ public:
 };
 class ComponentBBoxJson {
 public:
-  std::vector<float> position_offset; // Offset from center of object
-  std::vector<float> size;            // Unique
-  std::vector<float> orientation;     // Offset from object
+  std::vector<float> position_offset;
+  std::vector<float> size;
+  std::vector<float> orientation;
+  bool isTrigger;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentBBoxJson, position_offset, size,
-                                   orientation);
+                                   orientation, isTrigger);
 class ComponentBoundingBox
     : public IComponent,
       public std::enable_shared_from_this<ComponentBoundingBox> {
   REGISTER_CLASS(ComponentBoundingBox);
 
 public:
-  json ToJson() override {
-    ComponentBBoxJson js;
-    js.size = std::vector<float>{this->size[0], this->size[1], this->size[2]};
-    js.position_offset =
-        std::vector<float>{this->position_offset[0], this->position_offset[1],
-                           this->position_offset[2]};
-    js.orientation =
-        std::vector<float>{orientation_offset.w, orientation_offset.x,
-                           orientation_offset.y, orientation_offset.z};
-    return js;
-  }
+  json ToJson() override;
 
-  void FromJson(json &js) override {
-    if (!js.contains("size") || !js.contains("position_offset") ||
-        !js.contains("orientation")) {
-      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
-                         "An Object has saved invalid OBB - reset");
-      return;
-    }
-    ComponentBBoxJson cb = js;
-
-    size = glm::vec3(cb.size[0], cb.size[1], cb.size[2]);
-    position_offset = glm::vec3(cb.position_offset[0], cb.position_offset[1],
-                                cb.position_offset[2]);
-    orientation_offset = glm::quat(cb.orientation[0], cb.orientation[1],
-                                   cb.orientation[2], cb.orientation[3]);
-  }
-  void Setup() override;
-  void End() override;
+  void FromJson(json &js) override;
+  void EarlySetup() override;
+  void LateEnd() override;
   void Update() override;
   std::shared_ptr<OBB> GetOBB();
   bool Collides(std::shared_ptr<ComponentBoundingBox> other) {
     return GetOBB()->Collides(other->GetOBB());
   }
   void InvalidateBB() { obb = nullptr; }
+  bool isTrigger = false;
+  using ContactCallback =
+      std::function<void(std::shared_ptr<ComponentBoundingBox> other)>;
 
+  ContactCallback OnCollisionEnter;
+  ContactCallback OnCollision;
+  ContactCallback OnCollisionLeave;
+
+  ContactCallback OnTriggerEnter;
+  ContactCallback OnTrigger;
+  ContactCallback OnTriggerLeave;
   glm::vec3 position_offset = {0, 0, 0};
   glm::quat orientation_offset = glm::identity<glm::quat>();
   glm::vec3 size = {

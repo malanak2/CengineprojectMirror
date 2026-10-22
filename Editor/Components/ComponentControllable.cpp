@@ -3,7 +3,7 @@
 #include "Object.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <GLFW/glfw3.h>
-void Editor::ComponentControllable::Setup() {
+void Editor::ComponentControllable::EarlySetup() {
   auto o = object.lock();
   auto cam = o->GetComponent<Engine::Graphics::CameraComponent>();
   keybindMoveForward = Engine::InputSystem::NewKeybind(
@@ -77,4 +77,26 @@ void Editor::ComponentControllable::Setup() {
       },
       false);
   keybindControll->isEnabled = true;
+}
+void Editor::ComponentControllable::LateEnd() { ReleaseKeybinds(true); }
+Editor::ComponentControllable::~ComponentControllable() {
+  ReleaseKeybinds(false);
+}
+void Editor::ComponentControllable::ReleaseKeybinds(bool restoreMouse) {
+  if (keybindLook && keybindLook->isEnabled)
+    Engine::InputSystem::SetMouseEnabled(true);
+
+  for (auto *keybind :
+       {&keybindMoveForward, &keybindMoveBackward, &keybindMoveLeft,
+        &keybindMoveRight, &keybindControll}) {
+    if (*keybind) {
+      (*keybind)->isEnabled = false;
+      (*keybind)->f = nullptr;
+      keybind->reset();
+    }
+  }
+  if (keybindLook) {
+    keybindLook->isEnabled = false;
+    keybindLook.reset();
+  }
 }

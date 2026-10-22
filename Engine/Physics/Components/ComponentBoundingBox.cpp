@@ -261,10 +261,38 @@ bool Engine::Physics::OBB::PointInOBB(glm::vec3 point) {
   return true;
 }
 
-void Engine::Physics::ComponentBoundingBox::Setup() {
+json Engine::Physics::ComponentBoundingBox::ToJson() {
+  ComponentBBoxJson js;
+  js.size = std::vector<float>{this->size[0], this->size[1], this->size[2]};
+  js.position_offset =
+      std::vector<float>{this->position_offset[0], this->position_offset[1],
+                         this->position_offset[2]};
+  js.orientation =
+      std::vector<float>{orientation_offset.w, orientation_offset.x,
+                         orientation_offset.y, orientation_offset.z};
+  js.isTrigger = isTrigger;
+  return js;
+}
+void Engine::Physics::ComponentBoundingBox::FromJson(json &js) {
+  if (!js.contains("size") || !js.contains("position_offset") ||
+      !js.contains("orientation")) {
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                       "An Object has saved invalid OBB - reset");
+    return;
+  }
+  ComponentBBoxJson cb = js;
+
+  size = glm::vec3(cb.size[0], cb.size[1], cb.size[2]);
+  position_offset = glm::vec3(cb.position_offset[0], cb.position_offset[1],
+                              cb.position_offset[2]);
+  orientation_offset = glm::quat(cb.orientation[0], cb.orientation[1],
+                                 cb.orientation[2], cb.orientation[3]);
+  isTrigger = cb.isTrigger;
+}
+void Engine::Physics::ComponentBoundingBox::EarlySetup() {
   PhysicsSystem::RegisterBBox(this->shared_from_this());
 }
-void Engine::Physics::ComponentBoundingBox::End() {
+void Engine::Physics::ComponentBoundingBox::LateEnd() {
   PhysicsSystem::UnregisterBBox(this->shared_from_this());
 }
 void Engine::Physics::ComponentBoundingBox::Update() { InvalidateBB(); }

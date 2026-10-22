@@ -33,7 +33,7 @@ public:
   CameraComponent(json &js, std::shared_ptr<Object> object);
 
   // IComponent
-  void Setup() override;
+  void EarlySetup() override;
 
   void Update() override;
 
@@ -59,7 +59,9 @@ public:
 private:
   void recalculateMatrixes();
 
+  bool isUpToDate();
   glm::quat oldrot = {};
+  glm::vec3 oldpos = {};
   int w, h;
 };
 } // namespace Graphics

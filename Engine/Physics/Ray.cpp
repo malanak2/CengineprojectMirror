@@ -50,6 +50,7 @@ Engine::Physics::Ray::Intersects(std::shared_ptr<OBB> obb) {
     outResult.normal = glm::normalize(outResult.point - obb->position);
     return outResult;
   }
+  outResult.t = tmin;
   outResult.point = origin + direction * tmin;
   outResult.normal = glm::normalize(outResult.point - obb->position);
   return outResult;

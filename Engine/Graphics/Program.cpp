@@ -3,11 +3,11 @@
 #include "Graphics/Texture.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "spdlog/spdlog.h"
+#include "tracy/TracyOpenGL.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <stacktrace>
 #include <tracy/Tracy.hpp>
-#include "tracy/TracyOpenGL.hpp"
 #include <vector>
 using namespace Engine::Graphics;
 using json = nlohmann::json;
@@ -18,45 +18,46 @@ Program::Program(std::vector<UniformJson> uniforms_json,
   ZoneScoped;
   _uses_camera = uses_camera;
   auto logger = spdlog::get("console");
-  unsigned int program;
-  program = glCreateProgram();
-  for (int i = 0; i < shaders.size(); i++) {
-    std::shared_ptr<Shader> shad = shaders[i];
-    shaders[i] = shad;
-    if (!shad->isValid) {
+  unsigned int program = glCreateProgram();
+  std::vector<std::shared_ptr<Shader>> attached; // only these may be detached
+  for (auto &shad : shaders) {
+    if (!shad || !shad->isValid) {
       SPDLOG_LOGGER_WARN(
           logger, "Tried to add an invalid shader to a program, ignoring...");
       continue;
     }
     glAttachShader(program, shad->id);
+    attached.push_back(shad);
   }
   glLinkProgram(program);
-  int success;
-  char infoLog[512];
+
+  auto releaseShaders = [&] {
+    for (auto &shad : attached)
+      glDetachShader(program, shad->id);
+    for (auto &shad : attached)
+      if (!shad->_reusable)
+        shad->Delete();
+  };
+
+  int success = 0;
   glGetProgramiv(program, GL_LINK_STATUS, &success);
   if (!success) {
-    glGetProgramInfoLog(program, 512, NULL, infoLog);
+    int logLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+    std::string infoLog(static_cast<size_t>(std::max(logLength, 1)), '\0');
+    glGetProgramInfoLog(program, static_cast<GLsizei>(infoLog.size()), nullptr,
+                        infoLog.data());
     SPDLOG_LOGGER_ERROR(logger, "ERROR::PROGRAM::LINKING_FAILED {}", infoLog);
-    SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER,
-                           "Program has crashed. Stacktrace: {}",
-                           std::to_string(std::stacktrace::current()));
-
+    releaseShaders();
+    glDeleteProgram(program); // don't leak the failed program
     isValid = false;
     return;
   }
   isValid = true;
   id = program;
-  for (int i = 0; i < shaders.size(); i++) {
-    std::shared_ptr<Shader> shad = shaders[i];
-    glDetachShader(program, shad->id);
-    if (!shad->_reusable) {
-      shad->Delete();
-      continue;
-    }
-  }
-  unsigned int ubo;
-  glGenBuffers(1, &ubo);
-  this->ubo = ubo;
+  releaseShaders();
+  glGenBuffers(1, &this->ubo);
+  const unsigned int ubo = this->ubo;
   glBindBuffer(GL_UNIFORM_BUFFER, ubo);
   unsigned int total_size = _uses_camera ? 128 : 0;
   for (auto uniform : uniforms_json) {
@@ -86,49 +87,15 @@ Program::Program(std::vector<UniformJson> uniforms_json,
   CHECK_GL_ERROR();
 }
 
-/*
-// Link the block to binding point 0
-glUniformBlockBinding(id, blockIndex, 0);
-// Bind the buffer to binding point 0
-glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
-GLint numUniforms;
-glGetActiveUniformBlockiv(id, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
-                          &numUniforms);
-
-std::vector<GLint> uniformIndices(numUniforms);
-glGetActiveUniformBlockiv(id, blockIndex,
-                          GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-                          uniformIndices.data());
-
-std::vector<GLint> offsets(numUniforms);
-glGetActiveUniformsiv(id, numUniforms, (GLuint *)uniformIndices.data(),
-                      GL_UNIFORM_OFFSET, offsets.data());
-
-for (int i = 0; i < numUniforms; i++) {
-  char name[256];
-  GLsizei length;
-  glGetActiveUniformName(id, uniformIndices[i], 256, &length, name);
-
-  std::string uniformName(name);
-
-  // Clean up the name (remove "MaterialData." prefix if present)
-  size_t dot = uniformName.find('.');
-  if (dot != std::string::npos)
-    uniformName = uniformName.substr(dot + 1);
-
-  uniforms[uniformName] = {offsets[i]};
-  spdlog::get("console")->info("Found Uniform: {} at offset {}", uniformName,
-                               offsets[i]);
-}
-*/
-
 Program::~Program() {
   ZoneScoped;
-  glDeleteProgram(id);
-  id = 0;
-  for (auto [name, uniform] : uniforms) {
-    glDeleteBuffers(1, &(uniform)->info.id);
-    break;
+  if (id != 0) {
+    glDeleteProgram(id);
+    id = 0;
+  }
+  if (ubo != 0) {
+    glDeleteBuffers(1, &ubo);
+    ubo = 0;
   }
   uniforms.clear();
 }
@@ -147,7 +114,8 @@ void Program::SetUniform(std::string uniform, float value, bool camera) {
                   sizeof(float), &value);
   CHECK_GL_ERROR();
 }
-void Engine::Graphics::Program::SetUniform(std::string uniform, int value) {
+void Engine::Graphics::Program::SetUniform(std::string uniform, int value,
+                                           bool camera) {
   ZoneScoped;
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
@@ -155,7 +123,7 @@ void Engine::Graphics::Program::SetUniform(std::string uniform, int value) {
     return;
   }
   glBindBuffer(GL_UNIFORM_BUFFER, uniforms[uniform]->info.id);
-  glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, true),
+  glBufferSubData(GL_UNIFORM_BUFFER, GetUniformOffset(uniform, camera),
                   sizeof(float), &value);
 }
 

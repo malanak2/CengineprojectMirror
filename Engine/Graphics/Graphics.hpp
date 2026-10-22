@@ -65,6 +65,11 @@ public:
   GLFWwindow *window = nullptr;
 
   std::unique_ptr<Engine::Object> camera = nullptr;
+  static std::shared_ptr<Material> debugMaterial;
+  static unsigned int debugUBO;
+  static unsigned int debugVBO;
+  static unsigned int debugEBO;
+  static void ReleaseDebugResources();
 
 private:
   std::shared_ptr<Config> config = nullptr;

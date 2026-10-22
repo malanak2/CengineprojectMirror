@@ -22,6 +22,90 @@ float PhysicsSystem::LinearProjectionPercent = 0.45f;
 float PhysicsSystem::PenetrationSlack = 0.01f;
 int PhysicsSystem::ImpulseIteration = 7;
 float PhysicsSystem::gravity_accel = 9.834f;
+float PhysicsSystem::currentTicksPerSecond = 0;
+int PhysicsSystem::tickCount = 0;
+float PhysicsSystem::tickWindow = 0;
+
+std::map<PhysicsSystem::ContactKey, PhysicsSystem::Contact>
+    PhysicsSystem::previousContacts;
+std::map<PhysicsSystem::ContactKey, PhysicsSystem::Contact>
+    PhysicsSystem::currentContacts;
+
+bool PhysicsSystem::ReportContact(
+    const std::shared_ptr<ComponentBoundingBox> &a,
+    const std::shared_ptr<ComponentBoundingBox> &b, bool trigger) {
+  ContactKey key = std::less<const ComponentBoundingBox *>{}(a.get(), b.get())
+                       ? ContactKey{a.get(), b.get()}
+                       : ContactKey{b.get(), a.get()};
+  auto [it, inserted] = currentContacts.try_emplace(key);
+  if (inserted) {
+    it->second.a = a;
+    it->second.b = b;
+    it->second.trigger = trigger;
+  }
+  return inserted;
+}
+
+void PhysicsSystem::FireContactEvent(
+    const std::shared_ptr<ComponentBoundingBox> &self,
+    const std::shared_ptr<ComponentBoundingBox> &other, ContactEvent type,
+    bool trigger) {
+  auto &cb = trigger ? (type == ContactEvent::Enter  ? self->OnTriggerEnter
+                        : type == ContactEvent::Stay ? self->OnTrigger
+                                                     : self->OnTriggerLeave)
+                     : (type == ContactEvent::Enter  ? self->OnCollisionEnter
+                        : type == ContactEvent::Stay ? self->OnCollision
+                                                     : self->OnCollisionLeave);
+  if (cb) {
+    auto copy = cb;
+    copy(other);
+  }
+}
+
+void PhysicsSystem::DispatchContactEvents() {
+  constexpr int LEAVE_GRACE_TICKS = 3;
+
+  struct Pending {
+    std::shared_ptr<ComponentBoundingBox> a, b;
+    ContactEvent type;
+    bool trigger;
+  };
+  std::vector<Pending> pending;
+  auto add = [&](const Contact &c, ContactEvent type) {
+    auto a = c.a.lock();
+    auto b = c.b.lock();
+    if (a && b)
+      pending.push_back({a, b, type, c.trigger});
+  };
+
+  for (auto &[key, c] : currentContacts) {
+    add(c, previousContacts.contains(key) ? ContactEvent::Stay
+                                          : ContactEvent::Enter);
+  }
+  for (auto &[key, c] : previousContacts) {
+    if (currentContacts.contains(key))
+      continue;
+    Contact carried = c;
+    if (++carried.missed < LEAVE_GRACE_TICKS)
+      currentContacts.emplace(key, carried); // still counts as touching
+    else
+      add(carried, ContactEvent::Leave);
+  }
+
+  previousContacts = std::move(currentContacts);
+  currentContacts.clear();
+
+  for (auto &p : pending) {
+    FireContactEvent(p.a, p.b, p.type, p.trigger);
+    FireContactEvent(p.b, p.a, p.type, p.trigger);
+  }
+}
+
+bool PhysicsSystem::interpolateRendering = true;
+float PhysicsSystem::GetInterpolationAlpha() {
+  const float step = 1.0f / physics_framerate;
+  return std::clamp(accumulator / step, 0.0f, 1.0f);
+}
 
 void Engine::Physics::PhysicsSystem::RegisterCPhysics(
     std::shared_ptr<ComponentPhysics> c) {
@@ -53,6 +137,21 @@ void Engine::Physics::PhysicsSystem::UnregisterBBox(
     return;
   }
   boundingBoxes.erase(pos);
+  std::vector<std::pair<std::shared_ptr<ComponentBoundingBox>, bool>> leaving;
+  for (auto it = previousContacts.begin(); it != previousContacts.end();) {
+    if (it->first.first == c.get() || it->first.second == c.get()) {
+      auto a = it->second.a.lock();
+      auto b = it->second.b.lock();
+      auto other = (a == c) ? b : a;
+      if (other)
+        leaving.push_back({other, it->second.trigger});
+      it = previousContacts.erase(it); // also stops a reused address matching
+    } else {
+      ++it;
+    }
+  }
+  for (auto &[other, trigger] : leaving)
+    FireContactEvent(other, c, ContactEvent::Leave, trigger);
 }
 void PhysicsSystem::ApplyStaticImpulse(std::shared_ptr<ComponentPhysics> body,
                                        std::shared_ptr<CollisionManifold> M,
@@ -84,17 +183,30 @@ void PhysicsSystem::ApplyStaticImpulse(std::shared_ptr<ComponentPhysics> body,
 }
 
 void Engine::Physics::PhysicsSystem::ProcessPhysics() {
-  accumulator += std::min(Engine::GetDeltaTime(), 0.25f);
+  const float frameDelta = Engine::GetDeltaTime();
+  accumulator += std::min(frameDelta, 0.25f);
   float physdelta = 1 / physics_framerate;
   while (accumulator >= physdelta) {
     ZoneScoped;
     phystick();
     accumulator -= physdelta;
+    ++tickCount;
+  }
+
+  tickWindow += frameDelta;
+  if (tickWindow >= 0.5f) {
+    currentTicksPerSecond = tickCount / tickWindow;
+    tickCount = 0;
+    tickWindow = 0;
   }
 }
 void Engine::Physics::PhysicsSystem::phystick() {
   ZoneScoped;
+  for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
+    cphysics[i]->BeginTick();
+  }
   collisions.clear();
+  currentContacts.clear();
 
   for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
     cphysics[i]->UpdatePhysics();
@@ -124,6 +236,14 @@ void Engine::Physics::PhysicsSystem::phystick() {
       auto result = m1->FindCollisionFeatures(m2);
 
       if (result && result->colliding) {
+        const bool trigger =
+            physBBoxComp->isTrigger || boundingBoxes[j]->isTrigger;
+        // Deduplicate
+        if (!ReportContact(physBBoxComp, boundingBoxes[j], trigger)) {
+          continue;
+        }
+        if (trigger)
+          continue;
         std::shared_ptr<ComponentPhysics> otherPhysics = nullptr;
         auto otherObj = boundingBoxes[j]->object.lock();
         if (otherObj) {
@@ -150,7 +270,6 @@ void Engine::Physics::PhysicsSystem::phystick() {
       }
     }
   }
-
   for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
     cphysics[i]->ApplyForces();
   }
@@ -197,4 +316,8 @@ void Engine::Physics::PhysicsSystem::phystick() {
       }
     }
   }
+  for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
+    cphysics[i]->EndTick();
+  }
+  DispatchContactEvents();
 }

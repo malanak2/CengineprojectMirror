@@ -292,8 +292,8 @@ private:
   void ReadHeirarchyData(AssimpNodeData &dest, const aiNode *src);
   void SetupNodeHierarchy(AssimpNodeData &node);
   std::string m_Name;
-  float m_Duration;
-  int m_TicksPerSecond;
+  float m_Duration = 0;
+  float m_TicksPerSecond = 25.0f;
   std::vector<Bone> m_Bones;
   AssimpNodeData m_RootNode;
   std::map<std::string, BoneInfo> m_BoneInfoMap;

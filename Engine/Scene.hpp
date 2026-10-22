@@ -41,6 +41,12 @@ public:
            std::shared_ptr<SceneObject> self,
            std::shared_ptr<SceneObject> parent = nullptr);
   //!
+  //! @brief Calls early setup on itself and then its children
+  //!
+  //!
+  void EarlySetup();
+
+  //!
   //! @brief Calls setup on itself and then its children
   //!
   //!
@@ -51,10 +57,15 @@ public:
   //!
   void Update();
   //!
-  //! @brief Calls end on itself
+  //! @brief Calls end on itself and its children
   //!
   //!
   void End();
+  //!
+  //! @brief Calls late end on itself and its children
+  //!
+  //!
+  void LateEnd();
 };
 
 class SceneJson {

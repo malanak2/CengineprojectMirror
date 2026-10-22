@@ -43,9 +43,33 @@ public:
   static void ProcessPhysics();
   static float accumulator;
   static float physics_framerate;
+  static float currentTicksPerSecond;
+  static bool interpolateRendering;
+  static float GetInterpolationAlpha();
+  struct Contact {
+    std::weak_ptr<ComponentBoundingBox> a, b;
+    bool trigger = false;
+    int missed = 0; // consecutive ticks without contact (leave grace)
+  };
+
+  using ContactKey =
+      std::pair<const ComponentBoundingBox *, const ComponentBoundingBox *>;
+  enum class ContactEvent { Enter, Stay, Leave };
 
 private:
   static void phystick();
+  static int tickCount;
+  static float tickWindow;
+  static std::map<ContactKey, Contact> previousContacts;
+  static std::map<ContactKey, Contact> currentContacts;
+  static bool ReportContact(const std::shared_ptr<ComponentBoundingBox> &a,
+                            const std::shared_ptr<ComponentBoundingBox> &b,
+                            bool trigger);
+  static void DispatchContactEvents();
+  static void
+  FireContactEvent(const std::shared_ptr<ComponentBoundingBox> &self,
+                   const std::shared_ptr<ComponentBoundingBox> &other,
+                   ContactEvent type, bool trigger);
 };
 } // namespace Physics
 } // namespace Engine

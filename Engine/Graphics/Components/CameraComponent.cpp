@@ -13,7 +13,7 @@ namespace Graphics {
 
 // TODO:
 using json = nlohmann::json;
-void CameraComponent::Setup() {
+void CameraComponent::EarlySetup() {
   ZoneScoped;
   auto obj = object.lock();
   if (!obj)
@@ -22,17 +22,10 @@ void CameraComponent::Setup() {
   w = Engine::Engine::width;
   h = Engine::Engine::height;
   oldrot = obj->_rotation;
+  oldpos = obj->_position;
 }
 
-void CameraComponent::Update() {
-  ZoneScoped;
-  auto obj = object.lock();
-  if (!obj)
-    return;
-  if (oldrot != obj->_rotation || w != Engine::Engine::width ||
-      h != Engine::Engine::height)
-    recalculateMatrixes();
-}
+void CameraComponent::Update() {}
 
 CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
   ZoneScoped;
@@ -44,7 +37,6 @@ CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
 
 CameraComponent::~CameraComponent() {}
 
-// TODO:
 void CameraComponent::FromJson(json &js) {
   CameraComponentJson ccjs = js;
   far = ccjs.far;
@@ -61,12 +53,23 @@ CameraComponent::CameraComponent(json &js, std::shared_ptr<Object> object) {
   this->object = object;
   FromJson(js);
 } //
-glm::mat4 CameraComponent::GetProjMatrix() { return projmat; }
-glm::mat4 CameraComponent::GetViewMatrix() { return viewmat; }
+glm::mat4 CameraComponent::GetProjMatrix() {
+  if (!isUpToDate())
+    recalculateMatrixes();
+  return projmat;
+}
+glm::mat4 CameraComponent::GetViewMatrix() {
+  if (!isUpToDate())
+    recalculateMatrixes();
+  return viewmat;
+}
+
 void CameraComponent::recalculateMatrixes() {
   ZoneScoped;
   auto obj = object.lock();
   if (!obj)
+    return;
+  if (Engine::Engine::width <= 0 || Engine::Engine::height <= 0)
     return;
   glm::vec3 frontnormal = glm::normalize(obj->_rotation * glm::vec3(0, 0, -1));
   this->front = frontnormal;
@@ -77,6 +80,17 @@ void CameraComponent::recalculateMatrixes() {
       (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
   viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
                         glm::vec3(0, 1, 0));
+  oldrot = obj->_rotation;
+  oldpos = obj->_position;
+  w = Engine::Engine::width;
+  h = Engine::Engine::height;
+}
+bool CameraComponent::isUpToDate() {
+  auto obj = object.lock();
+  if (!obj)
+    return false;
+  return oldrot == obj->_rotation && oldpos == obj->_position &&
+         w == Engine::Engine::width && h == Engine::Engine::height;
 }
 
 } // namespace Graphics

@@ -11,6 +11,9 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
                bool reusable) {
 
   ZoneScoped;
+
+  this->type = type;
+  this->path = path;
   if (!GLAD_GL_VERSION_4_6) {
     SPDLOG_LOGGER_ERROR(
         ENGINE_UTIL_LOGGER,
@@ -19,12 +22,14 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     return;
   }
   std::vector<unsigned char> spirv;
+
   SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading shader at {}", path);
   if (FileUtil::LoadBinary(path, &spirv) != 0) {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Failed to load spirv at {}", path);
     isValid = false;
     return;
   }
+
   switch (type) {
   case Vertex: {
     unsigned int vertexShader;
@@ -52,8 +57,6 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     id = vertexShader;
     isValid = true;
     _reusable = reusable;
-    this->type = type;
-    this->path = path;
     break;
   }
   case Fragment: {
@@ -82,8 +85,6 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     id = fragShader;
     isValid = true;
     _reusable = reusable;
-    this->type = type;
-    this->path = path;
     break;
   }
   default: {

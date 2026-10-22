@@ -117,13 +117,13 @@ json ComponentRenderable::ToJson() {
   jb.data = j;
   return jb;
 }
-void Engine::Graphics::ComponentRenderable::Setup() {
+void Engine::Graphics::ComponentRenderable::EarlySetup() {
   if (!material)
     return;
   material->renderableObjects.push_back(shared_from_this());
 }
 
-void Engine::Graphics::ComponentRenderable::End() {
+void Engine::Graphics::ComponentRenderable::LateEnd() {
   if (!material)
     return;
   material->renderableObjects.erase(

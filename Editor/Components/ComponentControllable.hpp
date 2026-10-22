@@ -16,7 +16,9 @@ public:
     movespeed = js["movespeed"].get<float>();
     sensitivity = js["sensitivity"].get<float>();
   }
-  void Setup() override;
+  void EarlySetup() override;
+  void LateEnd() override;
+  ~ComponentControllable() override;
   float movespeed = 1;
   float sensitivity = 1;
   bool FollowsPausedExecution() override { return false; }
@@ -31,5 +33,6 @@ private:
   int oldx = 0, oldy = 0;
   float currentPitch = 0.0f;
   bool isNew = true;
+  void ReleaseKeybinds(bool restoreMouse);
 };
 } // namespace Editor

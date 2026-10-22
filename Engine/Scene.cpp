@@ -76,6 +76,12 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
   }
   return camcomp;
 }
+void SceneObject::EarlySetup() {
+  instance->EarlySetup();
+  for (auto var : this->Children) {
+    var->EarlySetup();
+  }
+}
 
 void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
   auto oldParent = this->Parent.lock();
@@ -149,15 +155,21 @@ void Scene::Instantiate(std::shared_ptr<Object> object,
   object->scene = shared_from_this();
   object->sceneobject = so;
   so->instance = object;
-  so->Children = {};
+  so->EarlySetup();
+  so->Setup();
 }
 void Scene::RemoveObject(std::shared_ptr<SceneObject> so) {
   so->End();
+  so->LateEnd();
   auto pos = std::find(objects.begin(), objects.end(), so);
   if (pos != objects.end()) {
     objects.erase(pos);
+    auto chls = std::vector<std::shared_ptr<SceneObject>>{};
     for (auto ch : so->Children) {
       objects.insert(objects.end(), ch);
+      chls.push_back(ch);
+    }
+    for (auto ch : chls) {
       ch->SetParent(nullptr);
     }
     return;
@@ -167,16 +179,23 @@ void Scene::RemoveObject(std::shared_ptr<SceneObject> so) {
   if (loc != parent->Children.end()) {
     parent->Children.erase(loc);
   }
+  auto chls = std::vector<std::shared_ptr<SceneObject>>{};
   for (auto child : so->Children) {
     child->SetParent(parent);
+  }
+  for (auto ch : chls) {
+
+    ch->SetParent(parent);
   }
 }
 
 void Scene::RemoveObjectCascade(std::shared_ptr<SceneObject> so) {
-  for (auto child : so->Children) {
+  auto ch = std::vector<std::shared_ptr<SceneObject>>(so->Children);
+  for (auto child : ch) {
     RemoveObjectCascade(child);
   }
   so->End();
+  so->LateEnd();
   if (auto p = so->Parent.lock()) {
     auto pos = std::find(p->Children.begin(), p->Children.end(), so);
     if (pos == p->Children.end()) {
@@ -194,6 +213,9 @@ void Scene::RemoveObjectCascade(std::shared_ptr<SceneObject> so) {
 }
 
 void Scene::Setup() {
+  for (auto var : this->objects) {
+    var->EarlySetup();
+  }
   for (auto var : this->objects) {
     var->Setup();
   }
@@ -213,11 +235,16 @@ void Scene::Update() {
 void SceneObject::Update() {
   instance->Update();
   for (auto var : this->Children) {
-
     var->Update();
   }
 }
 void SceneObject::End() { instance->End(); }
+void SceneObject::LateEnd() {
+  instance->LateEnd();
+  for (auto var : this->Children) {
+    var->LateEnd();
+  }
+}
 
 static std::shared_ptr<Object>
 FindObjectRecursive(const std::shared_ptr<SceneObject> &so,

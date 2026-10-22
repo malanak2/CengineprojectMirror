@@ -93,7 +93,7 @@ Engine::Graphics::Texture::Texture(std::string json_path) {
       case nearest:
         if (mipmap) {
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                          GL_LINEAR_MIPMAP_NEAREST);
+                          GL_NEAREST_MIPMAP_NEAREST);
         } else {
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }

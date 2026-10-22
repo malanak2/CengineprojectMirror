@@ -59,7 +59,7 @@ void Engine::LoadScene(std::string path) {
   auto e = Engine::instance;
   auto config = Config::inst;
   if (e == nullptr || config == nullptr) {
-    throw new std::logic_error("Engine or config is not initialized!");
+    throw std::logic_error("Engine or config is not initialized!");
   }
   try {
     e->current_scene = Scene::Load(path);
@@ -93,7 +93,8 @@ void Engine::LoadScene(std::string path) {
     object_default->fromParams("Test object", {com_render});
     e->current_scene->Instantiate(object_default);
     std::string scene_json = e->current_scene->ToJson().dump();
-    FileUtil::SaveFile(path, &scene_json);
+    // Probably better to not save automatically
+    // FileUtil::SaveFile(path, &scene_json);
 #endif
   }
   CHECK_GL_ERROR();

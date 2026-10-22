@@ -43,17 +43,22 @@ public:
   //!
   //! @_position The position of the object
   //!
-  glm::vec3 _position;
+  glm::vec3 _position = {0, 0, 0};
   //!
   //! @_rotation The rotation of the object
   //!
-  glm::quat _rotation;
-  glm::vec3 scale;
+  glm::quat _rotation = {1, 0, 0, 0};
+  glm::vec3 scale = {1, 1, 1};
   Object(std::string path, std::shared_ptr<Scene> scene);
 
   Object();
   Object(std::shared_ptr<Scene> scene);
   std::string _name;
+  //!
+  //! @brief Calls EarlySetup on components
+  //!
+  //!
+  void EarlySetup();
   //!
   //! @brief Calls setup on components
   //!
@@ -75,6 +80,11 @@ public:
   //!
   //!
   void End();
+  //!
+  //! @brief Calls LateEnd on components
+  //!
+  //!
+  void LateEnd();
   void Save();
   void Load();
   json ToJson() override;
@@ -87,7 +97,7 @@ public:
   void fromParams(std::string name,
                   std::vector<std::shared_ptr<IComponent>> comps = {},
                   std::vector<float> position = {0, 0, 0},
-                  std::vector<float> rotation = {0, 0, 0, 0},
+                  std::vector<float> rotation = {1, 0, 0, 0},
                   glm::vec3 scale = {1, 1, 1});
   //!
   //! @brief Adds component to object unless already present
@@ -116,6 +126,7 @@ public:
       return;
     }
     component->SetObject(shared_from_this());
+    component->EarlySetup();
     component->Setup();
     _components[key] = component;
   }
@@ -140,6 +151,7 @@ public:
     }
     auto component = GetComponent(key);
     component->End();
+    component->LateEnd();
     _components.erase(_components.find(key));
   }
   //!

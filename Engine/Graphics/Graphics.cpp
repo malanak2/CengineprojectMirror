@@ -48,6 +48,32 @@ std::unordered_map<std::string, std::shared_ptr<Material>> Main::materials = {};
 std::unordered_map<std::string, std::shared_ptr<Texture>> Main::textures = {};
 std::shared_ptr<Main> Main::instance = std::make_shared<Main>();
 
+std::shared_ptr<Material> Main::debugMaterial = nullptr;
+unsigned int Main::debugUBO = 0;
+unsigned int Main::debugVBO = 0;
+unsigned int Main::debugEBO = 0;
+
+void Main::ReleaseDebugResources() {
+  if (debugMaterial) {
+    if (debugMaterial->vao != 0) {
+      glDeleteVertexArrays(1, &debugMaterial->vao);
+      debugMaterial->vao = 0;
+    }
+    debugMaterial.reset();
+  }
+  if (debugUBO != 0) {
+    glDeleteBuffers(1, &debugUBO);
+    debugUBO = 0;
+  }
+  if (debugVBO != 0) {
+    glDeleteBuffers(1, &debugVBO);
+    debugVBO = 0;
+  }
+  if (debugEBO != 0) {
+    glDeleteBuffers(1, &debugEBO);
+    debugEBO = 0;
+  }
+}
 int Main::Init(std::shared_ptr<Config> config) {
 
   ZoneScoped;
@@ -179,13 +205,32 @@ int Main::Tick(
 }
 
 void Main::Terminate() {
+  if (auto engine = Engine::Engine::instance; engine && engine->current_scene) {
+    std::function<void(const std::shared_ptr<SceneObject> &)> endAll =
+        [&](const std::shared_ptr<SceneObject> &so) {
+          if (!so)
+            return;
+          auto children = so->Children;
+          for (auto &child : children)
+            endAll(child);
+          so->End();
+        };
+    auto roots = engine->current_scene->objects;
+    for (auto &so : roots)
+      endAll(so);
+    engine->current_scene.reset();
+  }
+  ReleaseDebugResources();
   materials.clear();
+  textures.clear();
+  FallbackTexture.reset();
+  Model::models.clear();
   vertexShaders.clear();
   fragmentShaders.clear();
-  for (auto f : *instance->terminate) {
+  for (auto f : *instance->terminate)
     f();
-  }
   glfwDestroyWindow(window);
+  window = nullptr;
   glfwTerminate();
 }
 
@@ -204,13 +249,24 @@ void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
 void Main::RenderBBOS() {
   if (Config::inst->graphics->renderBoundingBox) {
     ZoneScopedN("BoundingBoxRender");
-    static auto debugmat = Material::Create("materials/bounding_box.json");
-
-    static GLuint combinedUBO = 0;
-    if (combinedUBO == 0) {
-      glGenBuffers(1, &combinedUBO);
-      glBindBuffer(GL_UNIFORM_BUFFER, combinedUBO);
-      glBufferData(GL_UNIFORM_BUFFER, 144, nullptr, GL_DYNAMIC_DRAW);
+    if (!debugMaterial)
+      debugMaterial = Material::Create("materials/bounding_box.json");
+    auto &debugmat = debugMaterial;
+    if (!debugmat || !debugmat->usable) {
+      static bool warned = false;
+      if (!warned) {
+        warned = true;
+        SPDLOG_LOGGER_ERROR(
+            ENGINE_UTIL_LOGGER,
+            "Bounding box material is not usable (are the shaders generated?)");
+      }
+      return;
+    }
+    if (debugUBO == 0) {
+      glGenBuffers(1, &debugUBO);
+      glBindBuffer(GL_UNIFORM_BUFFER, debugUBO);
+      glBindBuffer(GL_UNIFORM_BUFFER, debugUBO);
+      glBufferData(GL_UNIFORM_BUFFER, 160, nullptr, GL_DYNAMIC_DRAW);
       glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
@@ -253,20 +309,27 @@ void Main::RenderBBOS() {
       auto proj = scene->camera->GetProjMatrix();
       auto view = scene->camera->GetViewMatrix();
       float color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+      float color_trigger[4] = {0.0f, 0.0f, 1.0f, 1.0f};
 
-      glBindBuffer(GL_UNIFORM_BUFFER, combinedUBO);
+      glBindBuffer(GL_UNIFORM_BUFFER, debugUBO);
       glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
                       glm::value_ptr(proj));
       glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
                       glm::value_ptr(view));
       glBufferSubData(GL_UNIFORM_BUFFER, 128, sizeof(color), color);
+      glBufferSubData(GL_UNIFORM_BUFFER, 144, sizeof(color_trigger),
+                      color_trigger);
 
-      glBindBufferBase(GL_UNIFORM_BUFFER, 0, combinedUBO);
+      glBindBufferBase(GL_UNIFORM_BUFFER, 0, debugUBO);
       glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
-
-    std::vector<glm::mat4> obbMatrices;
-    obbMatrices.reserve(Physics::PhysicsSystem::boundingBoxes.size());
+    struct InstanceData {
+      glm::mat4 modelMatrix;
+      uint32_t isTrigger;
+      float padding[3];
+    };
+    std::vector<InstanceData> instances;
+    instances.reserve(Physics::PhysicsSystem::boundingBoxes.size());
 
     for (auto bb : Physics::PhysicsSystem::boundingBoxes) {
       if (!bb)
@@ -275,13 +338,18 @@ void Main::RenderBBOS() {
       if (!obb)
         continue;
       glm::mat4 translation = glm::translate(glm::mat4(1.0f), obb->position);
-      glm::mat4 rotation = glm::transpose(glm::mat4(obb->orientation));
+      glm::mat4 rotation = glm::mat4(obb->orientation);
       glm::mat4 scale = glm::scale(glm::mat4(1.0f), obb->size);
-
-      obbMatrices.push_back(translation * rotation * scale);
+      InstanceData data{};
+      data.modelMatrix = translation * rotation * scale;
+      data.isTrigger = bb->isTrigger ? 1 : 0;
+      data.padding[0] = 0;
+      data.padding[1] = 0;
+      data.padding[2] = 0;
+      instances.push_back(data);
     }
 
-    if (!obbMatrices.empty()) {
+    if (!instances.empty()) {
       if (debugmat->instanceSSBO == 0) {
         glGenBuffers(1, &debugmat->instanceSSBO);
       }
@@ -289,14 +357,14 @@ void Main::RenderBBOS() {
       glBindBuffer(GL_SHADER_STORAGE_BUFFER, debugmat->instanceSSBO);
       // Allocate/reallocate storage for all bounding boxes in this frame
       glBufferData(GL_SHADER_STORAGE_BUFFER,
-                   obbMatrices.size() * sizeof(glm::mat4), obbMatrices.data(),
+                   instances.size() * sizeof(InstanceData), instances.data(),
                    GL_DYNAMIC_DRAW);
       glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, debugmat->instanceSSBO);
       glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
       glBindVertexArray(debugmat->vao);
       glDrawElementsInstanced(GL_LINES, 24, GL_UNSIGNED_INT, nullptr,
-                              static_cast<GLsizei>(obbMatrices.size()));
+                              static_cast<GLsizei>(instances.size()));
       glBindVertexArray(0);
     }
   }

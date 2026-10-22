@@ -3,6 +3,7 @@
 #include "Graphics.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
+#include "Graphics/Uniforms/UniformFloatVector.hpp"
 #include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Physics/PhysicsSystem.hpp"
 #include "Program.hpp"
@@ -107,6 +108,24 @@ void Material::SetupMaterial() {
   program->Setup();
 }
 
+std::string UniformSignature(const ComponentRenderable &r) {
+  std::string sig;
+  for (const auto &[key, val] : r._uniforms) {
+    if (key == "camera" || key == "translate")
+      continue;
+    sig += key;
+    sig += '\0';
+    if (auto v = std::dynamic_pointer_cast<UniformFloatVector>(val)) {
+      sig.append(reinterpret_cast<const char *>(v->data.data()),
+                 v->data.size() * sizeof(float));
+    } else {
+      auto addr = reinterpret_cast<std::uintptr_t>(val.get());
+      sig.append(reinterpret_cast<const char *>(&addr), sizeof(addr));
+    }
+    sig += '\0';
+  }
+  return sig;
+}
 void Material::RenderObjects() {
   ZoneScopedN("Material::RenderObjects");
   TracyGpuZone("Material::RenderObjects");
@@ -133,32 +152,44 @@ void Material::RenderObjects() {
     }
   }
 
-  std::map<std::shared_ptr<Model>,
-           std::vector<std::shared_ptr<ComponentRenderable>>>
-      batches;
+  using BatchKey = std::tuple<std::shared_ptr<Model>, std::vector<bool>,
+                              std::string, const void *>;
+  std::map<BatchKey, std::vector<std::shared_ptr<ComponentRenderable>>> batches;
   {
     ZoneScopedN("BatchingObjects");
-    for (auto element : this->renderableObjects) {
-      if (element && element->model) {
-        batches[element->model].push_back(element);
+    for (auto &element : this->renderableObjects) {
+      if (!element || !element->model)
+        continue;
+      const void *animatorKey = nullptr;
+      if (uses_animations) {
+        if (auto obj = element->object.lock())
+          animatorKey = obj->GetComponent<ComponentAnimator>().get();
       }
+      batches[BatchKey{element->model, element->GetEnabledMeshes(),
+                       UniformSignature(*element), animatorKey}]
+          .push_back(element);
     }
   }
 
-  for (auto &[model, instances] : batches) {
+  for (auto &[batchKey, instances] : batches) {
+    const auto &model = std::get<0>(batchKey);
+    const std::vector<bool> &enabledMeshes = std::get<1>(batchKey);
     ZoneScopedN("ModelBatch");
     ZoneText(model->path.c_str(), model->path.size());
     TracyGpuZoneTransient(__gpu_batch_zone, model->path.c_str(), true);
     if (instances.empty())
       continue;
-
     std::vector<glm::mat4> transforms;
     transforms.reserve(instances.size());
     for (auto &inst : instances) {
       glm::mat4 transform = glm::mat4(1.0f);
       auto obj = inst->object.lock();
       if (obj) {
-        glm::mat4 T = glm::translate(glm::mat4(1.0f), obj->_position);
+        glm::vec3 position = obj->_position;
+        if (auto phys = obj->GetComponent<Physics::ComponentPhysics>())
+          position = phys->GetRenderPosition();
+
+        glm::mat4 T = glm::translate(glm::mat4(1.0f), position);
         glm::mat4 R = glm::mat4_cast(obj->_rotation);
         glm::mat4 S = glm::scale(glm::mat4(1.0f), obj->scale);
 
@@ -228,10 +259,6 @@ void Material::RenderObjects() {
     {
       ZoneScopedN("DrawModel");
       TracyGpuZone("DrawModel");
-      std::vector<bool> enabledMeshes;
-      if (!instances.empty() && instances[0]) {
-        enabledMeshes = instances[0]->GetEnabledMeshes();
-      }
       model->DrawInstanced(*program,
                            static_cast<unsigned int>(transforms.size()),
                            enabledMeshes);

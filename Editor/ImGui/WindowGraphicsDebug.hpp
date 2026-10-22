@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Graphics/Graphics.hpp"
-#include "Graphics/Texture.hpp"
 #include "ImGui/Window.hpp"
-#include "Physics/PhysicsSystem.hpp"
 #include <imgui.h>
 namespace Editor {
 class WindowGraphicsDebug : public Window {
