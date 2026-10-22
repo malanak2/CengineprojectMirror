@@ -87,11 +87,13 @@ namespace Engine::Graphics {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_SAMPLES, 4);
-
-        SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (800x600, title: {})...", config->window->title);
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+        SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (Fullscreen, title: {})...", config->window->title);
         instance->window = glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
-        Engine::Engine::width = 800;
-        Engine::Engine::height = 600;
+
+        glfwGetWindowSize(instance->window, &Engine::Engine::width, &Engine::Engine::height);
+
+        SPDLOG_LOGGER_INFO(logger, "Glfw window created, {}x{}", Engine::Engine::width, Engine::Engine::height);
         if (instance->window == NULL) {
             SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
             glfwTerminate();
@@ -116,7 +118,7 @@ namespace Engine::Graphics {
         }
 
         TracyGpuContext;
-        glViewport(0, 0, 800, 600);
+        glViewport(0, 0, Engine::Engine::width, Engine::Engine::height);
         glfwSetFramebufferSizeCallback(instance->window, framebuffer_size_callback);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
