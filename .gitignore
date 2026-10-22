@@ -9,3 +9,6 @@ Engine/glad
 /Util/External/stb/stb_image.h
 /doxygen/html
 *.tracy
+/.cache/clangd/index
+/.clang-tidy
+/.clang-format

@@ -1,7 +1,18 @@
 cmake_minimum_required(VERSION 4.2)
+if(WIN32)
+add_compile_options("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=")
+set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\malan\\Documents\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" CACHE STRING "")
+set(VCPKG_TARGET_TRIPLET "x64-mingw-dynamic")
+set(VCPKG_APPLOCAL_DEPS ON)
+
+include(C:\\Users\\malan\\Documents\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake)
+
+list(APPEND CMAKE_IGNORE_PATH "C:/msys64")
+endif()
 project(cengine)
 include(FetchContent)
 set(CMAKE_CXX_STANDARD 26)
+
 
 find_package(spdlog CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -74,7 +85,10 @@ add_subdirectory(Util)
 
 set_target_properties(cengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengine PUBLIC cengineutil spdlog::spdlog )
-target_link_libraries(cengine PRIVATE  glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm stdc++exp assimp::assimp)
+target_link_libraries(cengine PUBLIC  glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm assimp::assimp)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_link_libraries(cengine PUBLIC stdc++exp)
+endif()
 if (PROFILE)
   target_link_libraries(cengine PUBLIC Tracy::TracyClient)
 endif()
