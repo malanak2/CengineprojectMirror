@@ -181,7 +181,7 @@ static const std::vector<glm::mat4> s_defaultBoneMatrices(500, glm::mat4(1.0f));
 
 const std::vector<glm::mat4> &
 Engine::Graphics::ComponentAnimator::GetFinalBoneMatrices() const {
-  if (animator) {
+  if (animator && !current_animation.empty()) {
     return animator->GetFinalBoneMatrices();
   }
   if (!m_DefaultBoneMatrices.empty()) {

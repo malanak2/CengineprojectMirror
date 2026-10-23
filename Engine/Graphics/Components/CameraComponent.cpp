@@ -29,13 +29,15 @@ void CameraComponent::EarlySetup() {
 
 void CameraComponent::Update() {}
 glm::mat4 CameraComponent::GetFrustumMatrix() {
+  const glm::mat4 proj = GetProjMatrix();
+  const glm::mat4 view = GetViewMatrix();
   if (w <= 0 || h <= 0 || near <= 0.0f || far <= near) {
-    return glm::mat4(1.0f); // Return identity fallback to avoid NaNs
+    return {1.0f};
   }
-  glm::mat4 viewProj = GetProjMatrix() * GetViewMatrix();
+  glm::mat4 viewProj = proj * view;
   float det = glm::determinant(viewProj);
   if (glm::abs(det) < 1e-6f) {
-    return glm::mat4(1.0f);
+    return {1.0f};
   }
   return glm::inverse(viewProj);
 }

@@ -139,7 +139,7 @@ public:
   //!
   //!
   template <typename T = IComponent> void AddComponent() {
-    std::string key = T::GetNameS();
+    std::string key(T::GetNameS());
     AddComponent(key);
   }
   //!
@@ -170,7 +170,7 @@ public:
   //!
   //!
   template <typename T = IComponent> void RemoveComponent() {
-    std::string key = T::GetNameS();
+    std::string key(T::GetNameS());
     RemoveComponent(key);
   }
   //!

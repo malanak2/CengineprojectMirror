@@ -45,8 +45,6 @@ void Editor::ComponentControllable::EarlySetup() {
           oldx = x;
           oldy = y;
           isNew = false;
-          // pick up whatever rotation the object has now (inspector edits,
-          // etc.)
           glm::vec3 f = o->GetLocalRotation() * glm::vec3(0, 0, -1);
           this->yaw = glm::degrees(std::atan2(-f.x, -f.z));
           currentPitch = glm::degrees(std::asin(glm::clamp(f.y, -1.0f, 1.0f)));
@@ -92,11 +90,10 @@ void Editor::ComponentControllable::ReleaseKeybinds(bool restoreMouse) {
     if (*keybind) {
       (*keybind)->isEnabled = false;
       (*keybind)->f = nullptr;
-      keybind->reset();
     }
   }
   if (keybindLook) {
     keybindLook->isEnabled = false;
-    keybindLook.reset();
+    keybindLook->ResetFunc();
   }
 }

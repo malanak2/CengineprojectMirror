@@ -286,7 +286,6 @@ void Main::RenderBBOS() {
       float vertices[] = {-1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f, 1.0f,
                           -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
                           -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f, 1.0f};
-
       unsigned int indices[] = {
           0, 1, 1, 2, 2, 3, 3, 0, // Bottom face
           4, 5, 5, 6, 6, 7, 7, 4, // Top face
@@ -340,7 +339,7 @@ void Main::RenderBBOS() {
     std::vector<InstanceData> instances;
     instances.reserve(Physics::PhysicsSystem::boundingBoxes.size() + 1);
 
-    for (auto bb : Physics::PhysicsSystem::boundingBoxes) {
+    for (const auto &bb : Physics::PhysicsSystem::boundingBoxes) {
       if (!bb)
         continue;
       auto obb = bb->GetOBB();

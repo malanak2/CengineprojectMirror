@@ -165,6 +165,7 @@ public:
                         int maction, int mmods, double xscrolloffset,
                         double yscrolloffset, double positionX,
                         double positionY) = 0;
+  virtual void ResetFunc() = 0;
   bool operator==(const KeybindMouse &rhs) const { return name == rhs.name; };
   virtual KeybindMouseEventType GetType() = 0;
 };
@@ -190,6 +191,7 @@ public:
   void FromJson(json &js) override;
 
   MOVE_TYPE mtype = NORMAL;
+  void ResetFunc() override { func = nullptr; }
   // xpos, ypos
   std::function<void(double, double)> func;
   void CallFunc(double xposmouse, double yposmouse, int mbutton, int maction,
@@ -214,6 +216,7 @@ public:
   json ToJson() override;
   void FromJson(json &js) override;
 
+  void ResetFunc() override { func = nullptr; }
   std::function<void()> func;
   CLICK_TYPE ctype = CLICK_PRESS;
   bool followsPausedExecution;
@@ -237,6 +240,7 @@ public:
                      std::function<void(double, double)> func,
                      bool followsPausedExecution);
 
+  void ResetFunc() override { func = nullptr; }
   KeybindMouseEventType GetType() override {
     return KeybindMouseEventType::SCROLL;
   }

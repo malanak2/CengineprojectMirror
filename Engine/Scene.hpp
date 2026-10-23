@@ -41,7 +41,7 @@ public:
   std::vector<std::shared_ptr<SceneObject>> Children;
   JsonFileBase ToJson();
   void SetParent(std::shared_ptr<SceneObject> parent);
-  std::shared_ptr<Graphics::CameraComponent>
+  std::vector<std::shared_ptr<Graphics::CameraComponent>>
   FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
            std::shared_ptr<SceneObject> self,
            std::shared_ptr<SceneObject> parent = nullptr);
@@ -76,9 +76,11 @@ public:
 class SceneJson {
 public:
   std::vector<JsonFileBase> objects;
+
+  std::string default_camera;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneJson, objects)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SceneJson, objects, default_camera)
 
 class Scene : public IJson, public std::enable_shared_from_this<Scene> {
 public:
@@ -103,11 +105,13 @@ public:
   void RemoveObject(std::shared_ptr<SceneObject> so);
   void RemoveObjectCascade(std::shared_ptr<SceneObject> so);
   json ToJson() override;
-  std::shared_ptr<Graphics::CameraComponent> camera = nullptr;
   void FromJson(json &js) override;
   void FromJson(json &js, std::shared_ptr<Scene> self);
   std::shared_ptr<Object> FindObject(const std::string &name);
   void Setup();
   void Update();
+  std::shared_ptr<Graphics::CameraComponent> camera = nullptr;
+  std::string default_camera;
+  std::vector<std::shared_ptr<Graphics::CameraComponent>> cameras;
 };
 } // namespace Engine

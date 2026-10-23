@@ -296,8 +296,7 @@ void Engine::Graphics::Model::ExtractBoneWeightForVertices(
       float weight = weights[weightIndex].mWeight;
       if (vertexId < 0 || static_cast<size_t>(vertexId) >= vertices.size())
         continue;
-      SetVertexBoneData(vertices[vertexId], boneID, weight);
-      assert(vertexId <= vertices.size());
+      assert(vertexId < vertices.size());
       SetVertexBoneData(vertices[vertexId], boneID, weight);
     }
   }
@@ -487,12 +486,21 @@ void Engine::Graphics::Animator::UpdateAnimation(float dt) {
       m_CurrentTime = fmod(m_CurrentTime, duration);
     else
       m_CurrentTime = 0.0f;
+
+    CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
   }
 }
 void Engine::Graphics::Animator::PlayAnimation(
     std::shared_ptr<Animation> pAnimation) {
-  m_CurrentAnimation = pAnimation;
+  m_CurrentAnimation = std::move(pAnimation);
   m_CurrentTime = 0.0f;
+  m_GlobalNodeTransforms.clear();
+
+  if (m_CurrentAnimation) {
+    CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+  } else {
+    m_FinalBoneMatrices.assign(MAX_BONE_WEIGHTS, glm::mat4(1.0f));
+  }
 }
 void Engine::Graphics::Animator::SetSockets(
     const std::vector<SocketAttachment> &sockets) {
@@ -514,6 +522,7 @@ glm::mat4 Engine::Graphics::Animator::GetBoneGlobalTransform(
 void Engine::Graphics::Animator::CalculateBoneTransform(
     const AssimpNodeData *node, const glm::mat4 &parentTransform) {
   m_GlobalNodeTransforms.clear();
+  m_FinalBoneMatrices.assign(MAX_BONE_WEIGHTS, glm::mat4(1.0f));
 
   std::unordered_map<std::string, const SocketAttachment *> activeSockets;
   for (const auto &s : m_Sockets) {

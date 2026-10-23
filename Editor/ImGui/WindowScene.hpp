@@ -56,6 +56,45 @@ protected:
                       &Config::inst->graphics->renderBoundingBox);
       ImGui::Checkbox("Enable simulation",
                       &Engine::Engine::isSimulationEnabled);
+      if (ImGui::BeginCombo(
+              "Scene camera",
+              Engine::Engine::instance->current_scene->camera->object.lock()
+                  ? Engine::Engine::instance->current_scene->camera->object
+                        .lock()
+                        ->_name.c_str()
+                  : "nullptr")) {
+        for (auto &cam : Engine::Engine::instance->current_scene->cameras) {
+          bool is_selected =
+              (Engine::Engine::instance->current_scene->camera == cam);
+          if (ImGui::Selectable(cam->object.lock()
+                                    ? cam->object.lock()->_name.c_str()
+                                    : "nullptr",
+                                is_selected)) {
+            Engine::Engine::instance->current_scene->camera = cam;
+          }
+          if (is_selected)
+            ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+      }
+      if (ImGui::BeginCombo("Default camera",
+                            Engine::Engine::instance->current_scene
+                                ->default_camera.c_str())) {
+        for (auto &cam : Engine::Engine::instance->current_scene->cameras) {
+          bool is_selected =
+              (Engine::Engine::instance->current_scene->camera == cam);
+          if (ImGui::Selectable(cam->object.lock()
+                                    ? cam->object.lock()->_name.c_str()
+                                    : "nullptr",
+                                is_selected)) {
+            Engine::Engine::instance->current_scene->default_camera =
+                cam->object.lock() ? cam->object.lock()->_name : "nullptr";
+          }
+          if (is_selected)
+            ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+      }
     }
     if (ImGui::CollapsingHeader("Objects")) {
       ShowSceneObjectMenu(&scene->objects);

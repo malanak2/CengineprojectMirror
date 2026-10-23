@@ -127,7 +127,7 @@ private:
   bool isUpToDate();
   glm::quat oldrot = {};
   glm::vec3 oldpos = {};
-  int w, h;
+  int w = 0, h = 0;
 };
 } // namespace Graphics
 } // namespace Engine

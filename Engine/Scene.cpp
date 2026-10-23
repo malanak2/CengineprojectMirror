@@ -45,14 +45,15 @@ json Scene::ToJson() {
   for (auto var : objects) {
     sj.objects.insert(sj.objects.end(), var->ToJson());
   }
+  sj.default_camera = default_camera;
   return sj;
 }
 
-std::shared_ptr<Graphics::CameraComponent>
+std::vector<std::shared_ptr<Graphics::CameraComponent>>
 SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
                       std::shared_ptr<SceneObject> self,
                       std::shared_ptr<SceneObject> parent) {
-  std::shared_ptr<Graphics::CameraComponent> camcomp = nullptr;
+  std::vector<std::shared_ptr<Graphics::CameraComponent>> camcomps = {};
   if (jsbase.object_type != ObjectType::Object) {
     throw std::logic_error("Bad object type");
   }
@@ -62,21 +63,20 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
   auto ojsref = ((json)js.data);
   auto rr = o->FromJson(ojsref, nullptr);
   o->sceneobject = shared_from_this();
-  if (rr != nullptr && o->_name != "fakecam") {
-    camcomp = rr;
+  if (rr != nullptr) {
+    camcomps.push_back(rr);
   }
+
   this->instance = o;
   o->_UpdateWorldTransform();
   this->scene = std::weak_ptr<Scene>(scene);
   for (auto var : js.children) {
     auto j = std::make_shared<SceneObject>();
     auto r = j->FromJson(var, scene, j, self);
-    if (r != nullptr && o->_name != "fakecam")
-      camcomp = r;
-
+    camcomps.insert(camcomps.end(), r.begin(), r.end());
     this->Children.insert(this->Children.end(), j);
   }
-  return camcomp;
+  return camcomps;
 }
 void SceneObject::EarlySetup() {
   instance->EarlySetup();
@@ -132,13 +132,13 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
                            (std::string)e.what());
   }
   this->objects = {};
+  this->cameras = {};
+  this->default_camera = ojs.default_camera;
   for (auto var : ojs.objects) {
     try {
       auto j = std::make_shared<SceneObject>();
       auto c = j->FromJson(var, self, j);
-      if (this->camera == nullptr && c != nullptr) {
-        this->camera = c;
-      }
+      cameras.insert(cameras.end(), c.begin(), c.end());
       this->objects.insert(this->objects.end(), j);
     } catch (const std::exception &e) {
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
@@ -146,6 +146,32 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
       continue;
     }
   }
+  if (cameras.size() == 0) {
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                       "Scene {} has no cameras, creating default camera",
+                       this->path);
+    auto camobj = std::make_shared<SceneObject>();
+    camobj->instance = std::make_shared<Object>(self);
+    camobj->instance->_name = "Default Camera";
+    camobj->instance->AddComponent<Graphics::CameraComponent>();
+    auto cam = camobj->instance->GetComponent<Graphics::CameraComponent>();
+    camobj->scene = self;
+    cam->near = 0.1f;
+    cam->far = 1000.0f;
+    this->objects.insert(this->objects.end(), camobj);
+    this->cameras.insert(this->cameras.end(), cam);
+    return;
+  }
+  for (auto cam : cameras) {
+    if (cam->object.lock()->_name == ojs.default_camera) {
+      this->camera = cam;
+      return;
+    }
+  }
+  SPDLOG_LOGGER_ERROR(
+      ENGINE_UTIL_LOGGER,
+      "Scene {} is missing its default camera, using first camera", this->path);
+  this->camera = cameras[0];
 }
 
 Scene::Scene() { this->objects = {}; }
