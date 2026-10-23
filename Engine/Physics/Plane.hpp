@@ -8,7 +8,7 @@ class Plane {
 public:
   glm::vec3 normal;
   float distance;
-  Plane() { normal = glm::vec3(1, 0, 0); }
+  Plane() : normal(1, 0, 0), distance(0.0f) {}
   Plane(const glm::vec3 &n, float d) : normal(n), distance(d) {}
   float PlaneEquation(const glm::vec3 &pt) {
     return glm::dot(pt, normal) - distance;

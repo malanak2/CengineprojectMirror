@@ -149,20 +149,26 @@ bool CameraComponent::isUpToDate() {
 std::vector<glm::vec3> Frustum::GetCorners() {
   std::vector<glm::vec3> outCorners;
   outCorners.reserve(8);
-  outCorners[0] = planes.str.near.Intersection(planes.str.top, planes.str.left);
-  outCorners[1] =
-      planes.str.near.Intersection(planes.str.top, planes.str.right);
-  outCorners[2] =
-      planes.str.near.Intersection(planes.str.bottom, planes.str.left);
-  outCorners[3] =
-      planes.str.near.Intersection(planes.str.bottom, planes.str.right);
-  outCorners[4] = planes.str.far.Intersection(planes.str.top, planes.str.left);
-  outCorners[5] = planes.str.far.Intersection(planes.str.top, planes.str.right);
-  outCorners[6] =
-      planes.str.far.Intersection(planes.str.bottom, planes.str.left);
-  outCorners[7] =
-      planes.str.far.Intersection(planes.str.bottom, planes.str.right);
+
+  outCorners.push_back(
+      planes.str.near.Intersection(planes.str.top, planes.str.left));
+  outCorners.push_back(
+      planes.str.near.Intersection(planes.str.top, planes.str.right));
+  outCorners.push_back(
+      planes.str.near.Intersection(planes.str.bottom, planes.str.left));
+  outCorners.push_back(
+      planes.str.near.Intersection(planes.str.bottom, planes.str.right));
+  outCorners.push_back(
+      planes.str.far.Intersection(planes.str.top, planes.str.left));
+  outCorners.push_back(
+      planes.str.far.Intersection(planes.str.top, planes.str.right));
+  outCorners.push_back(
+      planes.str.far.Intersection(planes.str.bottom, planes.str.left));
+  outCorners.push_back(
+      planes.str.far.Intersection(planes.str.bottom, planes.str.right));
+
   return outCorners;
 }
+
 } // namespace Graphics
 } // namespace Engine
