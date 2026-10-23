@@ -91,9 +91,9 @@ protected:
     ImGui::Separator();
   }
 
-  void RenderMouseInputMap(
-      std::string name,
-      std::vector<std::shared_ptr<Engine::KeybindMouse>> *vec) {
+  void
+  RenderMouseInputMap(std::string name,
+                      std::vector<std::shared_ptr<Engine::KeybindMouse>> *vec) {
     if (ImGui::CollapsingHeader(name.c_str())) {
       ImGui::Indent(10);
       for (auto &keybind : *vec) {

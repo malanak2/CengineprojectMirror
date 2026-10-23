@@ -16,7 +16,7 @@ protected:
   void draw() override {
     ImGui::Begin("WindowToggles");
     for (auto w : *windows) {
-      ImGui ::Checkbox(w->GetName().c_str(), &w->isOpen);
+      ImGui::Checkbox(w->GetName().c_str(), &w->isOpen);
     }
     ImGui::End();
   }

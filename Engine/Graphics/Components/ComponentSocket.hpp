@@ -17,8 +17,9 @@ struct ComponentSocketJson {
   std::vector<float> rotation;
   std::vector<float> scale;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-    ComponentSocketJson, target_object, target_bone, position, rotation, scale)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ComponentSocketJson,
+                                                target_object, target_bone,
+                                                position, rotation, scale)
 
 class ComponentSocket : public IComponent {
   REGISTER_CLASS(ComponentSocket);

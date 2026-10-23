@@ -40,7 +40,8 @@ protected:
 
   void draw() override {
     ImGui::SetNextWindowSize(ImVec2(380, 220), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin(GetName().c_str(), &isOpen, ImGuiWindowFlags_NoCollapse)) {
+    if (!ImGui::Begin(GetName().c_str(), &isOpen,
+                      ImGuiWindowFlags_NoCollapse)) {
       ImGui::End();
       return;
     }
