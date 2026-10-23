@@ -1,6 +1,7 @@
 #include "Material.hpp"
 #include "Engine.hpp"
 #include "Graphics.hpp"
+#include "Graphics/Components/CameraComponent.hpp"
 #include "Graphics/Components/ComponentAnimator.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
@@ -132,23 +133,33 @@ void Material::RenderObjects() {
   if (renderableObjects.size() == 0) {
     return;
   }
+  Frustum frustum;
+  bool useFrustum = false;
   if (uses_camera) {
     ZoneScopedN("UploadCamera");
     TracyGpuZone("UploadCamera");
     auto scene = Engine::Engine::instance
                      ? Engine::Engine::instance->current_scene
                      : nullptr;
-    if (scene && scene->camera && program->uniforms.contains("camera")) {
-      auto proj = scene->camera->GetProjMatrix();
-      auto view = scene->camera->GetViewMatrix();
-      glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"]->info.id);
-      CHECK_GL_ERROR();
+    if (scene && scene->camera) {
+      if (auto obj = scene->FindObject("fakecam")) {
+        if (auto c = obj->GetComponent<CameraComponent>()) {
+          useFrustum = true;
+          frustum = c->GetFrustum();
+        }
+      }
+      if (program->uniforms.contains("camera")) {
+        auto proj = scene->camera->GetProjMatrix();
+        auto view = scene->camera->GetViewMatrix();
+        glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"]->info.id);
+        CHECK_GL_ERROR();
 
-      glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
-                      glm::value_ptr(proj));
-      glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
-                      glm::value_ptr(view));
-      CHECK_GL_ERROR();
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                        glm::value_ptr(proj));
+        glBufferSubData(GL_UNIFORM_BUFFER, 64, sizeof(glm::mat4),
+                        glm::value_ptr(view));
+        CHECK_GL_ERROR();
+      }
     }
   }
 
@@ -165,9 +176,25 @@ void Material::RenderObjects() {
         if (auto obj = element->object.lock())
           animatorKey = obj->GetComponent<ComponentAnimator>().get();
       }
-      batches[BatchKey{element->model, element->GetEnabledMeshes(),
-                       UniformSignature(*element), animatorKey}]
-          .push_back(element);
+      // If uses frustum, only insert if in said frustum, otherwise dont
+      if (useFrustum) {
+        if (auto obj = element->object.lock()) {
+          if (auto bb = obj->GetComponent<Physics::ComponentBoundingBox>()) {
+            if (auto obb = bb->GetOBB()) {
+              if (frustum.Intersects(obb)) {
+                batches[BatchKey{element->model, element->GetEnabledMeshes(),
+                                 UniformSignature(*element), animatorKey}]
+                    .push_back(element);
+                continue;
+              }
+            }
+          }
+        }
+      } else {
+        batches[BatchKey{element->model, element->GetEnabledMeshes(),
+                         UniformSignature(*element), animatorKey}]
+            .push_back(element);
+      }
     }
   }
 

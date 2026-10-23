@@ -62,15 +62,16 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
   auto ojsref = ((json)js.data);
   auto rr = o->FromJson(ojsref, nullptr);
   o->sceneobject = shared_from_this();
-  if (rr != nullptr) {
+  if (rr != nullptr && o->_name != "fakecam") {
     camcomp = rr;
   }
   this->instance = o;
+  o->_UpdateWorldTransform();
   this->scene = std::weak_ptr<Scene>(scene);
   for (auto var : js.children) {
     auto j = std::make_shared<SceneObject>();
     auto r = j->FromJson(var, scene, j, self);
-    if (r != nullptr)
+    if (r != nullptr && o->_name != "fakecam")
       camcomp = r;
 
     this->Children.insert(this->Children.end(), j);
@@ -95,6 +96,8 @@ void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
   if (parent) {
     parent->Children.insert(parent->Children.end(), this->shared_from_this());
   }
+  if (instance)
+    instance->_UpdateWorldTransform();
 }
 
 JsonFileBase SceneObject::ToJson() {

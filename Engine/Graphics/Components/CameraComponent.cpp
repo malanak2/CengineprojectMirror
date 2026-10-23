@@ -3,7 +3,6 @@
 #include "Interfaces/IComponent.hpp"
 #include "Physics/Components/ComponentPhysics.hpp"
 #include "Physics/PhysicsSystem.hpp"
-#include "Scene.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -29,7 +28,17 @@ void CameraComponent::EarlySetup() {
 }
 
 void CameraComponent::Update() {}
-
+glm::mat4 CameraComponent::GetFrustumMatrix() {
+  if (w <= 0 || h <= 0 || near <= 0.0f || far <= near) {
+    return glm::mat4(1.0f); // Return identity fallback to avoid NaNs
+  }
+  glm::mat4 viewProj = GetProjMatrix() * GetViewMatrix();
+  float det = glm::determinant(viewProj);
+  if (glm::abs(det) < 1e-6f) {
+    return glm::mat4(1.0f);
+  }
+  return glm::inverse(viewProj);
+}
 CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
   ZoneScoped;
   this->object = object;
@@ -74,39 +83,46 @@ void CameraComponent::recalculateMatrixes() {
     return;
   if (Engine::Engine::width <= 0 || Engine::Engine::height <= 0)
     return;
-  glm::vec3 frontnormal =
-      glm::normalize(obj->GetRotation() * glm::vec3(0, 0, -1));
-  this->front = frontnormal;
-  this->right = glm::normalize(glm::cross(this->front, glm::vec3(0, 1, 0)));
-  this->up = glm::normalize(glm::cross(this->right, this->front));
+
+  // Extract forward, right, and up directly from the Object's quaternion
+  // rotation. This avoids cross products against world Up (0,1,0) and
+  // eliminates Gimbal Lock singularities.
+  glm::quat orientation = obj->GetRotation();
+
+  this->front = glm::normalize(orientation * glm::vec3(0, 0, -1));
+  this->right = glm::normalize(orientation * glm::vec3(1, 0, 0));
+  this->up = glm::normalize(orientation * glm::vec3(0, 1, 0));
+
   projmat = glm::perspective(
       glm::radians(45.0f),
       (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
 
-  // Default: use exact world position
   glm::vec3 camPos = obj->GetPosition();
 
-  // If the camera is a child of an object with physics, smoothly lerp
-  // its position using the parent's interpolated render position so that
-  // it doesn't stutter between fixed physics ticks.
+  // Handle physics interpolation if present
   if (auto so = obj->sceneobject.lock()) {
     if (auto parentSO = so->Parent.lock()) {
       if (parentSO->instance) {
         if (auto phys =
                 parentSO->instance->GetComponent<Physics::ComponentPhysics>()) {
           glm::vec3 smoothParentPos = phys->GetRenderPosition();
-          camPos = smoothParentPos + obj->GetLocalPosition();
+          camPos = smoothParentPos +
+                   parentSO->instance->GetRotation() * obj->GetLocalPosition();
         }
       }
     }
   }
 
-  viewmat = glm::lookAt(camPos, camPos + frontnormal, glm::vec3(0, 1, 0));
+  // Pass the camera's actual local UP vector instead of hardcoded world (0, 1,
+  // 0)
+  viewmat = glm::lookAt(camPos, camPos + this->front, this->up);
+
   oldrot = obj->GetRotation();
   oldpos = obj->GetPosition();
   w = Engine::Engine::width;
   h = Engine::Engine::height;
 }
+
 bool CameraComponent::isUpToDate() {
   auto obj = object.lock();
   if (!obj)
@@ -130,5 +146,23 @@ bool CameraComponent::isUpToDate() {
          w == Engine::Engine::width && h == Engine::Engine::height;
 }
 
+std::vector<glm::vec3> Frustum::GetCorners() {
+  std::vector<glm::vec3> outCorners;
+  outCorners.reserve(8);
+  outCorners[0] = planes.str.near.Intersection(planes.str.top, planes.str.left);
+  outCorners[1] =
+      planes.str.near.Intersection(planes.str.top, planes.str.right);
+  outCorners[2] =
+      planes.str.near.Intersection(planes.str.bottom, planes.str.left);
+  outCorners[3] =
+      planes.str.near.Intersection(planes.str.bottom, planes.str.right);
+  outCorners[4] = planes.str.far.Intersection(planes.str.top, planes.str.left);
+  outCorners[5] = planes.str.far.Intersection(planes.str.top, planes.str.right);
+  outCorners[6] =
+      planes.str.far.Intersection(planes.str.bottom, planes.str.left);
+  outCorners[7] =
+      planes.str.far.Intersection(planes.str.bottom, planes.str.right);
+  return outCorners;
+}
 } // namespace Graphics
 } // namespace Engine

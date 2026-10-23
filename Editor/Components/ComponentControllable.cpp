@@ -6,60 +6,59 @@
 void Editor::ComponentControllable::EarlySetup() {
   auto o = object.lock();
   auto cam = o->GetComponent<Engine::Graphics::CameraComponent>();
+
+  auto step = [this](float forward, float strafe) {
+    auto o = object.lock();
+    if (!o)
+      return;
+    glm::vec3 front = o->GetRotation() * glm::vec3(0, 0, -1);
+    glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
+    o->AddWorldPosition((front * forward + right * strafe) * movespeed *
+                        GetDeltaTime());
+  };
   keybindMoveForward = Engine::InputSystem::NewKeybind(
       "move-forward", GLFW_KEY_W, GLFW_KEY_W, 0, Engine::KeypressType::HOLD,
-      [this, o, cam] {
-        o->AddPosition(cam->front * movespeed * GetDeltaTime());
-      },
-      false);
+      [step] { step(1, 0); }, false);
   keybindMoveForward->isEnabled = true;
   keybindMoveBackward = Engine::InputSystem::NewKeybind(
       "move-backward", GLFW_KEY_S, GLFW_KEY_S, 0, Engine::KeypressType::HOLD,
-      [this, o, cam] {
-        o->AddPosition(-cam->front * movespeed * GetDeltaTime());
-      },
-      false);
+      [step] { step(-1, 0); }, false);
 
   keybindMoveBackward->isEnabled = true;
   keybindMoveLeft = Engine::InputSystem::NewKeybind(
       "move-left", GLFW_KEY_A, GLFW_KEY_A, 0, Engine::KeypressType::HOLD,
-      [this, o, cam] {
-        o->AddPosition(-cam->right * movespeed * GetDeltaTime());
-      },
-      false);
+      [step] { step(0, -1); }, false);
 
   keybindMoveLeft->isEnabled = true;
   keybindMoveRight = Engine::InputSystem::NewKeybind(
       "move-right", GLFW_KEY_D, GLFW_KEY_D, 0, Engine::KeypressType::HOLD,
-      [this, o, cam] {
-        o->AddPosition(cam->right * movespeed * GetDeltaTime());
-      },
-      false);
+      [step] { step(0, 1); }, false);
 
   keybindMoveRight->isEnabled = true;
   keybindLook = Engine::InputSystem::NewKeybindMouseMove(
       "look", Engine::MOVE_TYPE::NORMAL, 0, 0, 0,
-      [this](int x, int y) {
+      [this](double x, double y) {
+        auto o = object.lock();
+        if (!o)
+          return;
         if (isNew) {
           oldx = x;
           oldy = y;
           isNew = false;
+          // pick up whatever rotation the object has now (inspector edits,
+          // etc.)
+          glm::vec3 f = o->GetLocalRotation() * glm::vec3(0, 0, -1);
+          this->yaw = glm::degrees(std::atan2(-f.x, -f.z));
+          currentPitch = glm::degrees(std::asin(glm::clamp(f.y, -1.0f, 1.0f)));
         }
-        auto deltax = (x - oldx) * sensitivity;
-        auto deltay = (y - oldy) * sensitivity;
+        yaw -= float(x - oldx) * sensitivity;
+        currentPitch = glm::clamp(currentPitch - float(y - oldy) * sensitivity,
+                                  -89.0f, 89.0f);
         oldx = x;
         oldy = y;
-        auto o = object.lock();
-        o->SetRotation(
-            glm::angleAxis(glm::radians(-deltax), glm::vec3(0, 1, 0)) *
-            o->GetRotation());
-        float newPitch = glm::clamp(currentPitch - deltay, -89.0f, 89.0f);
-        float clampedDelta = newPitch - currentPitch;
-        currentPitch = newPitch;
-        o->SetRotation(
-            o->GetRotation() *
-            glm::angleAxis(glm::radians(clampedDelta), glm::vec3(1, 0, 0)));
-        o->SetRotation(glm::normalize(o->GetRotation()));
+        o->SetRotation(glm::normalize(
+            glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) *
+            glm::angleAxis(glm::radians(currentPitch), glm::vec3(1, 0, 0))));
       },
       false);
   keybindLook->isEnabled = false;

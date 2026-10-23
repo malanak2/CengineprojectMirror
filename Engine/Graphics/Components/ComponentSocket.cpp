@@ -29,7 +29,7 @@ void Engine::Graphics::ComponentSocket::Update() {
       glm::scale(glm::mat4(1.0f), offset_scale);
   glm::mat4 finalWorld = boneWorld * offsetMat;
 
-  owner->SetPosition(glm::vec3(finalWorld[3]));
+  owner->SetWorldPosition(glm::vec3(finalWorld[3]));
 
   glm::mat3 rot(finalWorld);
   for (int i = 0; i < 3; ++i) {
@@ -37,7 +37,7 @@ void Engine::Graphics::ComponentSocket::Update() {
     if (len > 1e-8f)
       rot[i] /= len;
   }
-  owner->SetRotation(glm::normalize(glm::quat_cast(rot)));
+  owner->SetWorldRotation(glm::normalize(glm::quat_cast(rot)));
 }
 
 json Engine::Graphics::ComponentSocket::ToJson() {

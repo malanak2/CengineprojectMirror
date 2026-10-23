@@ -77,6 +77,7 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Physics/Components/ComponentPhysics.cpp
         Physics/Components/ComponentBoundingBox.cpp
         Physics/Ray.cpp
+        Physics/Plane.cpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)

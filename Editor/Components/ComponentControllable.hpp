@@ -30,9 +30,10 @@ private:
   std::shared_ptr<Engine::Keybind> keybindMoveRight;
   std::shared_ptr<Engine::Keybind> keybindControll;
   std::shared_ptr<Engine::KeybindMouse> keybindLook;
-  int oldx = 0, oldy = 0;
+  double oldx = 0, oldy = 0;
   float currentPitch = 0.0f;
   bool isNew = true;
   void ReleaseKeybinds(bool restoreMouse);
+  float yaw = 0;
 };
 } // namespace Editor

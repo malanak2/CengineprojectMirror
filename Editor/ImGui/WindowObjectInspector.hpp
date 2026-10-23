@@ -47,30 +47,21 @@ protected:
           obj->SetPosition(localPos);
         }
         ImGui::InputFloat3("Scale", &obj->scale[0]);
-
-        static glm::vec3 currentAngles = glm::vec3(0.0f);
-        static glm::quat lastRotation = glm::identity<glm::quat>();
+        static glm::vec3 angles = glm::vec3(0.0f);
         static Engine::Object *lastObject = nullptr;
 
-        if (lastObject != obj.get() ||
-            obj->GetLocalRotation() != lastRotation) {
-          currentAngles =
-              glm::degrees(glm::eulerAngles(obj->GetLocalRotation()));
-          lastRotation = obj->GetLocalRotation();
+        glm::quat local = obj->GetLocalRotation();
+        glm::quat fromAngles = glm::quat(glm::radians(angles));
+        // q and -q are the same rotation, so compare |dot|
+        bool sameRotation = std::abs(glm::dot(local, fromAngles)) > 0.999999f;
+
+        if (lastObject != obj.get() || !sameRotation) {
+          angles = glm::degrees(glm::eulerAngles(local));
           lastObject = obj.get();
         }
 
-        glm::vec3 newAngles = currentAngles;
-
-        if (ImGui::DragFloat3("Rotation", &newAngles[0], 1.0f)) {
-          currentAngles = newAngles;
-
-          glm::vec3 radians = glm::radians(newAngles);
-
-          obj->SetRotation(glm::quat(radians));
-          obj->SetRotation(glm::normalize(obj->GetRotation()));
-
-          lastRotation = obj->GetRotation();
+        if (ImGui::DragFloat3("Rotation", &angles[0], 1.0f)) {
+          obj->SetRotation(glm::normalize(glm::quat(glm::radians(angles))));
         }
       }
     }

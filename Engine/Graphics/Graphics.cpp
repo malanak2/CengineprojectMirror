@@ -250,6 +250,14 @@ void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
 void Main::RenderBBOS() {
   if (Config::inst->graphics->renderBoundingBox) {
     ZoneScopedN("BoundingBoxRender");
+    bool useFrustum = false;
+    Frustum frustum;
+    if (auto obj = Engine::instance->current_scene->FindObject("fakecam")) {
+      if (auto c = obj->GetComponent<CameraComponent>()) {
+        useFrustum = true;
+        frustum = c->GetFrustum();
+      }
+    }
     if (!debugMaterial)
       debugMaterial = Material::Create("materials/bounding_box.json");
     auto &debugmat = debugMaterial;
@@ -330,7 +338,7 @@ void Main::RenderBBOS() {
       float padding[3];
     };
     std::vector<InstanceData> instances;
-    instances.reserve(Physics::PhysicsSystem::boundingBoxes.size());
+    instances.reserve(Physics::PhysicsSystem::boundingBoxes.size() + 1);
 
     for (auto bb : Physics::PhysicsSystem::boundingBoxes) {
       if (!bb)
@@ -349,6 +357,20 @@ void Main::RenderBBOS() {
       data.padding[2] = 0;
       instances.push_back(data);
     }
+    if (useFrustum) {
+      if (auto obj = Engine::instance->current_scene->FindObject("fakecam")) {
+        if (auto c = obj->GetComponent<CameraComponent>()) {
+          InstanceData frustumInstance{};
+          frustumInstance.modelMatrix = c->GetFrustumMatrix();
+          frustumInstance.isTrigger = 1;
+          frustumInstance.padding[0] = 0;
+          frustumInstance.padding[1] = 0;
+          frustumInstance.padding[2] = 0;
+
+          instances.push_back(frustumInstance);
+        }
+      }
+    }
 
     if (!instances.empty()) {
       if (debugmat->instanceSSBO == 0) {
@@ -362,11 +384,14 @@ void Main::RenderBBOS() {
                    GL_DYNAMIC_DRAW);
       glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, debugmat->instanceSSBO);
       glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
+      glDisable(GL_CULL_FACE);
+      glDepthMask(GL_FALSE);
       glBindVertexArray(debugmat->vao);
       glDrawElementsInstanced(GL_LINES, 24, GL_UNSIGNED_INT, nullptr,
                               static_cast<GLsizei>(instances.size()));
       glBindVertexArray(0);
+      glDepthMask(GL_TRUE);
+      glEnable(GL_CULL_FACE);
     }
   }
 }

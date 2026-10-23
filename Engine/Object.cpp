@@ -140,8 +140,9 @@ void Object::fromParams(std::string name,
                        position.size());
   } else {
     this->_localPosition = glm::vec3(position[0], position[1], position[2]);
-    this->_worldPosition = _localPosition; // will be corrected after SetParent
   }
+
+  this->_worldPosition = _localPosition;
   if (rotation.size() == 4) {
     this->_localRotation =
         glm::quat(rotation[0], rotation[1], rotation[2], rotation[3]);
@@ -154,6 +155,8 @@ void Object::fromParams(std::string name,
                        rotation.size());
     this->_localRotation = glm::identity<glm::quat>();
   }
+
+  this->_worldRotation = _localRotation;
   this->scale = scale;
 }
 
@@ -189,7 +192,28 @@ void Object::LateEnd() {
     comp->LateEnd();
   }
 }
-
+void Object::GetParentWorld(glm::vec3 &pos, glm::quat &rot) const {
+  pos = {0, 0, 0};
+  rot = glm::identity<glm::quat>();
+  if (auto so = sceneobject.lock())
+    if (auto p = so->Parent.lock())
+      if (p->instance) {
+        pos = p->instance->GetPosition();
+        rot = p->instance->GetRotation();
+      }
+}
+void Object::SetWorldPosition(glm::vec3 w) {
+  glm::vec3 pp;
+  glm::quat pr;
+  GetParentWorld(pp, pr);
+  SetPosition(glm::inverse(pr) * (w - pp));
+}
+void Object::SetWorldRotation(glm::quat w) {
+  glm::vec3 pp;
+  glm::quat pr;
+  GetParentWorld(pp, pr);
+  SetRotation(glm::normalize(glm::inverse(pr) * w));
+}
 void Object::_UpdateWorldTransform() {
   // Compute world position: parent world pos + local position
   glm::vec3 parentWorldPos = {0, 0, 0};
@@ -200,7 +224,6 @@ void Object::_UpdateWorldTransform() {
       }
     }
   }
-  _worldPosition = parentWorldPos + _localPosition;
   glm::quat parentWorldRot = glm::identity<glm::quat>();
   if (auto so = sceneobject.lock()) {
     if (auto parent = so->Parent.lock()) {
@@ -209,7 +232,9 @@ void Object::_UpdateWorldTransform() {
       }
     }
   }
-  _worldRotation = parentWorldRot + _localRotation;
+
+  _worldPosition = parentWorldPos + parentWorldRot * _localPosition;
+  _worldRotation = glm::normalize(parentWorldRot * _localRotation);
   // Propagate to children
   if (auto so = sceneobject.lock()) {
     for (auto &child : so->Children) {

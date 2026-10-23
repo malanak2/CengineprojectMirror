@@ -76,6 +76,13 @@ public:
     _localRotation = rot;
     _UpdateWorldTransform();
   }
+
+  void GetParentWorld(glm::vec3 &pos, glm::quat &rot) const;
+  void SetWorldPosition(glm::vec3 world);
+  void AddWorldPosition(glm::vec3 delta) {
+    SetWorldPosition(_worldPosition + delta);
+  }
+  void SetWorldRotation(glm::quat world);
   glm::vec3 scale = {1, 1, 1};
   Object(std::string path, std::shared_ptr<Scene> scene);
 
@@ -229,7 +236,8 @@ private:
   //!
   glm::vec3 _localPosition = {0, 0, 0};
   //!
-  //! @_worldPosition Cached world-space position (parent world pos + parent rot * local pos)
+  //! @_worldPosition Cached world-space position (parent world pos + parent rot
+  //! * local pos)
   //!
   glm::vec3 _worldPosition = {0, 0, 0};
   //!
