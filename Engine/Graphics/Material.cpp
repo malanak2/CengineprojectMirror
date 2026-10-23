@@ -185,12 +185,12 @@ void Material::RenderObjects() {
       glm::mat4 transform = glm::mat4(1.0f);
       auto obj = inst->object.lock();
       if (obj) {
-        glm::vec3 position = obj->_position;
+        glm::vec3 position = obj->GetPosition();
         if (auto phys = obj->GetComponent<Physics::ComponentPhysics>())
           position = phys->GetRenderPosition();
 
         glm::mat4 T = glm::translate(glm::mat4(1.0f), position);
-        glm::mat4 R = glm::mat4_cast(obj->_rotation);
+        glm::mat4 R = glm::mat4_cast(obj->GetRotation());
         glm::mat4 S = glm::scale(glm::mat4(1.0f), obj->scale);
 
         transform = T * R * S;

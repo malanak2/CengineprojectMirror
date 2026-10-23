@@ -303,10 +303,10 @@ Engine::Physics::ComponentBoundingBox::GetOBB() {
     return obb;
   auto o = object.lock();
   auto obb = std::make_shared<OBB>();
-  obb->position = o->_position + o->_rotation * position_offset;
+  obb->position = o->GetPosition() + o->GetRotation() * position_offset;
   obb->size = size;
   obb->orientation =
-      glm::toMat3(glm::normalize(o->_rotation * orientation_offset));
+      glm::toMat3(glm::normalize(o->GetRotation() * orientation_offset));
   this->obb = obb;
   return obb;
 }

@@ -132,9 +132,10 @@ glm::mat4 Engine::Graphics::ComponentAnimator::GetBoneWorldTransform(
   glm::mat4 localBone = GetBoneGlobalTransform(boneName);
   auto obj = object.lock();
   if (obj) {
-    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), obj->_position) *
-                            glm::mat4_cast(obj->_rotation) *
-                            glm::scale(glm::mat4(1.0f), obj->scale);
+    glm::mat4 modelMatrix =
+        glm::translate(glm::mat4(1.0f), obj->GetPosition()) *
+        glm::mat4_cast(obj->GetRotation()) *
+        glm::scale(glm::mat4(1.0f), obj->scale);
     return modelMatrix * localBone;
   }
   return localBone;

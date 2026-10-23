@@ -9,14 +9,14 @@ void Editor::ComponentControllable::EarlySetup() {
   keybindMoveForward = Engine::InputSystem::NewKeybind(
       "move-forward", GLFW_KEY_W, GLFW_KEY_W, 0, Engine::KeypressType::HOLD,
       [this, o, cam] {
-        o->_position += cam->front * movespeed * GetDeltaTime();
+        o->AddPosition(cam->front * movespeed * GetDeltaTime());
       },
       false);
   keybindMoveForward->isEnabled = true;
   keybindMoveBackward = Engine::InputSystem::NewKeybind(
       "move-backward", GLFW_KEY_S, GLFW_KEY_S, 0, Engine::KeypressType::HOLD,
       [this, o, cam] {
-        o->_position -= cam->front * movespeed * GetDeltaTime();
+        o->AddPosition(-cam->front * movespeed * GetDeltaTime());
       },
       false);
 
@@ -24,7 +24,7 @@ void Editor::ComponentControllable::EarlySetup() {
   keybindMoveLeft = Engine::InputSystem::NewKeybind(
       "move-left", GLFW_KEY_A, GLFW_KEY_A, 0, Engine::KeypressType::HOLD,
       [this, o, cam] {
-        o->_position -= cam->right * movespeed * GetDeltaTime();
+        o->AddPosition(-cam->right * movespeed * GetDeltaTime());
       },
       false);
 
@@ -32,7 +32,7 @@ void Editor::ComponentControllable::EarlySetup() {
   keybindMoveRight = Engine::InputSystem::NewKeybind(
       "move-right", GLFW_KEY_D, GLFW_KEY_D, 0, Engine::KeypressType::HOLD,
       [this, o, cam] {
-        o->_position += cam->right * movespeed * GetDeltaTime();
+        o->AddPosition(cam->right * movespeed * GetDeltaTime());
       },
       false);
 
@@ -50,15 +50,16 @@ void Editor::ComponentControllable::EarlySetup() {
         oldx = x;
         oldy = y;
         auto o = object.lock();
-        o->_rotation =
+        o->SetRotation(
             glm::angleAxis(glm::radians(-deltax), glm::vec3(0, 1, 0)) *
-            o->_rotation;
+            o->GetRotation());
         float newPitch = glm::clamp(currentPitch - deltay, -89.0f, 89.0f);
         float clampedDelta = newPitch - currentPitch;
         currentPitch = newPitch;
-        o->_rotation = o->_rotation * glm::angleAxis(glm::radians(clampedDelta),
-                                                     glm::vec3(1, 0, 0));
-        o->_rotation = glm::normalize(o->_rotation);
+        o->SetRotation(
+            o->GetRotation() *
+            glm::angleAxis(glm::radians(clampedDelta), glm::vec3(1, 0, 0)));
+        o->SetRotation(glm::normalize(o->GetRotation()));
       },
       false);
   keybindLook->isEnabled = false;

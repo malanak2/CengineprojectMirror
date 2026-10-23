@@ -66,6 +66,7 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
     camcomp = rr;
   }
   this->instance = o;
+  this->scene = std::weak_ptr<Scene>(scene);
   for (auto var : js.children) {
     auto j = std::make_shared<SceneObject>();
     auto r = j->FromJson(var, scene, j, self);
@@ -87,6 +88,8 @@ void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
   auto oldParent = this->Parent.lock();
   if (oldParent) {
     std::erase(oldParent->Children, this->shared_from_this());
+  } else {
+    std::erase(scene.lock()->objects, this->shared_from_this());
   }
   this->Parent = parent;
   if (parent) {

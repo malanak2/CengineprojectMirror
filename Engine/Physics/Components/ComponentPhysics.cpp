@@ -19,12 +19,12 @@ json ComponentPhysics::ToJson() {
 }
 void Physics::ComponentPhysics::BeginTick() {
   if (auto o = object.lock())
-    prevPos = o->_position;
+    prevPos = o->GetPosition();
 }
 
 void Physics::ComponentPhysics::EndTick() {
   if (auto o = object.lock()) {
-    currPos = o->_position;
+    currPos = o->GetPosition();
     hasTickState = true;
   }
 }
@@ -35,9 +35,9 @@ glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
     return glm::vec3(0.0f);
   if (!hasTickState || !PhysicsSystem::interpolateRendering ||
       !Engine::Engine::isSimulationEnabled)
-    return o->_position;
-  if (o->_position != currPos)
-    return o->_position;
+    return o->GetPosition();
+  if (o->GetPosition() != currPos)
+    return o->GetPosition();
   return glm::mix(prevPos, currPos, PhysicsSystem::GetInterpolationAlpha());
 }
 void ComponentPhysics::FromJson(json &js) {
@@ -85,8 +85,8 @@ void Physics::ComponentPhysics::ApplyForces() {
   if (!o)
     return;
 
-  oldPos = o->_position;
-  o->_position += velocities * GetDeltaTime();
+  oldPos = o->GetPosition();
+  o->AddPosition(velocities * GetDeltaTime());
   auto obb = o->GetComponent<ComponentBoundingBox>();
   obb->InvalidateBB();
 }

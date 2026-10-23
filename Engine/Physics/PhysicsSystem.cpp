@@ -298,7 +298,7 @@ void Engine::Physics::PhysicsSystem::phystick() {
 
     auto om1 = m1->object.lock();
     if (om1 && invMass1 > 0.0f) {
-      om1->_position -= correction * invMass1;
+      om1->AddPosition(-correction * invMass1);
       glm::vec3 v1 = m1->GetVelocities();
       float vNorm = glm::dot(v1, norm);
       if (vNorm > 0.0f)
@@ -310,7 +310,7 @@ void Engine::Physics::PhysicsSystem::phystick() {
     if (m2) {
       auto om2 = m2->object.lock();
       if (om2 && invMass2 > 0.0f) {
-        om2->_position += correction * invMass2;
+        om2->AddPosition(correction * invMass2);
         if (auto bbox = om2->GetComponent<ComponentBoundingBox>())
           bbox->InvalidateBB();
       }

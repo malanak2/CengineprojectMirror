@@ -35,8 +35,10 @@ Object::Object(std::string path, std::shared_ptr<Scene> scene) {
 }
 Object::Object() {
   this->_components = {};
-  this->_position = {0, 0, 0};
-  this->_rotation = glm::identity<glm::quat>();
+  this->_localPosition = {0, 0, 0};
+  this->_worldPosition = {0, 0, 0};
+  this->_localRotation = glm::identity<glm::quat>();
+  this->_worldRotation = glm::identity<glm::quat>();
   this->_name = "New Object";
   this->scale = {1, 1, 1};
 }
@@ -55,8 +57,9 @@ json Object::ToJson() {
     cmps.insert(cmps.end(), static_cast<ComponentJson>(j));
   }
   js.components = cmps;
-  js.position = {_position[0], _position[1], _position[2]};
-  js.rotation = {_rotation.w, _rotation.x, _rotation.y, _rotation.z};
+  js.position = {_localPosition[0], _localPosition[1], _localPosition[2]};
+  js.rotation = {_localRotation.w, _localRotation.x, _localRotation.y,
+                 _localRotation.z};
   js.name = _name;
   js.scale = std::vector<float>{scale.x, scale.y, scale.z};
   ret.data = js;
@@ -136,19 +139,20 @@ void Object::fromParams(std::string name,
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Bad position passed to Object : {}",
                        position.size());
   } else {
-    this->_position = glm::vec3(position[0], position[1], position[2]);
+    this->_localPosition = glm::vec3(position[0], position[1], position[2]);
+    this->_worldPosition = _localPosition; // will be corrected after SetParent
   }
   if (rotation.size() == 4) {
-    this->_rotation =
+    this->_localRotation =
         glm::quat(rotation[0], rotation[1], rotation[2], rotation[3]);
 
   } else if (rotation.size() == 3) {
-    this->_rotation = glm::quat(
+    this->_localRotation = glm::quat(
         glm::radians(glm::vec3(rotation[0], rotation[1], rotation[2])));
   } else {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Bad rotation passed to Object : {}",
                        rotation.size());
-    this->_rotation = glm::identity<glm::quat>();
+    this->_localRotation = glm::identity<glm::quat>();
   }
   this->scale = scale;
 }
@@ -183,6 +187,36 @@ void Object::End() {
 void Object::LateEnd() {
   for (auto &[id, comp] : _components) {
     comp->LateEnd();
+  }
+}
+
+void Object::_UpdateWorldTransform() {
+  // Compute world position: parent world pos + local position
+  glm::vec3 parentWorldPos = {0, 0, 0};
+  if (auto so = sceneobject.lock()) {
+    if (auto parent = so->Parent.lock()) {
+      if (parent->instance) {
+        parentWorldPos = parent->instance->GetPosition();
+      }
+    }
+  }
+  _worldPosition = parentWorldPos + _localPosition;
+  glm::quat parentWorldRot = glm::identity<glm::quat>();
+  if (auto so = sceneobject.lock()) {
+    if (auto parent = so->Parent.lock()) {
+      if (parent->instance) {
+        parentWorldRot = parent->instance->GetRotation();
+      }
+    }
+  }
+  _worldRotation = parentWorldRot + _localRotation;
+  // Propagate to children
+  if (auto so = sceneobject.lock()) {
+    for (auto &child : so->Children) {
+      if (child && child->instance) {
+        child->instance->_UpdateWorldTransform();
+      }
+    }
   }
 }
 

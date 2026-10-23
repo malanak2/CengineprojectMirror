@@ -41,13 +41,41 @@ public:
   //!
   std::map<std::string, std::shared_ptr<IComponent>> _components = {};
   //!
-  //! @_position The position of the object
+  //! @brief Get the world-space position of the object (local + parent offset)
   //!
-  glm::vec3 _position = {0, 0, 0};
+  glm::vec3 GetPosition() const { return _worldPosition; }
   //!
-  //! @_rotation The rotation of the object
+  //! @brief Get the local position of the object (relative to parent)
   //!
-  glm::quat _rotation = {1, 0, 0, 0};
+  glm::vec3 GetLocalPosition() const { return _localPosition; }
+
+  //!
+  //! @brief Set the local position of the object. Propagates to children.
+  //!
+  void SetPosition(glm::vec3 pos) {
+    _localPosition = pos;
+    _UpdateWorldTransform();
+  }
+
+  //!
+  //! @brief Add a delta to the local position. Propagates to children.
+  //!
+  void AddPosition(glm::vec3 delta) { SetPosition(_localPosition + delta); }
+  //!
+  //! @brief Get the world-space rotation of the object (parent rot * local rot)
+  //!
+  glm::quat GetRotation() const { return _worldRotation; }
+  //!
+  //! @brief Get the local rotation of the object (relative to parent)
+  //!
+  glm::quat GetLocalRotation() const { return _localRotation; }
+  //!
+  //! @brief Set the local rotation. Propagates world transform to children.
+  //!
+  void SetRotation(glm::quat rot) {
+    _localRotation = rot;
+    _UpdateWorldTransform();
+  }
   glm::vec3 scale = {1, 1, 1};
   Object(std::string path, std::shared_ptr<Scene> scene);
 
@@ -188,5 +216,29 @@ public:
     }
     return true;
   }
+
+  //!
+  //! @brief Recomputes world position and rotation from parent transform, then
+  //! signals children to do the same.
+  //!
+  void _UpdateWorldTransform();
+
+private:
+  //!
+  //! @_localPosition Position relative to parent (or world if no parent)
+  //!
+  glm::vec3 _localPosition = {0, 0, 0};
+  //!
+  //! @_worldPosition Cached world-space position (parent world pos + parent rot * local pos)
+  //!
+  glm::vec3 _worldPosition = {0, 0, 0};
+  //!
+  //! @_localRotation Rotation relative to parent (or world if no parent)
+  //!
+  glm::quat _localRotation = {1, 0, 0, 0};
+  //!
+  //! @_worldRotation Cached world-space rotation (parent world rot * local rot)
+  //!
+  glm::quat _worldRotation = {1, 0, 0, 0};
 };
 } // namespace Engine

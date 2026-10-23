@@ -30,6 +30,11 @@ public:
   //! @Parent Ptr ro parent sceneObject
   //!
   std::weak_ptr<SceneObject> Parent;
+
+  //!
+  //! @scene Scene ptr
+  //!
+  std::weak_ptr<Scene> scene;
   //!
   //! @Children Ptr to children of object
   //!

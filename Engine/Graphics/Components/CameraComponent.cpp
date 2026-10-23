@@ -1,6 +1,9 @@
 #include "CameraComponent.hpp"
 #include "Engine.hpp"
 #include "Interfaces/IComponent.hpp"
+#include "Physics/Components/ComponentPhysics.hpp"
+#include "Physics/PhysicsSystem.hpp"
+#include "Scene.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -21,8 +24,8 @@ void CameraComponent::EarlySetup() {
   recalculateMatrixes();
   w = Engine::Engine::width;
   h = Engine::Engine::height;
-  oldrot = obj->_rotation;
-  oldpos = obj->_position;
+  oldrot = obj->GetRotation();
+  oldpos = obj->GetPosition();
 }
 
 void CameraComponent::Update() {}
@@ -71,17 +74,36 @@ void CameraComponent::recalculateMatrixes() {
     return;
   if (Engine::Engine::width <= 0 || Engine::Engine::height <= 0)
     return;
-  glm::vec3 frontnormal = glm::normalize(obj->_rotation * glm::vec3(0, 0, -1));
+  glm::vec3 frontnormal =
+      glm::normalize(obj->GetRotation() * glm::vec3(0, 0, -1));
   this->front = frontnormal;
   this->right = glm::normalize(glm::cross(this->front, glm::vec3(0, 1, 0)));
   this->up = glm::normalize(glm::cross(this->right, this->front));
   projmat = glm::perspective(
       glm::radians(45.0f),
       (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
-  viewmat = glm::lookAt(obj->_position, obj->_position + frontnormal,
-                        glm::vec3(0, 1, 0));
-  oldrot = obj->_rotation;
-  oldpos = obj->_position;
+
+  // Default: use exact world position
+  glm::vec3 camPos = obj->GetPosition();
+
+  // If the camera is a child of an object with physics, smoothly lerp
+  // its position using the parent's interpolated render position so that
+  // it doesn't stutter between fixed physics ticks.
+  if (auto so = obj->sceneobject.lock()) {
+    if (auto parentSO = so->Parent.lock()) {
+      if (parentSO->instance) {
+        if (auto phys =
+                parentSO->instance->GetComponent<Physics::ComponentPhysics>()) {
+          glm::vec3 smoothParentPos = phys->GetRenderPosition();
+          camPos = smoothParentPos + obj->GetLocalPosition();
+        }
+      }
+    }
+  }
+
+  viewmat = glm::lookAt(camPos, camPos + frontnormal, glm::vec3(0, 1, 0));
+  oldrot = obj->GetRotation();
+  oldpos = obj->GetPosition();
   w = Engine::Engine::width;
   h = Engine::Engine::height;
 }
@@ -89,7 +111,22 @@ bool CameraComponent::isUpToDate() {
   auto obj = object.lock();
   if (!obj)
     return false;
-  return oldrot == obj->_rotation && oldpos == obj->_position &&
+
+  // If the parent has physics and interpolation is on, the smooth position
+  // changes every render frame — always recalculate.
+  if (Physics::PhysicsSystem::interpolateRendering &&
+      Engine::Engine::isSimulationEnabled) {
+    if (auto so = obj->sceneobject.lock()) {
+      if (auto parentSO = so->Parent.lock()) {
+        if (parentSO->instance &&
+            parentSO->instance->GetComponent<Physics::ComponentPhysics>()) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return oldrot == obj->GetRotation() && oldpos == obj->GetPosition() &&
          w == Engine::Engine::width && h == Engine::Engine::height;
 }
 

@@ -13,6 +13,13 @@ void Editor::ComponentTestTrigger::Setup() {
                              object.lock()->_name, o->_name);
         }
       };
+  bb->OnTriggerLeave =
+      [this](std::shared_ptr<Engine::Physics::ComponentBoundingBox> other) {
+        if (auto o = other->object.lock()) {
+          SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "{} Left trigger {}", o->_name,
+                             object.lock()->_name);
+        }
+      };
 }
 void Editor::ComponentTestTrigger::End() {
   auto o = object.lock();

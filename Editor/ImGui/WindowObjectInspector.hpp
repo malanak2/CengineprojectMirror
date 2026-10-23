@@ -42,16 +42,21 @@ protected:
     if (ImGui::CollapsingHeader("Values")) {
       auto obj = sceneObject->instance;
       if (obj) {
-        ImGui::InputFloat3("XYZ", &obj->_position[0]);
+        glm::vec3 localPos = obj->GetLocalPosition();
+        if (ImGui::InputFloat3("XYZ", &localPos[0])) {
+          obj->SetPosition(localPos);
+        }
         ImGui::InputFloat3("Scale", &obj->scale[0]);
 
         static glm::vec3 currentAngles = glm::vec3(0.0f);
         static glm::quat lastRotation = glm::identity<glm::quat>();
         static Engine::Object *lastObject = nullptr;
 
-        if (lastObject != obj.get() || obj->_rotation != lastRotation) {
-          currentAngles = glm::degrees(glm::eulerAngles(obj->_rotation));
-          lastRotation = obj->_rotation;
+        if (lastObject != obj.get() ||
+            obj->GetLocalRotation() != lastRotation) {
+          currentAngles =
+              glm::degrees(glm::eulerAngles(obj->GetLocalRotation()));
+          lastRotation = obj->GetLocalRotation();
           lastObject = obj.get();
         }
 
@@ -62,10 +67,10 @@ protected:
 
           glm::vec3 radians = glm::radians(newAngles);
 
-          obj->_rotation = glm::quat(radians);
-          obj->_rotation = glm::normalize(obj->_rotation);
+          obj->SetRotation(glm::quat(radians));
+          obj->SetRotation(glm::normalize(obj->GetRotation()));
 
-          lastRotation = obj->_rotation;
+          lastRotation = obj->GetRotation();
         }
       }
     }
