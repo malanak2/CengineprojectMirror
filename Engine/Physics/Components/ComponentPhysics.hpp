@@ -43,8 +43,8 @@ public:
   float friction = 1;
   void ApplyForces();
 
-  void ApplyImpulse(std::shared_ptr<ComponentPhysics> B,
-                    std::shared_ptr<CollisionManifold> M, int c);
+  void ApplyImpulse(const std::shared_ptr<ComponentPhysics> &B,
+                    const std::shared_ptr<CollisionManifold> &M);
   float GetDeltaTime() override;
   void BeginTick();
   void EndTick();

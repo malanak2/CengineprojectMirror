@@ -1,7 +1,6 @@
 #pragma once
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
-#include <memory>
 #define JSON_TRY_USER if (true)
 #define JSON_CATCH_USER(exception) if (false)
 #define JSON_THROW_USER(exception)                                             \
@@ -17,7 +16,6 @@
 using json = nlohmann::json;
 
 namespace Engine {
-// TODO: No.
 enum class ObjectType { Component, Object, Material, Shader, Texture, Invalid };
 NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
                              {

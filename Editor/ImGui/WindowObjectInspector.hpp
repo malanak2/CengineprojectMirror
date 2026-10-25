@@ -8,18 +8,19 @@
 #include <glm/gtc/quaternion.hpp>
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
+#include <utility>
 namespace Editor {
 class WindowObjectInspector : public Window {
 public:
   WindowObjectInspector(std::shared_ptr<WindowScene> sceneWindow) {
-    this->sceneWindow = sceneWindow;
+    this->sceneWindow = std::move(sceneWindow);
   }
   std::string GetName() override { return "Object Inspector"; }
 
 protected:
   std::shared_ptr<WindowScene> sceneWindow;
   // https://en.cppreference.com/cpp/string/byte/tolower
-  std::string str_tolower(std::string s) {
+  static std::string str_tolower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return std::tolower(c); });
     return s;
@@ -34,7 +35,7 @@ protected:
       return;
     }
     char buf[64] = {0};
-    strncpy(buf, sceneObject->instance->_name.c_str(), 63);
+    strncpy_s(buf, sceneObject->instance->_name.c_str(), 63);
 
     if (ImGui::InputText("Name:", buf, 64)) {
       sceneObject->instance->_name = buf; // instance correctly updates the size
@@ -66,7 +67,7 @@ protected:
       }
     }
     std::vector<std::string> names = std::vector<std::string>();
-    std::string todel = "";
+    std::string todel;
     for (auto &[type, comp] : sceneObject->instance->_components) {
       if (comp != nullptr) {
         bool isCOpen;

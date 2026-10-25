@@ -55,7 +55,7 @@ public:
 
   virtual float GetDeltaTime();
 
-  void SetObject(std::shared_ptr<Object> object);
+  virtual void SetObject(const std::shared_ptr<Object> &object);
 
   //!
   //! @object Pointer to the object this is assigned to

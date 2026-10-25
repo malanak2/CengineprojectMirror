@@ -54,7 +54,7 @@ public:
   //!
   void SetPosition(glm::vec3 pos) {
     _localPosition = pos;
-    _UpdateWorldTransform();
+    UpdateWorldTransform();
   }
 
   //!
@@ -74,7 +74,7 @@ public:
   //!
   void SetRotation(glm::quat rot) {
     _localRotation = rot;
-    _UpdateWorldTransform();
+    UpdateWorldTransform();
   }
 
   void GetParentWorld(glm::vec3 &pos, glm::quat &rot) const;
@@ -84,10 +84,10 @@ public:
   }
   void SetWorldRotation(glm::quat world);
   glm::vec3 scale = {1, 1, 1};
-  Object(std::string path, std::shared_ptr<Scene> scene);
+  Object(std::string path, const std::shared_ptr<Scene> &scene);
 
   Object();
-  Object(std::shared_ptr<Scene> scene);
+  Object(const std::shared_ptr<Scene> &scene);
   std::string _name;
   //!
   //! @brief Calls EarlySetup on components
@@ -130,7 +130,7 @@ public:
   std::weak_ptr<Scene> scene;
   std::weak_ptr<SceneObject> sceneobject;
   void fromParams(std::string name,
-                  std::vector<std::shared_ptr<IComponent>> comps = {},
+                  const std::vector<std::shared_ptr<IComponent>> &comps = {},
                   std::vector<float> position = {0, 0, 0},
                   std::vector<float> rotation = {1, 0, 0, 0},
                   glm::vec3 scale = {1, 1, 1});
@@ -147,7 +147,7 @@ public:
   //!
   //! @param[in] key key
   //!
-  void AddComponent(std::string key) {
+  void AddComponent(const std::string &key) {
     ZoneScoped;
     if (_components.contains(key)) {
       SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
@@ -178,7 +178,7 @@ public:
   //!
   //! @param[in] key key
   //!
-  void RemoveComponent(std::string key) {
+  void RemoveComponent(const std::string &key) {
     if (!_components.contains(key)) {
       SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
                          "Tried to remomve component not present");
@@ -204,7 +204,7 @@ public:
   //!
   //! @param[in] key key
   //!
-  std::shared_ptr<IComponent> GetComponent(std::string key) {
+  std::shared_ptr<IComponent> GetComponent(const std::string &key) {
     if (!_components.contains(key))
       return nullptr;
     return _components[key];
@@ -216,19 +216,15 @@ public:
   //! @return .
   //!
   bool IsValid() {
-    for (auto &[id, co] : _components) {
-      if (!co->IsValid()) {
-        return false;
-      }
-    }
-    return true;
+    return std::ranges::all_of(
+        _components, [](const auto &pair) { return pair.second->IsValid(); });
   }
 
   //!
   //! @brief Recomputes world position and rotation from parent transform, then
   //! signals children to do the same.
   //!
-  void _UpdateWorldTransform();
+  void UpdateWorldTransform();
 
 private:
   //!

@@ -2,7 +2,7 @@
 // Created by malan on 20.04.2026.
 //
 #pragma once
-#include "Graphics/Graphics.hpp"
+#include "Graphics/Graphics.hpp" // IWYU pragma: keep
 #include "Scene.hpp"
 #include <memory>
 namespace Engine {

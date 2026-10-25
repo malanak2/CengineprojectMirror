@@ -29,7 +29,7 @@ std::shared_ptr<ImGuiComponentRenderer> ImGuiComponentRenderer::instance =
 
 void ImGuiUniformRenderer::Register(
     std::string_view type,
-    void (*func)(std::shared_ptr<Engine::Graphics::IUniform>)) {
+    void (*func)(const std::shared_ptr<Engine::Graphics::IUniform> &)) {
   if (funcs.contains(type)) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to re-register type");
     return;
@@ -37,7 +37,7 @@ void ImGuiUniformRenderer::Register(
   funcs.insert({type, func});
 }
 void ImGuiUniformRenderer::Render(
-    std::shared_ptr<Engine::Graphics::IUniform> uni) {
+    const std::shared_ptr<Engine::Graphics::IUniform> &uni) {
   ZoneScoped;
   auto t = uni->GetName();
   if (funcs.contains(t)) {
@@ -84,14 +84,16 @@ void ImGuiUniformRenderer::Init() {
 }
 
 void ImGuiComponentRenderer::Register(
-    std::string_view type, void (*func)(std::shared_ptr<Engine::IComponent>)) {
+    std::string_view type,
+    void (*func)(const std::shared_ptr<Engine::IComponent> &)) {
   if (funcs.contains(type)) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to re-register Component");
     return;
   }
   funcs.insert({type, func});
 }
-void ImGuiComponentRenderer::Render(std::shared_ptr<Engine::IComponent> uni) {
+void ImGuiComponentRenderer::Render(
+    const std::shared_ptr<Engine::IComponent> &uni) {
   ZoneScoped;
   auto t = uni->GetName();
   if (funcs.contains(t)) {

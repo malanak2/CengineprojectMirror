@@ -184,7 +184,7 @@ protected:
       ImGui::PopID();
     }
   }
-  void ContextMenu(std::shared_ptr<Engine::Object> obj) {
+  void ContextMenu(const std::shared_ptr<Engine::Object> &obj) {
     if (ImGui::BeginPopupContextItem(("ContextMenu##" + obj->_name).c_str())) {
       if (ImGui::MenuItem(("New Object##" + obj->_name).c_str())) {
         auto o = std::make_shared<Engine::Object>();

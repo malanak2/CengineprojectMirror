@@ -74,7 +74,7 @@ void Main::ReleaseDebugResources() {
     debugEBO = 0;
   }
 }
-int Main::Init(std::shared_ptr<Config> config) {
+int Main::Init(const std::shared_ptr<Config> &config) {
 
   ZoneScoped;
   auto logger = ENGINE_UTIL_LOGGER;
@@ -115,7 +115,7 @@ int Main::Init(std::shared_ptr<Config> config) {
     glfwSwapInterval(0);
   }
 
-  for (auto f : *instance->init) {
+  for (const auto &f : *instance->init) {
     f();
   }
 
@@ -172,7 +172,7 @@ int Main::Tick(
   }
   {
     ZoneScopedN("PreRender");
-    for (auto f : *instance->preRender) {
+    for (const auto &f : *instance->preRender) {
       f();
     }
   }
@@ -190,7 +190,7 @@ int Main::Tick(
   RenderBBOS();
   {
     ZoneScopedN("PostRender");
-    for (auto f : *instance->postRender) {
+    for (const auto &f : *instance->postRender) {
       f();
     }
   }
@@ -231,7 +231,7 @@ void Main::Terminate() {
   Model::models.clear();
   vertexShaders.clear();
   fragmentShaders.clear();
-  for (auto f : *instance->terminate)
+  for (const auto &f : *instance->terminate)
     f();
   glfwDestroyWindow(window);
   window = nullptr;
@@ -242,7 +242,7 @@ void Main::keyCallback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
   ZoneScoped;
   if (instance->keyMap.contains(scancode)) {
-    for (auto var : instance->keyMap[scancode]) {
+    for (const auto &var : instance->keyMap[scancode]) {
       var(action, mods);
     }
   }

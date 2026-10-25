@@ -10,10 +10,11 @@
 #include "spdlog/spdlog.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <memory>
+#include <utility>
 
 namespace Engine {
 
-Object::Object(std::string path, std::shared_ptr<Scene> scene) {
+Object::Object(std::string path, const std::shared_ptr<Scene> &scene) {
   // TODO:
   // Load data...
   std::string js;
@@ -127,12 +128,12 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
 }
 
 void Object::fromParams(std::string name,
-                        std::vector<std::shared_ptr<IComponent>> comps,
+                        const std::vector<std::shared_ptr<IComponent>> &comps,
                         std::vector<float> position,
                         std::vector<float> rotation, glm::vec3 scale) {
-  _name = name;
+  _name = std::move(name);
   _name.reserve(50);
-  for (auto cmp : comps) {
+  for (const auto &cmp : comps) {
     _components[std::string(cmp->GetName())] = cmp;
   }
   if (position.size() != 3) {
@@ -160,7 +161,9 @@ void Object::fromParams(std::string name,
   this->scale = scale;
 }
 
-Object::Object(std::shared_ptr<Scene> scene) : Object() { this->scene = scene; }
+Object::Object(const std::shared_ptr<Scene> &scene) : Object() {
+  this->scene = scene;
+}
 void Object::EarlySetup() {
   for (auto &[key, comp] : this->_components) {
     comp->EarlySetup();
@@ -214,7 +217,7 @@ void Object::SetWorldRotation(glm::quat w) {
   GetParentWorld(pp, pr);
   SetRotation(glm::normalize(glm::inverse(pr) * w));
 }
-void Object::_UpdateWorldTransform() {
+void Object::UpdateWorldTransform() {
   // Compute world position: parent world pos + local position
   glm::vec3 parentWorldPos = {0, 0, 0};
   if (auto so = sceneobject.lock()) {
@@ -239,7 +242,7 @@ void Object::_UpdateWorldTransform() {
   if (auto so = sceneobject.lock()) {
     for (auto &child : so->Children) {
       if (child && child->instance) {
-        child->instance->_UpdateWorldTransform();
+        child->instance->UpdateWorldTransform();
       }
     }
   }

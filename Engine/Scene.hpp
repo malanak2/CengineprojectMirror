@@ -4,6 +4,7 @@
 #pragma once
 #include "Graphics/Components/CameraComponent.hpp"
 #include "JsonFileBase.hpp"
+#include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
 #include <vector>
 
@@ -39,38 +40,55 @@ public:
   //! @Children Ptr to children of object
   //!
   std::vector<std::shared_ptr<SceneObject>> Children;
-  JsonFileBase ToJson();
-  void SetParent(std::shared_ptr<SceneObject> parent);
-  std::vector<std::shared_ptr<Graphics::CameraComponent>>
-  FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
-           std::shared_ptr<SceneObject> self,
-           std::shared_ptr<SceneObject> parent = nullptr);
+  virtual JsonFileBase ToJson();
+  virtual void SetParent(const std::shared_ptr<SceneObject> &parent);
+  virtual std::vector<std::shared_ptr<Graphics::CameraComponent>>
+  FromJson(const JsonFileBase &jsbase, const std::shared_ptr<Scene> &scene,
+           const std::shared_ptr<SceneObject> &self,
+           const std::shared_ptr<SceneObject> &parent);
   //!
   //! @brief Calls early setup on itself and then its children
   //!
   //!
-  void EarlySetup();
+  virtual void EarlySetup();
 
   //!
   //! @brief Calls setup on itself and then its children
   //!
   //!
-  void Setup();
+  virtual void Setup();
   //!
   //! @brief Calls Update on itself and its children
   //!
   //!
-  void Update();
+  virtual void Update();
   //!
   //! @brief Calls end on itself and its children
   //!
   //!
-  void End();
+  virtual void End();
   //!
   //! @brief Calls late end on itself and its children
   //!
   //!
-  void LateEnd();
+  virtual void LateEnd();
+};
+
+class PrefabJson : public SceneObjectJson {
+public:
+  std::string prefab_path;
+};
+NLOHMANN_DEFINE_DERIVED_TYPE_NON_INTRUSIVE(PrefabJson, SceneObjectJson,
+                                           prefab_path);
+
+class PrefabSceneObject : public SceneObject {
+public:
+  std::string prefab_path;
+  JsonFileBase ToJson() override;
+  std::vector<std::shared_ptr<Graphics::CameraComponent>>
+  FromJson(const JsonFileBase &jsbase, const std::shared_ptr<Scene> &scene,
+           const std::shared_ptr<SceneObject> &self,
+           const std::shared_ptr<SceneObject> &parent) override;
 };
 
 class SceneJson {
@@ -100,10 +118,10 @@ public:
   //! @param[in] Parent Pointer to the sceneobject to be its parent. If not set
   //! spawn in the root
   //!
-  void Instantiate(std::shared_ptr<Object> object,
-                   std::shared_ptr<SceneObject> Parent = {});
-  void RemoveObject(std::shared_ptr<SceneObject> so);
-  void RemoveObjectCascade(std::shared_ptr<SceneObject> so);
+  void Instantiate(const std::shared_ptr<Object> &object,
+                   const std::shared_ptr<SceneObject> &Parent = {});
+  void RemoveObject(const std::shared_ptr<SceneObject> &so);
+  void RemoveObjectCascade(const std::shared_ptr<SceneObject> &so);
   json ToJson() override;
   void FromJson(json &js) override;
   void FromJson(json &js, std::shared_ptr<Scene> self);

@@ -15,13 +15,13 @@ protected:
             (std::format("Materials ({})",
                          Engine::Graphics::Main::materials.size())
                  .c_str()))) {
-      for (auto m : Engine::Graphics::Main::materials) {
+      for (const auto &m : Engine::Graphics::Main::materials) {
 
         if (ImGui::CollapsingHeader(
                 std::format("{} ({})", m.first,
                             m.second->renderableObjects.size())
                     .c_str())) {
-          for (auto o : m.second->renderableObjects) {
+          for (const auto &o : m.second->renderableObjects) {
             ImGui::Text("%s", o->object.lock()->_name.c_str());
           }
         }
@@ -31,7 +31,7 @@ protected:
             std::format("Textures ({})",
                         Engine::Graphics::Main::textures.size())
                 .c_str())) {
-      for (auto [path, tex] : Engine::Graphics::Main::textures) {
+      for (const auto &[path, tex] : Engine::Graphics::Main::textures) {
         ImGui::Text("%s", path.c_str());
       }
     }

@@ -197,7 +197,7 @@ Engine::Graphics::Texture::CreateModel(std::string textureName) {
                              ? textureName.substr(lastSlash + 1)
                              : textureName;
 
-  size_t lastDot = filename.find_last_of(".");
+  size_t lastDot = filename.find_last_of('.');
   std::string rawname =
       (lastDot != std::string::npos) ? filename.substr(0, lastDot) : filename;
 

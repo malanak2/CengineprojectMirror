@@ -157,7 +157,7 @@ public:
 
   glm::mat4 GetLocalTransform() { return m_LocalTransform; }
   std::string GetBoneName() const { return m_Name; }
-  int GetBoneID() { return m_ID; }
+  int GetBoneID() const { return m_ID; }
 
   /* Gets the current index on mKeyPositions to interpolate to based on
   the current animation time*/
@@ -251,9 +251,9 @@ public:
 
   Bone *FindBone(const std::string &name);
   inline const std::string &GetName() const { return m_Name; }
-  inline float GetTicksPerSecond() { return m_TicksPerSecond; }
+  inline float GetTicksPerSecond() const { return m_TicksPerSecond; }
 
-  inline float GetDuration() { return m_Duration; }
+  inline float GetDuration() const { return m_Duration; }
 
   inline const AssimpNodeData &GetRootNode() { return m_RootNode; }
 

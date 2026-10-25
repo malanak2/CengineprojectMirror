@@ -32,7 +32,7 @@ class Texture;
 class Main {
 public:
   static std::shared_ptr<Main> instance;
-  static int Init(std::shared_ptr<Config> config);
+  static int Init(const std::shared_ptr<Config> &config);
   static int
   Tick(std::chrono::duration<float, std::chrono::seconds::period> dur_other,
        std::chrono::duration<float, std::chrono::seconds::period> dur_graphics);

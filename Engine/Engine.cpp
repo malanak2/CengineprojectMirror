@@ -12,7 +12,6 @@
 #include "Object.hpp"
 #include "Physics/PhysicsSystem.hpp"
 #include "Scene.hpp"
-#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "spdlog/spdlog.h"
 #include <GLFW/glfw3.h>
@@ -42,7 +41,7 @@ void Engine::Engine::Init() {
   auto config = Config::inst;
   //  Graphics::Main::instance = std::make_unique<Graphics::Main>();
 
-  if (Graphics::Main::instance->Init(config) != 0) {
+  if (Graphics::Main::Init(config) != 0) {
     SPDLOG_LOGGER_ERROR(logger,
                         "Failed to initialize Graphics::Main::instance!");
     throw std::logic_error("Failed to initialize Graphics::Main::instance!");
@@ -137,7 +136,7 @@ void Engine::Engine::Run() {
     last_tick_begin = cur;
     {
       ZoneScopedN("Graphics");
-      if (Graphics::Main::instance->Tick(
+      if (Graphics::Main::Tick(
               std::chrono::duration_cast<std::chrono::duration<double>>(
                   dur_other),
               std::chrono::duration_cast<std::chrono::duration<double>>(

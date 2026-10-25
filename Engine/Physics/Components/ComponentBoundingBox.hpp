@@ -23,10 +23,11 @@ public:
   glm::vec3 size;
   glm::mat3 orientation;
 
-  std::pair<double, double> GetInterval(glm::vec3 axis);
-  bool OverlapOnAxis(std::shared_ptr<OBB> obb1, std::shared_ptr<OBB> obb2,
-                     const glm::vec3 &axis);
-  bool Collides(std::shared_ptr<OBB> other);
+  std::pair<double, double> GetInterval(const glm::vec3 &axis) const;
+  bool OverlapOnAxis(const std::shared_ptr<OBB> &obb1,
+                     const std::shared_ptr<OBB> &obb2,
+                     const glm::vec3 &axis) const;
+  bool Collides(const std::shared_ptr<OBB> &other);
   glm::mat4 GetModelMatrix() const {
     glm::mat4 translation = glm::translate(glm::mat4(1.0f), position);
     glm::mat4 rotation = glm::mat4(orientation);
@@ -67,7 +68,7 @@ public:
   void LateEnd() override;
   void Update() override;
   std::shared_ptr<OBB> GetOBB();
-  bool Collides(std::shared_ptr<ComponentBoundingBox> other) {
+  bool Collides(const std::shared_ptr<ComponentBoundingBox> &other) {
     return GetOBB()->Collides(other->GetOBB());
   }
   void InvalidateBB() { obb = nullptr; }

@@ -11,6 +11,7 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
+#include <utility>
 
 using namespace Engine;
 std::vector<std::function<void(GLFWwindow *, int, int, int, int)>>
@@ -83,7 +84,7 @@ void callback_key(GLFWwindow *window, int key, int scancode, int action,
                   int mods) {
   ZoneScoped;
   auto instance = InputSystem::instance;
-  for (auto f : InputSystem::onCallback) {
+  for (const auto &f : InputSystem::onCallback) {
     f(window, key, scancode, action, mods);
   }
   instance->currentMods = QueryCurrentMods(window);
@@ -149,41 +150,41 @@ void InputSystem::Init() {
     return;
   }
   InputSystemJson ijs = js;
-  for (auto j : ijs.keybindsPress) {
+  for (const auto &j : ijs.keybindsPress) {
     auto k =
         NewKeybind(j.name, j.default_key, j.key, j.mods, KeypressType::PRESS,
                    nullptr, j.followsPausedExecution, true);
   }
-  for (auto j : ijs.keybindsHold) {
+  for (const auto &j : ijs.keybindsHold) {
     auto k =
         NewKeybind(j.name, j.default_key, j.key, j.mods, KeypressType::HOLD,
                    nullptr, j.followsPausedExecution, true);
   }
-  for (auto j : ijs.keybindsHoldText) {
+  for (const auto &j : ijs.keybindsHoldText) {
     auto k = NewKeybind(j.name, j.default_key, j.key, j.mods,
                         KeypressType::HOLD_TEXT, nullptr,
                         j.followsPausedExecution, true);
   }
-  for (auto j : ijs.keybindsRelease) {
+  for (const auto &j : ijs.keybindsRelease) {
     auto k =
         NewKeybind(j.name, j.default_key, j.key, j.mods, KeypressType::RELEASE,
                    nullptr, j.followsPausedExecution, true);
   }
-  for (auto j : ijs.mouseMove) {
+  for (const auto &j : ijs.mouseMove) {
     NewKeybindMouseMove(j.name, (MOVE_TYPE)j.mtype, j.default_button, j.button,
                         j.mods, nullptr, j.followsPausedExecution, true);
   }
-  for (auto j : ijs.mouseClick) {
+  for (const auto &j : ijs.mouseClick) {
     NewKeybindMouseClick(j.name, j.default_button, j.button, j.mods,
                          (CLICK_TYPE)j.ctype, nullptr, j.followsPausedExecution,
                          true);
   }
-  for (auto j : ijs.mouseRelease) {
+  for (const auto &j : ijs.mouseRelease) {
     NewKeybindMouseClick(j.name, j.default_button, j.button, j.mods,
                          (CLICK_TYPE)j.ctype, nullptr, j.followsPausedExecution,
                          true);
   }
-  for (auto j : ijs.mouseScroll) {
+  for (const auto &j : ijs.mouseScroll) {
     NewKeybindMouseScroll(j.name, (SCROLL_TYPE)j.scrolltype, j.mods, nullptr,
                           j.followsPausedExecution, true);
   }
@@ -281,7 +282,7 @@ void InputSystem::ProcessEvents() {
     }
     }
     if ((*m).contains(event.scancode)) {
-      for (auto kb : (*m)[event.scancode]) {
+      for (const auto &kb : (*m)[event.scancode]) {
         int effectiveMods = SanitizeMods(event.mods);
         effectiveMods &= ~GetKeyModifierBit(kb->key);
         if (event.type == RELEASE) {
@@ -300,12 +301,12 @@ void InputSystem::ProcessEvents() {
     }
     if (event.type == RELEASE) {
       if (instance->keybind_map_press.contains(event.scancode)) {
-        for (auto kb : instance->keybind_map_press[event.scancode]) {
+        for (const auto &kb : instance->keybind_map_press[event.scancode]) {
           kb->isHeld = false;
         }
       }
       if (instance->keybind_map_hold.contains(event.scancode)) {
-        for (auto kb : instance->keybind_map_hold[event.scancode]) {
+        for (const auto &kb : instance->keybind_map_hold[event.scancode]) {
           kb->isHeld = false;
         }
       }
@@ -433,7 +434,7 @@ InputSystem::NewKeybind(std::string id, int default_key, int key, int mods,
 }
 std::shared_ptr<Keybind> InputSystem::ChangeKeybind(std::string id, int old_key,
                                                     int new_key, int mods) {
-  auto kb = GetKeybind(id);
+  auto kb = GetKeybind(std::move(id));
   if (kb == nullptr) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Tried to edit a non existing keybind");

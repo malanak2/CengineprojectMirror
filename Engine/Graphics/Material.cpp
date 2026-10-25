@@ -103,7 +103,7 @@ Material::Material(std::string path) {
   CHECK_GL_ERROR();
 }
 
-void Material::SetupMaterial() {
+void Material::SetupMaterial() const {
   ZoneScopedN("Material::Setup");
   TracyGpuZone("Material::Setup");
   program->Setup();

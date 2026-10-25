@@ -167,7 +167,9 @@ void Engine::Graphics::ComponentAnimator::SetAnimation(std::string path) {
 void Engine::Graphics::ComponentAnimator::SetIsPlaying(bool state) {
   isPlaying = state;
 }
-bool Engine::Graphics::ComponentAnimator::GetIsPlaying() { return isPlaying; }
+bool Engine::Graphics::ComponentAnimator::GetIsPlaying() const {
+  return isPlaying;
+}
 std::shared_ptr<Engine::Graphics::Animator>
 Engine::Graphics::ComponentAnimator::GetAnimator() {
   return animator;

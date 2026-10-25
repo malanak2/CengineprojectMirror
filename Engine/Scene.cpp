@@ -3,14 +3,12 @@
 //
 
 #include "Scene.hpp"
-#include "Engine.hpp"
 #include "Graphics/Components/CameraComponent.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "JsonFileBase.hpp"
 #include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <stdexcept>
 
@@ -42,17 +40,17 @@ std::shared_ptr<Scene> Scene::Load(std::string path) {
 json Scene::ToJson() {
   SceneJson sj;
   sj.objects = {};
-  for (auto var : objects) {
+  for (const auto &var : objects) {
     sj.objects.insert(sj.objects.end(), var->ToJson());
   }
   sj.default_camera = default_camera;
   return sj;
 }
-
 std::vector<std::shared_ptr<Graphics::CameraComponent>>
-SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
-                      std::shared_ptr<SceneObject> self,
-                      std::shared_ptr<SceneObject> parent) {
+SceneObject::FromJson(const JsonFileBase &jsbase,
+                      const std::shared_ptr<Scene> &scene,
+                      const std::shared_ptr<SceneObject> &self,
+                      const std::shared_ptr<SceneObject> &parent) {
   std::vector<std::shared_ptr<Graphics::CameraComponent>> camcomps = {};
   if (jsbase.object_type != ObjectType::Object) {
     throw std::logic_error("Bad object type");
@@ -68,9 +66,9 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
   }
 
   this->instance = o;
-  o->_UpdateWorldTransform();
+  o->UpdateWorldTransform();
   this->scene = std::weak_ptr<Scene>(scene);
-  for (auto var : js.children) {
+  for (const auto &var : js.children) {
     auto j = std::make_shared<SceneObject>();
     auto r = j->FromJson(var, scene, j, self);
     camcomps.insert(camcomps.end(), r.begin(), r.end());
@@ -78,14 +76,47 @@ SceneObject::FromJson(JsonFileBase jsbase, std::shared_ptr<Scene> scene,
   }
   return camcomps;
 }
+// TODO:
+std::vector<std::shared_ptr<Graphics::CameraComponent>>
+PrefabSceneObject::FromJson(const JsonFileBase &jsbase,
+                            const std::shared_ptr<Scene> &scene,
+                            const std::shared_ptr<SceneObject> &self,
+                            const std::shared_ptr<SceneObject> &parent) {
+  std::vector<std::shared_ptr<Graphics::CameraComponent>> camcomps = {};
+  if (jsbase.object_type != ObjectType::Object) {
+    throw std::logic_error("Bad object type");
+  }
+  PrefabJson js = jsbase.data;
+  this->Parent = parent;
+
+  auto o = std::make_shared<Object>(scene);
+  auto ojsref = ((json)js.data);
+  auto rr = o->FromJson(ojsref, nullptr);
+  o->sceneobject = shared_from_this();
+  if (rr != nullptr) {
+    camcomps.push_back(rr);
+  }
+
+  this->instance = o;
+  o->UpdateWorldTransform();
+  this->scene = std::weak_ptr<Scene>(scene);
+  for (const auto &var : js.children) {
+    auto j = std::make_shared<SceneObject>();
+    auto r = j->FromJson(var, scene, j, self);
+    camcomps.insert(camcomps.end(), r.begin(), r.end());
+    this->Children.insert(this->Children.end(), j);
+  }
+  return camcomps;
+}
+
 void SceneObject::EarlySetup() {
   instance->EarlySetup();
-  for (auto var : this->Children) {
+  for (const auto &var : this->Children) {
     var->EarlySetup();
   }
 }
 
-void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
+void SceneObject::SetParent(const std::shared_ptr<SceneObject> &parent) {
   auto oldParent = this->Parent.lock();
   if (oldParent) {
     std::erase(oldParent->Children, this->shared_from_this());
@@ -97,7 +128,7 @@ void SceneObject::SetParent(std::shared_ptr<SceneObject> parent) {
     parent->Children.insert(parent->Children.end(), this->shared_from_this());
   }
   if (instance)
-    instance->_UpdateWorldTransform();
+    instance->UpdateWorldTransform();
 }
 
 JsonFileBase SceneObject::ToJson() {
@@ -109,7 +140,27 @@ JsonFileBase SceneObject::ToJson() {
                         "Could not convert object to json: {}", e.what());
   }
   std::vector<JsonFileBase> child = {};
-  for (auto scene_object_json : this->Children) {
+  for (const auto &scene_object_json : this->Children) {
+    child.insert(child.end(), (scene_object_json->ToJson()));
+  }
+  ret->children = child;
+  JsonFileBase retbase;
+  retbase.object_type = ObjectType::Object;
+  retbase.data = *ret;
+  return retbase;
+}
+
+// TODO:
+JsonFileBase PrefabSceneObject::ToJson() {
+  auto ret = std::make_shared<SceneObjectJson>();
+  try {
+    ret->data = instance->ToJson();
+  } catch (const std::exception &e) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Could not convert object to json: {}", e.what());
+  }
+  std::vector<JsonFileBase> child = {};
+  for (const auto &scene_object_json : this->Children) {
     child.insert(child.end(), (scene_object_json->ToJson()));
   }
   ret->children = child;
@@ -134,10 +185,10 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
   this->objects = {};
   this->cameras = {};
   this->default_camera = ojs.default_camera;
-  for (auto var : ojs.objects) {
+  for (const auto &var : ojs.objects) {
     try {
       auto j = std::make_shared<SceneObject>();
-      auto c = j->FromJson(var, self, j);
+      auto c = j->FromJson(var, self, j, nullptr);
       cameras.insert(cameras.end(), c.begin(), c.end());
       this->objects.insert(this->objects.end(), j);
     } catch (const std::exception &e) {
@@ -162,7 +213,7 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
     this->cameras.insert(this->cameras.end(), cam);
     return;
   }
-  for (auto cam : cameras) {
+  for (const auto &cam : cameras) {
     if (cam->object.lock()->_name == ojs.default_camera) {
       this->camera = cam;
       return;
@@ -175,8 +226,8 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
 }
 
 Scene::Scene() { this->objects = {}; }
-void Scene::Instantiate(std::shared_ptr<Object> object,
-                        std::shared_ptr<SceneObject> Parent) {
+void Scene::Instantiate(const std::shared_ptr<Object> &object,
+                        const std::shared_ptr<SceneObject> &Parent) {
   auto so = std::make_shared<SceneObject>();
   so->Parent = Parent;
   if (Parent != nullptr) {
@@ -190,18 +241,18 @@ void Scene::Instantiate(std::shared_ptr<Object> object,
   so->EarlySetup();
   so->Setup();
 }
-void Scene::RemoveObject(std::shared_ptr<SceneObject> so) {
+void Scene::RemoveObject(const std::shared_ptr<SceneObject> &so) {
   so->End();
   so->LateEnd();
   auto pos = std::find(objects.begin(), objects.end(), so);
   if (pos != objects.end()) {
     objects.erase(pos);
     auto chls = std::vector<std::shared_ptr<SceneObject>>{};
-    for (auto ch : so->Children) {
+    for (const auto &ch : so->Children) {
       objects.insert(objects.end(), ch);
       chls.push_back(ch);
     }
-    for (auto ch : chls) {
+    for (const auto &ch : chls) {
       ch->SetParent(nullptr);
     }
     return;
@@ -212,18 +263,17 @@ void Scene::RemoveObject(std::shared_ptr<SceneObject> so) {
     parent->Children.erase(loc);
   }
   auto chls = std::vector<std::shared_ptr<SceneObject>>{};
-  for (auto child : so->Children) {
+  for (const auto &child : so->Children) {
     child->SetParent(parent);
   }
-  for (auto ch : chls) {
-
+  for (const auto &ch : chls) {
     ch->SetParent(parent);
   }
 }
 
-void Scene::RemoveObjectCascade(std::shared_ptr<SceneObject> so) {
+void Scene::RemoveObjectCascade(const std::shared_ptr<SceneObject> &so) {
   auto ch = std::vector<std::shared_ptr<SceneObject>>(so->Children);
-  for (auto child : ch) {
+  for (const auto &child : ch) {
     RemoveObjectCascade(child);
   }
   so->End();
@@ -245,35 +295,35 @@ void Scene::RemoveObjectCascade(std::shared_ptr<SceneObject> so) {
 }
 
 void Scene::Setup() {
-  for (auto var : this->objects) {
+  for (const auto &var : this->objects) {
     var->EarlySetup();
   }
-  for (auto var : this->objects) {
+  for (const auto &var : this->objects) {
     var->Setup();
   }
 }
 void SceneObject::Setup() {
 
   instance->Setup();
-  for (auto var : this->Children) {
+  for (const auto &var : this->Children) {
     var->Setup();
   }
 }
 void Scene::Update() {
-  for (auto var : this->objects) {
+  for (const auto &var : this->objects) {
     var->Update();
   }
 }
 void SceneObject::Update() {
   instance->Update();
-  for (auto var : this->Children) {
+  for (const auto &var : this->Children) {
     var->Update();
   }
 }
 void SceneObject::End() { instance->End(); }
 void SceneObject::LateEnd() {
   instance->LateEnd();
-  for (auto var : this->Children) {
+  for (const auto &var : this->Children) {
     var->LateEnd();
   }
 }

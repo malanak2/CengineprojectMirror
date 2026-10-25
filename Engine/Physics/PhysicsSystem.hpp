@@ -24,9 +24,8 @@ public:
                                          std::shared_ptr<ComponentPhysics>>,
                                std::shared_ptr<CollisionManifold>>>
       collisions;
-  static void ApplyStaticImpulse(std::shared_ptr<ComponentPhysics> body,
-                                 std::shared_ptr<CollisionManifold> M,
-                                 int contactIndex);
+  static void ApplyStaticImpulse(const std::shared_ptr<ComponentPhysics> &body,
+                                 const std::shared_ptr<CollisionManifold> &M);
 
   //!
   //! @LinearProjectionPercent Keep between 0.2 and 0.8

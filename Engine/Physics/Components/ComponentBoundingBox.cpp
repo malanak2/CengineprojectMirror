@@ -4,7 +4,8 @@
 #include "Physics/PhysicsSystem.hpp"
 #include "Physics/Plane.hpp"
 #include "Physics/Ray.hpp"
-std::pair<double, double> Engine::Physics::OBB::GetInterval(glm::vec3 axis) {
+std::pair<double, double>
+Engine::Physics::OBB::GetInterval(const glm::vec3 &axis) const {
   glm::vec3 vertex[8];
   glm::vec3 C = this->position; // OBB Center
   glm::vec3 E = this->size;     // OBB Extents
@@ -29,14 +30,14 @@ std::pair<double, double> Engine::Physics::OBB::GetInterval(glm::vec3 axis) {
   }
   return result;
 }
-bool Engine::Physics::OBB::OverlapOnAxis(std::shared_ptr<OBB> obb1,
-                                         std::shared_ptr<OBB> obb2,
-                                         const glm::vec3 &axis) {
+bool Engine::Physics::OBB::OverlapOnAxis(const std::shared_ptr<OBB> &obb1,
+                                         const std::shared_ptr<OBB> &obb2,
+                                         const glm::vec3 &axis) const {
   auto a = GetInterval(axis);
   auto b = obb2->GetInterval(axis);
   return ((b.first <= a.second) && (a.first <= b.second));
 }
-bool Engine::Physics::OBB::Collides(std::shared_ptr<OBB> other) {
+bool Engine::Physics::OBB::Collides(const std::shared_ptr<OBB> &other) {
   auto o1 = this->orientation;
   auto o2 = other->orientation;
   std::vector<glm::vec3> test = {glm::vec3(o1[0][0], o1[0][1], o1[0][2]),

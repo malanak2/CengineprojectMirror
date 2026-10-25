@@ -269,9 +269,7 @@ protected:
                      int newMods) {
     if (!kb)
       return;
-    auto input = Engine::InputSystem::instance;
-
-    input->ChangeKeybind(kb->name, kb->key, newKey, newMods);
+    Engine::InputSystem::ChangeKeybind(kb->name, kb->key, newKey, newMods);
   }
 };
 

@@ -11,7 +11,7 @@ void IComponent::LateEnd() {}
 float IComponent::GetDeltaTime() { return Engine::Engine::GetDeltaTime(); }
 
 void IComponent::FixedUpdate() {}
-void IComponent::SetObject(std::shared_ptr<Object> object) {
+void IComponent::SetObject(const std::shared_ptr<Object> &object) {
   this->object = object;
 }
 

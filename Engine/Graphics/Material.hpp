@@ -42,12 +42,12 @@ public:
   unsigned int instanceSSBO = 0;
   size_t instanceSSBOAllocatedSize = 0;
   unsigned int boneSSBO = 0;
-  std::string path = "";
-  std::string name = "";
+  std::string path;
+  std::string name;
   bool usable = false;
   bool uses_camera;
   std::string texture_path;
-  void SetupMaterial();
+  void SetupMaterial() const;
   void RenderObjects();
   std::vector<std::shared_ptr<ComponentRenderable>> renderableObjects;
   //!

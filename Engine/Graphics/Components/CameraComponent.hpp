@@ -36,7 +36,7 @@ public:
 
   Planes planes;
   Frustum() {}
-  bool Intersects(std::shared_ptr<Physics::OBB> obb) {
+  bool Intersects(const std::shared_ptr<Physics::OBB> &obb) {
     for (int i = 0; i < 6; ++i) {
       if (planes.planes[i].Classify(obb) < 0) {
         return false;

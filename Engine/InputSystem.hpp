@@ -219,7 +219,7 @@ public:
   void ResetFunc() override { func = nullptr; }
   std::function<void()> func;
   CLICK_TYPE ctype = CLICK_PRESS;
-  bool followsPausedExecution;
+  bool followsPausedExecution = true;
   void CallFunc(double xposmouse, double yposmouse, int mbutton, int maction,
                 int mmods, double xscrolloffset, double yscrolloffset,
                 double positionX, double positionY) override;

@@ -19,7 +19,7 @@ public:
 
   void SetAnimation(std::string name);
   void SetIsPlaying(bool state);
-  bool GetIsPlaying();
+  bool GetIsPlaying() const;
   std::shared_ptr<Animator> GetAnimator();
   std::string GetCurrentAnimation();
   const std::vector<glm::mat4> &GetFinalBoneMatrices() const;

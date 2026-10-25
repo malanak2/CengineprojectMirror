@@ -7,14 +7,16 @@ void Editor::ComponentTestTrigger::Setup() {
   auto o = object.lock();
   auto bb = o->GetComponent<Engine::Physics::ComponentBoundingBox>();
   bb->OnTriggerEnter =
-      [this](std::shared_ptr<Engine::Physics::ComponentBoundingBox> other) {
+      [this](
+          const std::shared_ptr<Engine::Physics::ComponentBoundingBox> &other) {
         if (auto o = other->object.lock()) {
           SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Trigger {} hit by {}",
                              object.lock()->_name, o->_name);
         }
       };
   bb->OnTriggerLeave =
-      [this](std::shared_ptr<Engine::Physics::ComponentBoundingBox> other) {
+      [this](
+          const std::shared_ptr<Engine::Physics::ComponentBoundingBox> &other) {
         if (auto o = other->object.lock()) {
           SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "{} Left trigger {}", o->_name,
                              object.lock()->_name);

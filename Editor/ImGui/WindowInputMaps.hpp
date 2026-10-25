@@ -35,7 +35,7 @@ protected:
     ImGui::End();
   }
   void RenderInputMap(
-      std::string name,
+      const std::string &name,
       std::map<int, std::vector<std::shared_ptr<Engine::Keybind>>> *map) {
     if (ImGui::CollapsingHeader(("KeyMap: " + name).c_str())) {
       for (auto const &[scancode, kvec] : *map) {

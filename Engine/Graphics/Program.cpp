@@ -101,7 +101,7 @@ Program::~Program() {
 }
 
 /// Assumes program is used
-void Program::SetUniform(std::string uniform, float value, bool camera) {
+void Program::SetUniform(const std::string &uniform, float value, bool camera) {
 
   ZoneScoped;
   if (!uniforms.contains(uniform)) {
@@ -114,8 +114,8 @@ void Program::SetUniform(std::string uniform, float value, bool camera) {
                   sizeof(float), &value);
   CHECK_GL_ERROR();
 }
-void Engine::Graphics::Program::SetUniform(std::string uniform, int value,
-                                           bool camera) {
+void Engine::Graphics::Program::SetUniform(const std::string &uniform,
+                                           int value, bool camera) {
   ZoneScoped;
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
@@ -128,8 +128,8 @@ void Engine::Graphics::Program::SetUniform(std::string uniform, int value,
 }
 
 /// Assumes program is used
-void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
-                         float v4, bool camera) {
+void Program::SetUniform(const std::string &uniform, float v1, float v2,
+                         float v3, float v4, bool camera) {
   ZoneScoped;
   if (!uniforms.contains(uniform)) {
     SPDLOG_LOGGER_INFO(spdlog::get("console"), "Uniform not found: {}",
@@ -146,7 +146,7 @@ void Program::SetUniform(std::string uniform, float v1, float v2, float v3,
   CHECK_GL_ERROR();
 }
 
-void Program::SetUniform(std::string key, std::vector<float> values,
+void Program::SetUniform(const std::string &key, std::vector<float> values,
                          bool camera) {
   ZoneScoped;
   switch (values.size()) {
@@ -166,7 +166,8 @@ void Program::SetUniform(std::string key, std::vector<float> values,
   CHECK_GL_ERROR();
 }
 
-void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
+void Program::SetUniform(const std::string &uniform, glm::mat4 mat,
+                         bool camera) {
   ZoneScoped;
   CHECK_GL_ERROR();
   if (!uniforms.contains(uniform)) {
@@ -181,12 +182,13 @@ void Program::SetUniform(std::string uniform, glm::mat4 mat, bool camera) {
                   sizeof(glm::mat4), glm::value_ptr(mat));
   CHECK_GL_ERROR();
 }
-void Engine::Graphics::Program::BindTexture2D(Texture tex) {
+void Engine::Graphics::Program::BindTexture2D(const Texture &tex) {
   ZoneScoped;
   glBindTexture(GL_TEXTURE_2D, tex.texture);
 }
 
-unsigned int Program::GetUniformOffset(std::string uniform, bool camera) {
+unsigned int Program::GetUniformOffset(const std::string &uniform,
+                                       bool camera) {
   ZoneScoped;
   unsigned int offset = 0;
   if (camera)

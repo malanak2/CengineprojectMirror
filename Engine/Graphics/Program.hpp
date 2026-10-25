@@ -20,14 +20,15 @@ public:
           std::vector<std::shared_ptr<Shader>> shaders, std::string texpath,
           bool uses_camera = false);
   ~Program();
-  void SetUniform(std::string uniform, float value, bool camera);
-  void SetUniform(std::string uniform, int value, bool camera);
-  void SetUniform(std::string uniform, float v1, float v2, float v3, float v4,
+  void SetUniform(const std::string &uniform, float value, bool camera);
+  void SetUniform(const std::string &uniform, int value, bool camera);
+  void SetUniform(const std::string &uniform, float v1, float v2, float v3,
+                  float v4, bool camera);
+  void SetUniform(const std::string &uniform, std::vector<float> values,
                   bool camera);
-  void SetUniform(std::string uniform, std::vector<float> values, bool camera);
-  void SetUniform(std::string uniform, glm::mat4 mat, bool camera);
+  void SetUniform(const std::string &uniform, glm::mat4 mat, bool camera);
 
-  void BindTexture2D(Texture tex);
+  void BindTexture2D(const Texture &tex);
 
   //!
   //! @uniforms Maps the name of uniform to the uniform itself
@@ -36,7 +37,7 @@ public:
   std::map<int, std::string> uniforms_info = {};
   bool _uses_camera = false;
 
-  unsigned int GetUniformOffset(std::string uniform, bool camera);
+  unsigned int GetUniformOffset(const std::string &uniform, bool camera);
   void Setup();
   std::shared_ptr<Texture> tex = nullptr;
 

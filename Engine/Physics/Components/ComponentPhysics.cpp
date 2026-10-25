@@ -41,15 +41,15 @@ glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
   return glm::mix(prevPos, currPos, PhysicsSystem::GetInterpolationAlpha());
 }
 void ComponentPhysics::FromJson(json &js) {
-  gravity_scale.x = js["gravity_scale"][0].get<double>();
-  gravity_scale.y = js["gravity_scale"][1].get<double>();
-  gravity_scale.z = js["gravity_scale"][2].get<double>();
-  world_direction.x = js["world_direction"][0].get<double>();
-  world_direction.y = js["world_direction"][1].get<double>();
-  world_direction.z = js["world_direction"][2].get<double>();
-  velocities.x = js["velocities"][0].get<double>();
-  velocities.y = js["velocities"][1].get<double>();
-  velocities.z = js["velocities"][2].get<double>();
+  gravity_scale.x = js["gravity_scale"][0].get<float>();
+  gravity_scale.y = js["gravity_scale"][1].get<float>();
+  gravity_scale.z = js["gravity_scale"][2].get<float>();
+  world_direction.x = js["world_direction"][0].get<float>();
+  world_direction.y = js["world_direction"][1].get<float>();
+  world_direction.z = js["world_direction"][2].get<float>();
+  velocities.x = js["velocities"][0].get<float>();
+  velocities.y = js["velocities"][1].get<float>();
+  velocities.z = js["velocities"][2].get<float>();
   cor = js["cor"].get<float>();
   mass = js["mass"].get<float>();
   friction = js["friction"].get<float>();
@@ -91,8 +91,8 @@ void Physics::ComponentPhysics::ApplyForces() {
   obb->InvalidateBB();
 }
 void Physics::ComponentPhysics::ApplyImpulse(
-    std::shared_ptr<ComponentPhysics> B, std::shared_ptr<CollisionManifold> M,
-    int c) {
+    const std::shared_ptr<ComponentPhysics> &B,
+    const std::shared_ptr<CollisionManifold> &M) {
 
   float invMass1 = (mass > 0.0f) ? (1.0f / mass) : 0.0f;
   float invMass2 = (B && B->mass > 0.0f) ? (1.0f / B->mass) : 0.0f;

@@ -73,7 +73,7 @@ public:
           //           ImGuiDockNodeFlags_PassthruCentralNode);
           {
             ZoneScopedN("ImGui build up frame");
-            for (auto w : windows) {
+            for (const auto &w : windows) {
               w->Draw();
             }
             wtgles->Draw();

@@ -153,9 +153,9 @@ void Engine::Physics::PhysicsSystem::UnregisterBBox(
   for (auto &[other, trigger] : leaving)
     FireContactEvent(other, c, ContactEvent::Leave, trigger);
 }
-void PhysicsSystem::ApplyStaticImpulse(std::shared_ptr<ComponentPhysics> body,
-                                       std::shared_ptr<CollisionManifold> M,
-                                       int) {
+void PhysicsSystem::ApplyStaticImpulse(
+    const std::shared_ptr<ComponentPhysics> &body,
+    const std::shared_ptr<CollisionManifold> &M) {
   if (body->mass <= 0.0f)
     return;
 
@@ -264,9 +264,9 @@ void Engine::Physics::PhysicsSystem::phystick() {
       auto manifold = p.second;
 
       if (m2) {
-        m1->ApplyImpulse(m2, manifold, 0);
+        m1->ApplyImpulse(m2, manifold);
       } else {
-        ApplyStaticImpulse(m1, manifold, 0);
+        ApplyStaticImpulse(m1, manifold);
       }
     }
   }
