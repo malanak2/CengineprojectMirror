@@ -35,10 +35,19 @@ protected:
       return;
     }
     char buf[64] = {0};
-    strncpy_s(buf, sceneObject->instance->_name.c_str(), 63);
+    strncpy(buf, sceneObject->instance->_name.c_str(), 63);
 
     if (ImGui::InputText("Name:", buf, 64)) {
-      sceneObject->instance->_name = buf; // instance correctly updates the size
+      sceneObject->instance->_name = buf;
+    }
+    auto preso =
+        std::dynamic_pointer_cast<Engine::PrefabSceneObject>(sceneObject);
+    if (preso != nullptr) {
+      char buf[128] = {0};
+      strncpy(buf, preso->prefab_path.c_str(), 127);
+      if (ImGui::InputText("Path", buf, 128)) {
+        preso->prefab_path = buf;
+      }
     }
     if (ImGui::CollapsingHeader("Values")) {
       auto obj = sceneObject->instance;
@@ -103,8 +112,8 @@ protected:
       if (it != names.end()) {
         continue;
       }
-      if (search[0] != '\0') {
 
+      if (search[0] != '\0') {
         if (str_tolower(name).find(str_tolower(search)) == std::string::npos) {
           continue;
         }

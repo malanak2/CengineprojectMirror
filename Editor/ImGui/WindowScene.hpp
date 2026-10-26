@@ -186,10 +186,22 @@ protected:
   }
   void ContextMenu(const std::shared_ptr<Engine::Object> &obj) {
     if (ImGui::BeginPopupContextItem(("ContextMenu##" + obj->_name).c_str())) {
+      auto so = obj->sceneobject.lock();
+      auto preso = std::dynamic_pointer_cast<Engine::PrefabSceneObject>(so);
+      if (preso != nullptr) {
+        if (ImGui::MenuItem(("Save prefab##" + obj->_name).c_str())) {
+          preso->ToJson();
+        }
+      }
       if (ImGui::MenuItem(("New Object##" + obj->_name).c_str())) {
         auto o = std::make_shared<Engine::Object>();
         Engine::Engine::instance->current_scene->Instantiate(
             o, obj->sceneobject.lock());
+      }
+      if (ImGui::MenuItem(("New Prefab Object##" + obj->_name).c_str())) {
+        auto o = std::make_shared<Engine::Object>();
+        Engine::Engine::instance->current_scene->Instantiate(
+            o, obj->sceneobject.lock(), true);
       }
       if (ImGui::MenuItem(("Delete##" + obj->_name).c_str())) {
         Engine::Engine::instance->current_scene->RemoveObject(

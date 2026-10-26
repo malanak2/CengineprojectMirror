@@ -151,6 +151,7 @@ void Material::RenderObjects() {
       if (program->uniforms.contains("camera")) {
         auto proj = scene->camera->GetProjMatrix();
         auto view = scene->camera->GetViewMatrix();
+
         glBindBuffer(GL_UNIFORM_BUFFER, program->uniforms["camera"]->info.id);
         CHECK_GL_ERROR();
 
@@ -176,7 +177,8 @@ void Material::RenderObjects() {
         if (auto obj = element->object.lock())
           animatorKey = obj->GetComponent<ComponentAnimator>().get();
       }
-      // If uses frustum, only insert if in said frustum, otherwise dont
+      // If uses frustum, only insert if in said frustum, otherwise dont (unless
+      // doesnt have bounding box ig)
       if (useFrustum) {
         if (auto obj = element->object.lock()) {
           if (auto bb = obj->GetComponent<Physics::ComponentBoundingBox>()) {
@@ -188,6 +190,12 @@ void Material::RenderObjects() {
                 continue;
               }
             }
+          } else {
+            // TODO: Detect non-bounding box objects (Add bounding box trigger?
+            // idk)
+            batches[BatchKey{element->model, element->GetEnabledMeshes(),
+                             UniformSignature(*element), animatorKey}]
+                .push_back(element);
           }
         }
       } else {

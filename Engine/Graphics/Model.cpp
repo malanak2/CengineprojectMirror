@@ -417,7 +417,11 @@ float Engine::Graphics::Bone::GetScaleFactor(float lastTimeStamp,
 }
 glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
   if (m_NumPositions <= 0)
-    return glm::mat4(1.0f);
+    return glm::translate(glm::mat4(1.0f), m_RestT);
+  if (m_NumRotations <= 0)
+    return glm::mat4_cast(m_RestR);
+  if (m_NumScalings <= 0)
+    return glm::scale(glm::mat4(1.0f), m_RestS);
   if (1 == m_NumPositions)
     return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 
@@ -432,8 +436,12 @@ glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
   return glm::translate(glm::mat4(1.0f), finalPosition);
 }
 glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
+  if (m_NumPositions <= 0)
+    return glm::translate(glm::mat4(1.0f), m_RestT);
   if (m_NumRotations <= 0)
-    return glm::mat4(1.0f);
+    return glm::mat4_cast(m_RestR);
+  if (m_NumScalings <= 0)
+    return glm::scale(glm::mat4(1.0f), m_RestS);
   if (1 == m_NumRotations) {
     auto rotation = glm::normalize(m_Rotations[0].orientation);
     return glm::mat4_cast(rotation);
@@ -451,8 +459,13 @@ glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
   return glm::mat4_cast(finalRotation);
 }
 glm::mat4 Engine::Graphics::Bone::InterpolateScaling(float animationTime) {
+  if (m_NumPositions <= 0)
+    return glm::translate(glm::mat4(1.0f), m_RestT);
+  if (m_NumRotations <= 0)
+    return glm::mat4_cast(m_RestR);
   if (m_NumScalings <= 0)
-    return glm::mat4(1.0f);
+    return glm::scale(glm::mat4(1.0f), m_RestS);
+
   if (1 == m_NumScalings)
     return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 

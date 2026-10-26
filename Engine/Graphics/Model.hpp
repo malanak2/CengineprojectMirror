@@ -12,6 +12,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 #define MAX_BONE_INFLUENCE 4
 #define MAX_BONE_WEIGHTS 500
 /// Mesh logic in this file is from https://learnopengl.com/Model-Loading/Mesh
@@ -145,6 +147,15 @@ private:
   int m_LastPositionIndex = 0;
   int m_LastRotationIndex = 0;
   int m_LastScaleIndex = 0;
+
+  glm::vec3 m_RestT{0}, m_RestS{1};
+  glm::quat m_RestR{1, 0, 0, 0};
+  void SetRest(const glm::mat4 &m) {
+    glm::vec3 skew;
+    glm::vec4 persp;
+    glm::decompose(m, m_RestS, m_RestR, m_RestT, skew,
+                   persp); // gtx/matrix_decompose.hpp
+  }
 
 public:
   /*reads keyframes from aiNodeAnim*/

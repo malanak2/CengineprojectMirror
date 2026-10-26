@@ -74,6 +74,11 @@ public:
   virtual void LateEnd();
 };
 
+// TODO: Save prefab file
+
+//!
+//! @brief Prefab - in the json, the SceneObjectJson are overrides
+//!
 class PrefabJson : public SceneObjectJson {
 public:
   std::string prefab_path;
@@ -117,9 +122,11 @@ public:
   //! @param[in] object Object to spawn in the scene
   //! @param[in] Parent Pointer to the sceneobject to be its parent. If not set
   //! spawn in the root
+  //! @param[in] asPrefab Is prefab?
   //!
   void Instantiate(const std::shared_ptr<Object> &object,
-                   const std::shared_ptr<SceneObject> &Parent = {});
+                   const std::shared_ptr<SceneObject> &Parent = {},
+                   bool asPrefab = false);
   void RemoveObject(const std::shared_ptr<SceneObject> &so);
   void RemoveObjectCascade(const std::shared_ptr<SceneObject> &so);
   json ToJson() override;

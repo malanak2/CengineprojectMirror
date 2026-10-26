@@ -82,29 +82,64 @@ PrefabSceneObject::FromJson(const JsonFileBase &jsbase,
                             const std::shared_ptr<Scene> &scene,
                             const std::shared_ptr<SceneObject> &self,
                             const std::shared_ptr<SceneObject> &parent) {
+  // Open file
+  // Try parse
+  // If bad, try reparse as prefab
+  // If still bad, error out
+  // Apply offsets?
+  // Create object
+  // Process the rest
   std::vector<std::shared_ptr<Graphics::CameraComponent>> camcomps = {};
-  if (jsbase.object_type != ObjectType::Object) {
-    throw std::logic_error("Bad object type");
-  }
-  PrefabJson js = jsbase.data;
-  this->Parent = parent;
+  try {
+    if (jsbase.object_type != ObjectType::Object) {
+      throw std::logic_error("Bad object type");
+    }
+    PrefabJson js = jsbase.data;
+    this->Parent = parent;
+    std::string res;
+    auto j = FileUtil::ReadFile(this->prefab_path, &res);
+    if (j != 0) {
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to open prefab at {}",
+                          prefab_path);
+      return camcomps;
+    }
+    SceneObjectJson sjs = json(res);
 
-  auto o = std::make_shared<Object>(scene);
-  auto ojsref = ((json)js.data);
-  auto rr = o->FromJson(ojsref, nullptr);
-  o->sceneobject = shared_from_this();
-  if (rr != nullptr) {
-    camcomps.push_back(rr);
-  }
+    auto o = std::make_shared<Object>(scene);
+    auto ojsref = ((json)sjs);
+    auto rr = o->FromJson(ojsref, nullptr);
+    o->sceneobject = shared_from_this();
+    if (rr != nullptr) {
+      camcomps.push_back(rr);
+    }
 
-  this->instance = o;
-  o->UpdateWorldTransform();
-  this->scene = std::weak_ptr<Scene>(scene);
-  for (const auto &var : js.children) {
-    auto j = std::make_shared<SceneObject>();
-    auto r = j->FromJson(var, scene, j, self);
-    camcomps.insert(camcomps.end(), r.begin(), r.end());
-    this->Children.insert(this->Children.end(), j);
+    this->instance = o;
+    o->UpdateWorldTransform();
+    this->scene = std::weak_ptr<Scene>(scene);
+    for (const auto &var : sjs.children) {
+      try {
+        auto j = std::make_shared<SceneObject>();
+        auto c = j->FromJson(var, scene, j, nullptr);
+        camcomps.insert(camcomps.end(), c.begin(), c.end());
+        this->Children.insert(this->Children.end(), j);
+      } catch (const std::exception &e) {
+        try {
+          auto j = std::make_shared<PrefabSceneObject>();
+          auto c = j->FromJson(var, scene, j, nullptr);
+
+          camcomps.insert(camcomps.end(), c.begin(), c.end());
+          this->Children.insert(this->Children.end(), j);
+        } catch (const std::exception &et) {
+          SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                              "Failed to parse scene object: ({})", e.what());
+          continue;
+        }
+      }
+    }
+  } catch (const std::exception &e) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Failed to parse scene object: ({})", e.what());
+    return {};
   }
   return camcomps;
 }
@@ -152,9 +187,16 @@ JsonFileBase SceneObject::ToJson() {
 
 // TODO:
 JsonFileBase PrefabSceneObject::ToJson() {
-  auto ret = std::make_shared<SceneObjectJson>();
+  auto ret = std::make_shared<PrefabJson>();
   try {
-    ret->data = instance->ToJson();
+    ret->prefab_path = prefab_path;
+  } catch (const std::exception &e) {
+    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                        "Could not convert object to json: {}", e.what());
+  }
+  auto save = std::make_shared<SceneObjectJson>();
+  try {
+    save->data = instance->ToJson();
   } catch (const std::exception &e) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Could not convert object to json: {}", e.what());
@@ -163,11 +205,18 @@ JsonFileBase PrefabSceneObject::ToJson() {
   for (const auto &scene_object_json : this->Children) {
     child.insert(child.end(), (scene_object_json->ToJson()));
   }
-  ret->children = child;
-  JsonFileBase retbase;
-  retbase.object_type = ObjectType::Object;
-  retbase.data = *ret;
-  return retbase;
+  save->children = child;
+  JsonFileBase savebase;
+  savebase.object_type = ObjectType::Object;
+  savebase.data = *save;
+  auto str = json(savebase).dump();
+  FileUtil::SaveFile(prefab_path, &str);
+
+  JsonFileBase retBase;
+  retBase.data = *ret;
+  retBase.object_type = ObjectType::Object;
+
+  return retBase;
 }
 
 void Scene::FromJson(json &js) { FromJson(js, shared_from_this()); }
@@ -192,9 +241,17 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
       cameras.insert(cameras.end(), c.begin(), c.end());
       this->objects.insert(this->objects.end(), j);
     } catch (const std::exception &e) {
-      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                          "Failed to parse scene object: ({})", e.what());
-      continue;
+      try {
+        auto j = std::make_shared<PrefabSceneObject>();
+        auto c = j->FromJson(var, self, j, nullptr);
+
+        cameras.insert(cameras.end(), c.begin(), c.end());
+        this->objects.insert(this->objects.end(), j);
+      } catch (const std::exception &et) {
+        SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
+                            "Failed to parse scene object: ({})", e.what());
+        continue;
+      }
     }
   }
   if (cameras.size() == 0) {
@@ -227,8 +284,15 @@ void Scene::FromJson(json &js, std::shared_ptr<Scene> self) {
 
 Scene::Scene() { this->objects = {}; }
 void Scene::Instantiate(const std::shared_ptr<Object> &object,
-                        const std::shared_ptr<SceneObject> &Parent) {
+                        const std::shared_ptr<SceneObject> &Parent,
+                        bool asPrefab) {
+
   auto so = std::make_shared<SceneObject>();
+  if (asPrefab) {
+    auto p = std::make_shared<PrefabSceneObject>();
+    p->prefab_path = "";
+    so = p;
+  }
   so->Parent = Parent;
   if (Parent != nullptr) {
     Parent->Children.insert(Parent->Children.end(), so);
