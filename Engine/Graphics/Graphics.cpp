@@ -6,12 +6,10 @@
 #include "Config/Config.hpp"
 #include "Engine.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
-#include "Interfaces/IComponent.hpp"
 #include "Material.hpp"
 #include "Physics/PhysicsSystem.hpp"
 #include "Scene.hpp"
 #include "Texture.hpp"
-#include "Util/FileUtil.hpp"
 #include "Util/LoggerUtil.hpp"
 #include "tracy/TracyOpenGL.hpp"
 #include <GLFW/glfw3.h>
@@ -357,17 +355,15 @@ void Main::RenderBBOS() {
       instances.push_back(data);
     }
     if (useFrustum) {
-      if (auto obj = Engine::instance->current_scene->FindObject("fakecam")) {
-        if (auto c = obj->GetComponent<CameraComponent>()) {
-          InstanceData frustumInstance{};
-          frustumInstance.modelMatrix = c->GetFrustumMatrix();
-          frustumInstance.isTrigger = 1;
-          frustumInstance.padding[0] = 0;
-          frustumInstance.padding[1] = 0;
-          frustumInstance.padding[2] = 0;
+      if (auto c = Engine::instance->current_scene->camera) {
+        InstanceData frustumInstance{};
+        frustumInstance.modelMatrix = c->GetFrustumMatrix();
+        frustumInstance.isTrigger = 1;
+        frustumInstance.padding[0] = 0;
+        frustumInstance.padding[1] = 0;
+        frustumInstance.padding[2] = 0;
 
-          instances.push_back(frustumInstance);
-        }
+        instances.push_back(frustumInstance);
       }
     }
 

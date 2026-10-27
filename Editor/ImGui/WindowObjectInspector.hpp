@@ -73,6 +73,10 @@ protected:
         if (ImGui::DragFloat3("Rotation", &angles[0], 1.0f)) {
           obj->SetRotation(glm::normalize(glm::quat(glm::radians(angles))));
         }
+        if (ImGui::Checkbox("Inherit parent rotation",
+                            &obj->inheritParentRotation)) {
+          obj->UpdateWorldTransform();
+        }
       }
     }
     std::vector<std::string> names = std::vector<std::string>();

@@ -41,6 +41,13 @@ public:
   //!
   std::vector<std::shared_ptr<SceneObject>> Children;
   virtual JsonFileBase ToJson();
+  SceneObject() {}
+  SceneObject(std::shared_ptr<SceneObject> other) noexcept
+      : instance(other ? other->instance : nullptr),
+        Parent(other ? other->Parent : std::weak_ptr<SceneObject>()),
+        scene(other ? other->scene : std::weak_ptr<Scene>()),
+        Children(other ? other->Children
+                       : std::vector<std::shared_ptr<SceneObject>>()) {}
   virtual void SetParent(const std::shared_ptr<SceneObject> &parent);
   virtual std::vector<std::shared_ptr<Graphics::CameraComponent>>
   FromJson(const JsonFileBase &jsbase, const std::shared_ptr<Scene> &scene,
@@ -94,6 +101,14 @@ public:
   FromJson(const JsonFileBase &jsbase, const std::shared_ptr<Scene> &scene,
            const std::shared_ptr<SceneObject> &self,
            const std::shared_ptr<SceneObject> &parent) override;
+  PrefabSceneObject(std::shared_ptr<SceneObject> so)
+      : SceneObject(so) {
+    if (this->instance) {
+      this->prefab_path =
+          "resources/prefabs/" + this->instance->_name + ".json";
+    }
+  }
+  PrefabSceneObject() {}
 };
 
 class SceneJson {

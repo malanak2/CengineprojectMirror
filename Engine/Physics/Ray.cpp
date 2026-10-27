@@ -23,7 +23,7 @@ Engine::Physics::Ray::Intersects(std::shared_ptr<OBB> obb) {
       if (-e[i] - size[i] > 0 || -e[i] + size[i] < 0) {
         return outResult;
       }
-      f[i] = 0.00001f; // Avoid div by 0!
+      f[i] = 0.00001f;
     }
     t[i * 2 + 0] = (e[i] + size[i]) / f[i]; // min
     t[i * 2 + 1] = (e[i] - size[i]) / f[i]; // max

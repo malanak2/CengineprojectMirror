@@ -4,6 +4,7 @@
 #include "Physics/PhysicsSystem.hpp"
 #include "Physics/Plane.hpp"
 #include "Physics/Ray.hpp"
+#include "Util/LoggerUtil.hpp"
 std::pair<double, double>
 Engine::Physics::OBB::GetInterval(const glm::vec3 &axis) const {
   glm::vec3 vertex[8];
@@ -304,7 +305,7 @@ Engine::Physics::ComponentBoundingBox::GetOBB() {
     return obb;
   auto o = object.lock();
   auto obb = std::make_shared<OBB>();
-  obb->position = o->GetPosition() + o->GetRotation() * position_offset;
+  obb->position = (o->GetPosition() + position_offset);
   obb->size = size;
   obb->orientation =
       glm::toMat3(glm::normalize(o->GetRotation() * orientation_offset));

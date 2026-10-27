@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Interfaces/IComponent.hpp"
-#include "Interfaces/IIdentifiable.hpp"
-#include "Physics/PhysicsSystem.hpp"
+#include "Attributes.hpp"
 #include <glm/glm.hpp>
-#include <imgui.h>
 #include <memory>
+// SZAUER, Gabor. Game Physics Cookbook. In: . S. 152-192. ISBN 978-1787120815.
 namespace Engine {
 namespace Physics {
 class CollisionManifold {
@@ -17,14 +16,11 @@ public:
   void ResetCollisionManifold();
 };
 using json = nlohmann::json;
-class ComponentPhysics : public IComponent,
+class [[=Attr::Script{}]] ComponentPhysics : public Attr::ReflectedComponent<ComponentPhysics>,
                          public std::enable_shared_from_this<ComponentPhysics> {
   REGISTER_CLASS(ComponentPhysics);
 
 public:
-  json ToJson() override;
-
-  void FromJson(json &js) override;
   void UpdatePhysics();
   void EarlySetup() override;
   void LateEnd() override;
@@ -34,13 +30,13 @@ public:
   void SetVelocityZ(float newz) { velocities.z = newz; }
   glm::vec3 GetVelocities() { return velocities; }
   void Impulse(glm::dvec3 newv) { velocities += newv; }
-  bool processPhysics = true;
-  bool useGlobalGravity = true;
-  bool useGlobalDirection = true;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]] bool processPhysics = true;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]] bool useGlobalGravity = true;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]] bool useGlobalDirection = true;
   glm::vec3 oldPos;
-  float mass = 1;
-  float cor = 0; // Coefficient of restitution - essentially the bounciness
-  float friction = 1;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]] float mass = 1;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]] float cor = 0; 
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]] float friction = 1;
   void ApplyForces();
 
   void ApplyImpulse(const std::shared_ptr<ComponentPhysics> &B,
@@ -51,9 +47,9 @@ public:
   glm::vec3 GetRenderPosition();
 
 private:
-  glm::vec3 velocities = {0, 0, 0};
-  glm::vec3 world_direction;
-  glm::vec3 gravity_scale;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]]glm::vec3 velocities = {0, 0, 0};
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]]glm::vec3 world_direction;
+  [[=Attr::Serialize{}]] [[=Attr::Edit{}]]glm::vec3 gravity_scale;
   glm::vec3 prevPos = {0, 0, 0};
   glm::vec3 currPos = {0, 0, 0};
   bool hasTickState = false;

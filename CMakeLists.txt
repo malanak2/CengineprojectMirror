@@ -15,6 +15,7 @@ include(FetchContent)
 
 set(CMAKE_GENERATOR Ninja)
 set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)
 set(IMGUI true)
@@ -55,6 +56,8 @@ endif()
 if (WIN32)
 get_target_property(IMGUI_INCLUDE_DIR imgui::imgui INTERFACE_INCLUDE_DIRECTORIES)
 
+target_compile_options(cengineeditor PUBLIC -freflection)
+target_link_libraries(cengineeditor PUBLIC stdc++exp)
 target_sources(cengineeditor PRIVATE
     ${IMGUI_INCLUDE_DIR}/imgui_impl_glfw.h
     ${IMGUI_INCLUDE_DIR}/imgui_impl_opengl3.h
@@ -63,7 +66,6 @@ endif()
 
 target_include_directories(cengineeditor PUBLIC Editor)
 add_subdirectory(Engine)
-
 target_link_libraries(cengineeditor PRIVATE cengine spdlog::spdlog imgui::imgui implot::implot)
 if (PROFILE)
 target_link_libraries(cengineeditor PRIVATE Tracy::TracyClient)

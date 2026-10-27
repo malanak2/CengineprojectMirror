@@ -5,6 +5,7 @@
 #include "glm/glm.hpp" // IWYU pragma: keep
 #include <memory>
 
+// SZAUER, Gabor. Game Physics Cookbook. In: . S. 152-192. ISBN 978-1787120815.
 namespace Engine {
 namespace Physics {
 class ComponentPhysics;

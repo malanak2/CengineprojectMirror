@@ -5,14 +5,12 @@ set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\malan\\Documents\\vcpkg\\scripts\\buildsyst
 set(VCPKG_TARGET_TRIPLET "x64-mingw-dynamic")
 set(VCPKG_APPLOCAL_DEPS ON)
 
-include(C:\\Users\\malan\\Documents\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake)
-
 list(APPEND CMAKE_IGNORE_PATH "C:/msys64")
 endif()
 project(cengine)
 include(FetchContent)
 set(CMAKE_CXX_STANDARD 26)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(spdlog CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -78,10 +76,18 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Physics/Components/ComponentBoundingBox.cpp
         Physics/Ray.cpp
         Physics/Plane.cpp
+        Attributes.hpp
+        Physics/Components/ComponentPhysics.hpp
+        JsonFileBase.hpp
+        Physics/Components/ComponentBoundingBox.hpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)
 target_include_directories(cengine PUBLIC .)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(cengine PUBLIC -freflection)
+    target_link_libraries(cengine PUBLIC stdc++exp)
+endif()
 add_subdirectory(Util)
 
 set_target_properties(cengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)

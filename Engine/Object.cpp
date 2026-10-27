@@ -42,6 +42,7 @@ Object::Object() {
   this->_worldRotation = glm::identity<glm::quat>();
   this->_name = "New Object";
   this->scale = {1, 1, 1};
+  this->inheritParentRotation = false;
 }
 
 json Object::ToJson() {
@@ -63,6 +64,7 @@ json Object::ToJson() {
                  _localRotation.z};
   js.name = _name;
   js.scale = std::vector<float>{scale.x, scale.y, scale.z};
+  js.inherit_parent_rotation = inheritParentRotation;
   ret.data = js;
   json r = ret;
   return r;
@@ -124,6 +126,7 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
                        jsobj.name, path, jsobj.scale.size());
   }
   fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation, scale);
+  this->inheritParentRotation = jsobj.inherit_parent_rotation;
   return cc;
 }
 
@@ -209,35 +212,42 @@ void Object::SetWorldPosition(glm::vec3 w) {
   glm::vec3 pp;
   glm::quat pr;
   GetParentWorld(pp, pr);
-  SetPosition(glm::inverse(pr) * (w - pp));
+  if (inheritParentRotation) {
+    SetPosition(glm::inverse(pr) * (w - pp));
+  } else {
+    SetPosition(w - pp);
+  }
 }
 void Object::SetWorldRotation(glm::quat w) {
   glm::vec3 pp;
   glm::quat pr;
   GetParentWorld(pp, pr);
-  SetRotation(glm::normalize(glm::inverse(pr) * w));
+  if (inheritParentRotation) {
+    SetRotation(glm::normalize(glm::inverse(pr) * w));
+  } else {
+    SetRotation(w);
+  }
 }
 void Object::UpdateWorldTransform() {
-  // Compute world position: parent world pos + local position
+  // Compute world position: parent world pos + local position (optionally rotated by parent)
   glm::vec3 parentWorldPos = {0, 0, 0};
-  if (auto so = sceneobject.lock()) {
-    if (auto parent = so->Parent.lock()) {
-      if (parent->instance) {
-        parentWorldPos = parent->instance->GetPosition();
-      }
-    }
-  }
   glm::quat parentWorldRot = glm::identity<glm::quat>();
   if (auto so = sceneobject.lock()) {
     if (auto parent = so->Parent.lock()) {
       if (parent->instance) {
+        parentWorldPos = parent->instance->GetPosition();
         parentWorldRot = parent->instance->GetRotation();
       }
     }
   }
 
-  _worldPosition = parentWorldPos + parentWorldRot * _localPosition;
-  _worldRotation = glm::normalize(parentWorldRot * _localRotation);
+  if (inheritParentRotation) {
+    _worldPosition = parentWorldPos + parentWorldRot * _localPosition;
+    _worldRotation = glm::normalize(parentWorldRot * _localRotation);
+  } else {
+    _worldPosition = parentWorldPos + _localPosition;
+    _worldRotation = _localRotation;
+  }
   // Propagate to children
   if (auto so = sceneobject.lock()) {
     for (auto &child : so->Children) {

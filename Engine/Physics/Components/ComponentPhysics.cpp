@@ -7,7 +7,7 @@
 using namespace Engine::Physics;
 using namespace Engine;
 
-json ComponentPhysics::ToJson() {
+/*json ComponentPhysics::ToJson() {
   return {
       {"gravity_scale", {gravity_scale.x, gravity_scale.y, gravity_scale.z}},
       {"world_direction",
@@ -16,7 +16,7 @@ json ComponentPhysics::ToJson() {
       {"cor", cor},
       {"mass", mass},
       {"friction", friction}};
-}
+}*/
 void Physics::ComponentPhysics::BeginTick() {
   if (auto o = object.lock())
     prevPos = o->GetPosition();
@@ -40,7 +40,7 @@ glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
     return o->GetPosition();
   return glm::mix(prevPos, currPos, PhysicsSystem::GetInterpolationAlpha());
 }
-void ComponentPhysics::FromJson(json &js) {
+/*void ComponentPhysics::FromJson(json &js) {
   gravity_scale.x = js["gravity_scale"][0].get<float>();
   gravity_scale.y = js["gravity_scale"][1].get<float>();
   gravity_scale.z = js["gravity_scale"][2].get<float>();
@@ -53,7 +53,7 @@ void ComponentPhysics::FromJson(json &js) {
   cor = js["cor"].get<float>();
   mass = js["mass"].get<float>();
   friction = js["friction"].get<float>();
-}
+}*/
 void ComponentPhysics::UpdatePhysics() {
   if (!processPhysics)
     return;

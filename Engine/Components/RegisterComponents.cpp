@@ -17,7 +17,6 @@ void Engine::ScriptRegistrar::RegisterGraphicComponents() {
   REGISTER_SCRIPT(Graphics::ComponentSocket);
 }
 void Engine::ScriptRegistrar::RegisterPhysicsComponents() {
-  REGISTER_SCRIPT(Physics::ComponentPhysics);
   REGISTER_SCRIPT(Physics::ComponentBoundingBox);
 }
 

@@ -102,11 +102,12 @@ void Engine::LoadScene(std::string path) {
 void Engine::Engine::Run() {
   ZoneScoped;
   auto logger = spdlog::get("console");
-  SPDLOG_LOGGER_INFO(logger, "Running...");
 
   // Handle
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
   current_scene->Setup();
+
+  SPDLOG_LOGGER_INFO(logger, "Running...");
   while (true) {
     ZoneScopedN("Frame");
     float currTime = glfwGetTime();

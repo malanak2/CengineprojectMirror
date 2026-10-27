@@ -7,6 +7,7 @@
 #include "Scene.hpp"
 #include "Util/FileUtil.hpp"
 #include "Window.hpp"
+#include <algorithm>
 #include <imgui.h>
 #include <memory>
 #include <tracy/Tracy.hpp>
@@ -185,31 +186,77 @@ protected:
     }
   }
   void ContextMenu(const std::shared_ptr<Engine::Object> &obj) {
-    if (ImGui::BeginPopupContextItem(("ContextMenu##" + obj->_name).c_str())) {
+    if (!obj)
+      return;
+    std::string objName = obj->_name;
+    if (ImGui::BeginPopupContextItem(("ContextMenu##" + objName).c_str())) {
       auto so = obj->sceneobject.lock();
       auto preso = std::dynamic_pointer_cast<Engine::PrefabSceneObject>(so);
       if (preso != nullptr) {
-        if (ImGui::MenuItem(("Save prefab##" + obj->_name).c_str())) {
+        if (ImGui::MenuItem(("Save prefab##" + objName).c_str())) {
           preso->ToJson();
         }
       }
-      if (ImGui::MenuItem(("New Object##" + obj->_name).c_str())) {
+      if (preso == nullptr && so != nullptr) {
+        if (ImGui::MenuItem(("To prefab##" + objName).c_str())) {
+          auto newSo = std::make_shared<Engine::PrefabSceneObject>(so);
+
+          if (newSo->instance) {
+            newSo->instance->sceneobject = newSo;
+          }
+          for (auto &child : newSo->Children) {
+            if (child) {
+              child->Parent = newSo;
+            }
+          }
+
+          auto scene = newSo->scene.lock();
+          if (!scene) {
+            scene = Engine::Engine::instance->current_scene;
+          }
+
+          if (auto parent = newSo->Parent.lock()) {
+            auto it =
+                std::find(parent->Children.begin(), parent->Children.end(), so);
+            if (it != parent->Children.end()) {
+              *it = newSo;
+            }
+          } else if (scene) {
+            auto it =
+                std::find(scene->objects.begin(), scene->objects.end(), so);
+            if (it != scene->objects.end()) {
+              *it = newSo;
+            }
+          }
+
+          if (sceneObject == so) {
+            sceneObject = newSo;
+          }
+          ImGui::EndPopup();
+          return;
+        }
+      }
+      if (ImGui::MenuItem(("New Object##" + objName).c_str())) {
         auto o = std::make_shared<Engine::Object>();
         Engine::Engine::instance->current_scene->Instantiate(
             o, obj->sceneobject.lock());
       }
-      if (ImGui::MenuItem(("New Prefab Object##" + obj->_name).c_str())) {
+      if (ImGui::MenuItem(("New Prefab Object##" + objName).c_str())) {
         auto o = std::make_shared<Engine::Object>();
         Engine::Engine::instance->current_scene->Instantiate(
             o, obj->sceneobject.lock(), true);
       }
-      if (ImGui::MenuItem(("Delete##" + obj->_name).c_str())) {
+      if (ImGui::MenuItem(("Delete##" + objName).c_str())) {
         Engine::Engine::instance->current_scene->RemoveObject(
             obj->sceneobject.lock());
+        ImGui::EndPopup();
+        return;
       }
-      if (ImGui::MenuItem(("Delete Cascade##" + obj->_name).c_str())) {
+      if (ImGui::MenuItem(("Delete Cascade##" + objName).c_str())) {
         Engine::Engine::instance->current_scene->RemoveObjectCascade(
             obj->sceneobject.lock());
+        ImGui::EndPopup();
+        return;
       }
       ImGui::EndPopup();
     }

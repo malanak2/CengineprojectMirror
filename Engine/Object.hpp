@@ -27,9 +27,11 @@ struct ObjectJson {
   std::vector<float> scale;
   std::vector<ComponentJson> components;
   std::string name;
+  bool inherit_parent_rotation = false;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ObjectJson, position, rotation, scale,
-                                   components, name)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+    ObjectJson, position, rotation, scale, components, name,
+    inherit_parent_rotation)
 //!
 //! @brief Scene object. Basic building block
 //!
@@ -83,6 +85,7 @@ public:
     SetWorldPosition(_worldPosition + delta);
   }
   void SetWorldRotation(glm::quat world);
+  bool inheritParentRotation = false;
   glm::vec3 scale = {1, 1, 1};
   Object(std::string path, const std::shared_ptr<Scene> &scene);
 

@@ -3,7 +3,6 @@
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
 #include "Object.hpp"
-#include "Util/LoggerUtil.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <imgui.h>
@@ -55,6 +54,7 @@ public:
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentBBoxJson, position_offset, size,
                                    orientation, isTrigger);
+
 class ComponentBoundingBox
     : public IComponent,
       public std::enable_shared_from_this<ComponentBoundingBox> {
