@@ -1,0 +1,27 @@
+{
+  "object_type": "material",
+  "name": "Texture Material",
+  "uses_camera": true,
+  "uses_translate": false,
+  "texture_path": "models/backpack/normal.json",
+  "uses_animations": false,
+  "shaders": [
+    {
+      "type": "vertex",
+      "path": "generated/shaders/spirv/texture.spv",
+      "entrypoint": "mainVertex"
+    },
+    {
+      "type": "fragment",
+      "path": "generated/shaders/spirv/texture.spv",
+      "entrypoint": "mainPixel"
+    }
+  ],
+  "uniforms": [
+    {
+      "name": "camera",
+      "bind_point": 0,
+      "size": 0
+    }
+  ]
+}

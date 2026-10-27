@@ -33,7 +33,7 @@ consteval std::string_view json_key(std::meta::info m) {
   return s.name ? std::string_view(s.name) : std::meta::identifier_of(m);
 }
 
-template <class T> struct ReflectedComponent : public Engine::IComponent {
+template <class T> struct ReflectedComponent : public ::Engine::IComponent {
   json ToJson() override {
     json j;
     auto &self = static_cast<T &>(*this);
