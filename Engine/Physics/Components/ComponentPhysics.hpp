@@ -16,8 +16,7 @@ public:
   void ResetCollisionManifold();
 };
 using json = nlohmann::json;
-class [[=Attr::Script{}]] ComponentPhysics : public Attr::ReflectedComponent<ComponentPhysics>,
-                         public std::enable_shared_from_this<ComponentPhysics> {
+  class [[=Attr::Script{}]] ComponentPhysics : public Attr::ReflectedComponent<ComponentPhysics>, public std::enable_shared_from_this<ComponentPhysics> {
   REGISTER_CLASS(ComponentPhysics);
 
 public:

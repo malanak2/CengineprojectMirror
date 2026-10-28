@@ -1,3 +1,4 @@
+#include <iostream>
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
@@ -26,6 +27,14 @@ void operator delete(void *ptr) noexcept {
 int main() {
   Editor::ImGuiR::ImGuiRegistrar rg;
   ZoneScopedNS("main", 64);
+  for (const auto& script_info : Engine::Attr::ScriptService::get_scripts()) {
+    std::cout << "Found Script: " << std::string(script_info.name )
+              << "\n";
+
+    // Instantiate via registered reflection factory
+    std::unique_ptr<Engine::IComponent> instance(script_info.factory());
+    instance->Update();
+  }
   /// Inject functions
   {
     ZoneScopedN("Register ImGui");
