@@ -157,12 +157,13 @@ public:
                          "Tried adding already present component");
       return;
     }
-    auto component = Main::ScriptSystem::instance->GetScript(key);
-    if (component == nullptr) {
+    auto componentinfo = Main::ScriptSystem::instance->GetScript(key);
+    if (componentinfo == nullptr) {
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                           "Getscript returned nullptr for {}", key);
       return;
     }
+    auto component = componentinfo->create();
     component->SetObject(shared_from_this());
     component->EarlySetup();
     component->Setup();

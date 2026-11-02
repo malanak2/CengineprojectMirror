@@ -3,8 +3,9 @@
 #include "InputSystem.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
+#include "ScriptSystem.hpp"
 namespace Editor {
-class ComponentControllable : public Engine::IComponent {
+class [[=Engine::Attr::Script{}]] ComponentControllable : public Engine::IComponent {
   REGISTER_CLASS(ComponentControllable);
 
 public:

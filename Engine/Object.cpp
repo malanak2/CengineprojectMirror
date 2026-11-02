@@ -103,13 +103,14 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
   std::vector<std::shared_ptr<IComponent>> cmps;
   cmps.reserve(jsobj.components.size());
   for (auto &c : jsobj.components) {
-    auto script =
+    auto scriptinfo =
         Main::ScriptSystem::instance->GetScript(c.name); // was fetched twice
-    if (!script) {
+    if (!scriptinfo) {
       SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
                          "Skipping unknown component {} in {}", c.name, path);
       continue;
     }
+    auto script = scriptinfo->create();
     script->FromJson(c.data);
     script->SetObject(self);
     cmps.insert(cmps.begin(), script);

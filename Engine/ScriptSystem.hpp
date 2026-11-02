@@ -8,14 +8,45 @@ namespace Engine
 {
   namespace Attr
   {
+    template <std::size_t N = 64>
+    struct FixedString
+    {
+      char buf[N]{};
+
+      constexpr FixedString() = default;
+
+      constexpr FixedString(const char* str)
+      {
+        if (str)
+        {
+          for (std::size_t i = 0; i < N - 1 && str[i] != '\0'; ++i)
+            buf[i] = str[i];
+        }
+      }
+
+      constexpr FixedString(std::string_view sv)
+      {
+        std::size_t count = std::min(sv.size(), N - 1);
+        for (std::size_t i = 0; i < count; ++i)
+          buf[i] = sv[i];
+      }
+
+      constexpr operator std::string_view() const
+      {
+        return std::string_view{buf};
+      }
+
+      constexpr bool empty() const { return buf[0] == '\0'; }
+    };
+
     struct Script
     {
-      const char* name;
-      const char* displayname;
-    }; // may be registered / added in editor
+      FixedString<64> name{};
+      FixedString<64> displayname{};
+    };
     struct Serialize
     {
-      const char* name = nullptr;
+      FixedString<64> name={};
     }; // override JSON key
     struct Edit
     {
@@ -40,8 +71,24 @@ namespace Engine
     //!
 #define REGISTER_SCRIPT(script)                                                \
   {                                                                            \
-    (Engine::Main::ScriptSystem::instance->RegisterScript<script>());          \
+    (Engine::Main::ScriptSystem::instance->RegisterScriptA<script>());          \
   }
+    
+    template <class T, class A> 
+    static consteval auto fields_with() {
+      std::vector<std::meta::info> v;
+      for (auto m : std::meta::nonstatic_data_members_of(^^T, std::meta::access_context::unchecked())) {
+        if (!std::meta::annotations_of_with_type(m, ^^A).empty()) v.push_back(m);
+      }
+      return std::define_static_array(v);
+    }
+
+    static consteval std::string_view json_key(std::meta::info m) {
+      auto annos = std::meta::annotations_of_with_type(m, ^^Attr::Serialize);
+      if (annos.empty()) return std::meta::identifier_of(m);
+      auto s = std::meta::extract<Attr::Serialize>(annos[0]);
+      return s.name.empty() ? std::meta::identifier_of(m) : std::string_view(s.name);
+    }
     
     struct ScriptInfo
     {
@@ -49,6 +96,9 @@ namespace Engine
       std::string_view displayname;
       std::type_index  type;
       std::shared_ptr<IComponent> (*create)();
+      
+      json (*toJson)(IComponent*);
+      void (*fromJson)(IComponent*, json&);
     };
     //!
     //! @brief System for registering user scripts.
@@ -58,30 +108,7 @@ namespace Engine
     public:
       static std::shared_ptr<ScriptSystem> instance;
 
-      template <typename T>
-      void RegisterScript()
-      {
-        SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Registering script {}",
-                           T::GetNameS());
-        map_comp[std::string(T::GetNameS())] = []() -> std::shared_ptr<IComponent>
-        {
-          return std::make_shared<T>();
-        };
-      }
-
-      template <typename T>
-      void UnregisterScript()
-      {
-        SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Unregistering script {}",
-                           T::GetNameS());
-        map_comp.erase(std::string(T::GetNameS()));
-      }
-
-      std::shared_ptr<IComponent> GetScript(std::string_view key);
-
-      std::map<std::string, std::function<std::shared_ptr<IComponent>()>,
-               std::less<>>
-      map_comp;
+      
       static inline std::unordered_map<std::string_view,
                                  std::function<std::shared_ptr<IComponent>()>> map;
     private:
@@ -105,40 +132,48 @@ namespace Engine
       }
 
     public:
-      
       template <typename T>
-          static consteval Attr::Script ScriptAttrOf()
+      static consteval Attr::Script ScriptAttrOf_Impl()
       {
         Attr::Script out{};
-        for (auto a : std::meta::annotations_of(^^T))
-          if (std::meta::type_of(a) == ^^Attr::Script)
-            out = std::meta::extract<Attr::Script>(a);
-
-        const char* id = std::define_static_string(std::meta::identifier_of(^^T));
-        if (!out.name)        out.name = id;
-        if (!out.displayname) out.displayname = out.name;
+        auto annos = std::meta::annotations_of_with_type(^^T, ^^Attr::Script);
+        if (!annos.empty())
+          out = std::meta::extract<Attr::Script>(annos[0]);
+        std::string_view id = std::meta::identifier_of(^^T);
+        if (out.name.empty())        out.name = id;
+        if (out.displayname.empty()) out.displayname = out.name;
         return out;
       }
-      
-      template <typename T>
-          static constexpr std::string_view NameOf() { return ScriptAttrOf<T>().name; }
-      
-template <typename T>
-    void RegisterScriptA()
-    {
-      constexpr Attr::Script attr = ScriptAttrOf<T>();
 
-      auto [it, inserted] = by_type.try_emplace(
-          std::type_index(typeid(T)),
-          ScriptInfo{attr.name, attr.displayname, std::type_index(typeid(T)),
-                     &make<T>});
+      template <typename T>
+      static constexpr const Attr::Script& ScriptAttrOf()
+      {
+        // Caches the result in permanent static memory
+        static constexpr Attr::Script instance = ScriptAttrOf_Impl<T>();
+        return instance;
+      }
+      template <typename T>
+            static constexpr std::string_view NameOf() 
+      { 
+        static constexpr Attr::Script attr = ScriptAttrOf<T>();
+        return attr.name; 
+      }      
+      template <typename T>
+      void RegisterScriptA()
+      {
+        // 2. Add static constexpr here so the FixedString buffers are never destroyed
+        static constexpr Attr::Script attr = ScriptAttrOf<T>();
+
+        auto [it, inserted] = by_type.try_emplace(
+            std::type_index(typeid(T)),
+            ScriptInfo{attr.name, attr.displayname, std::type_index(typeid(T)),
+                       &make<T>});
         if (inserted)
         {
           by_name[it->second.name] = &it->second;
           ordered.push_back(&it->second);
         }
-    }
-
+      }
     template <typename T>
     void UnregisterScriptA()
     {
@@ -166,6 +201,7 @@ template <typename T>
     {
       auto it = by_type.find(std::type_index(typeid(T)));
       return it == by_type.end() ? nullptr : &it->second;
+        
     }
 
     template <typename T>
@@ -202,10 +238,10 @@ template <typename T>
         }
       }
     }
-
+      template <std::meta::info Scope = ^^::>
     void create_global_registry()
     {
-      scan_scope<^^::>();
+      scan_scope<Scope>();
     }
 
     static constexpr auto access_ctx = std::meta::access_context::unchecked();
@@ -217,9 +253,7 @@ template <typename T>
 
     static consteval bool has_script_annotation(std::meta::info m)
     {
-      for (auto a : std::meta::annotations_of(m))
-        if (std::meta::type_of(a) == ^^Attr::Script) return true;
-      return false;
+      return !std::meta::annotations_of_with_type(m, ^^Attr::Script).empty();
     }
 
     std::unordered_map<std::type_index, ScriptInfo> by_type;

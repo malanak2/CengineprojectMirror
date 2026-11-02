@@ -1,9 +1,10 @@
 #pragma once
 
+#include "ScriptSystem.hpp"
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
 namespace Editor {
-class TestInputComponent : public Engine::IComponent {
+class [[=Engine::Attr::Script{}]] TestInputComponent : public Engine::IComponent {
   REGISTER_CLASS(TestInputComponent);
 
 public:

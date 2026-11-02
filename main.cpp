@@ -4,9 +4,13 @@
 #include <tracy/Tracy.hpp>
 
 #include "Editor/Components/Registrar.hpp"
+#include "Editor/Components/ComponentControllable.hpp"
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
+#include "Engine/Components/InvalidComponent.hpp"
+#include "Engine/Physics/Components/ComponentPhysics.hpp"
+#include "Editor/Components/TestInputComponent.hpp"
 
 // No need to make allocations synchronous without Tracy enabled
 #ifdef TRACY_ENABLE
@@ -27,11 +31,11 @@ void operator delete(void *ptr) noexcept {
 int main() {
   Editor::ImGuiR::ImGuiRegistrar rg;
   ZoneScopedNS("main", 64);
+  Engine::Main::ScriptSystem::instance->create_global_registry<^^::>();
   for (const auto& script_info : Engine::Main::ScriptSystem::instance->All()) {
     if (script_info == nullptr) continue;
     std::cout << "Found Script: " << std::string(script_info->name )
               << "\n";
-
   }
   /// Inject functions
   {

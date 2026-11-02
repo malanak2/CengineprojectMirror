@@ -2,8 +2,10 @@
 
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
-namespace Engine {
-  class InvalidComponent : public IComponent {
+#include "ScriptSystem.hpp"
+namespace Engine
+{
+  class [[=Attr::Script{}]] InvalidComponent : public IComponent {
   public:
     static std::string_view GetNameS() { return "InvalidComponent"; }
     std::string_view GetName() override {

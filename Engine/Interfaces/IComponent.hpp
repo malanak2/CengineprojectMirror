@@ -76,5 +76,6 @@ public:
   //! @return .
   //!
   virtual bool IsValid() { return true; }
+  
 };
 } // namespace Engine

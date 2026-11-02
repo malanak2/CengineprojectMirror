@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
 #include <utility>
+#include "ScriptSystem.hpp"
 namespace Editor {
 class WindowObjectInspector : public Window {
 public:
@@ -84,14 +85,16 @@ protected:
     for (auto &[type, comp] : sceneObject->instance->_components) {
       if (comp != nullptr) {
         bool isCOpen;
-        if (comp->IsValid()) {
-          isCOpen = ImGui::CollapsingHeader(comp->GetName().data());
-        } else {
-          isCOpen = ImGui::CollapsingHeader(
-              ("ERROR " + (std::string)comp->GetName().data() + " ERROR")
-                  .c_str());
+        std::string title = "";
+        if (!comp->IsValid())
+        {
+          title += "ERROR!!! ";
         }
-        if (isCOpen) {
+        title += Engine::Main::ScriptSystem::instance->GetScript(comp->GetName())->displayname;
+        title += "###";
+        
+        title += Engine::Main::ScriptSystem::instance->GetScript(comp->GetName())->name;
+        if (ImGui::CollapsingHeader(title.c_str())) {
           ImGuiR::ImGuiComponentRenderer::instance->Render(comp);
           if (ImGui::Button(
                   ("Remove##" + (std::string)comp->GetName().data()).c_str())) {
@@ -109,8 +112,9 @@ protected:
     ImGui::Text("Add components");
     static char search[256] = "";
     ImGui::InputText("Title", search, sizeof(search));
-    for (const auto &[name, factory] :
-         Engine::Main::ScriptSystem::instance->map_comp) {
+    for (const auto &info :
+         Engine::Main::ScriptSystem::instance->All()) {
+      auto name = std::string(info->displayname.data());
       auto it = find(names.begin(), names.end(), name);
 
       if (it != names.end()) {
