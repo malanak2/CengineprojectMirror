@@ -5,6 +5,8 @@ namespace Engine {
     struct ReflectAccess {
       template <std::meta::info M, class T>
       static auto &ref(T &o) { return o.[:M:]; }
+      template <std::meta::info M, class T>
+      static decltype(auto) call(T &o) { return o.[:M:](); }
     };
 #define REGISTER_CLASS(name)                                                   \
   friend struct ::Engine::ReflectAccess;                                       \

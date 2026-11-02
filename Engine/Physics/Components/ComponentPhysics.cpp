@@ -7,16 +7,6 @@
 using namespace Engine::Physics;
 using namespace Engine;
 
-/*json ComponentPhysics::ToJson() {
-  return {
-      {"gravity_scale", {gravity_scale.x, gravity_scale.y, gravity_scale.z}},
-      {"world_direction",
-       {world_direction.x, world_direction.y, world_direction.z}},
-      {"velocities", {velocities.x, velocities.y, velocities.z}},
-      {"cor", cor},
-      {"mass", mass},
-      {"friction", friction}};
-}*/
 void Physics::ComponentPhysics::BeginTick() {
   if (auto o = object.lock())
     prevPos = o->GetPosition();
@@ -28,6 +18,9 @@ void Physics::ComponentPhysics::EndTick() {
     hasTickState = true;
   }
 }
+ComponentPhysics::ComponentPhysics()
+    : world_direction(PhysicsSystem::world_direction),
+      gravity_scale(PhysicsSystem::gravity_scale) {}
 
 glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
   auto o = object.lock();
@@ -40,20 +33,6 @@ glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
     return o->GetPosition();
   return glm::mix(prevPos, currPos, PhysicsSystem::GetInterpolationAlpha());
 }
-/*void ComponentPhysics::FromJson(json &js) {
-  gravity_scale.x = js["gravity_scale"][0].get<float>();
-  gravity_scale.y = js["gravity_scale"][1].get<float>();
-  gravity_scale.z = js["gravity_scale"][2].get<float>();
-  world_direction.x = js["world_direction"][0].get<float>();
-  world_direction.y = js["world_direction"][1].get<float>();
-  world_direction.z = js["world_direction"][2].get<float>();
-  velocities.x = js["velocities"][0].get<float>();
-  velocities.y = js["velocities"][1].get<float>();
-  velocities.z = js["velocities"][2].get<float>();
-  cor = js["cor"].get<float>();
-  mass = js["mass"].get<float>();
-  friction = js["friction"].get<float>();
-}*/
 void ComponentPhysics::UpdatePhysics() {
   if (!processPhysics)
     return;
@@ -72,8 +51,6 @@ void ComponentPhysics::UpdatePhysics() {
 
 void Physics::ComponentPhysics::EarlySetup() {
   PhysicsSystem::RegisterCPhysics(this->shared_from_this());
-  world_direction = PhysicsSystem::world_direction;
-  gravity_scale = PhysicsSystem::gravity_scale;
 }
 
 void Physics::ComponentPhysics::LateEnd() {

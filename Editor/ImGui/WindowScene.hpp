@@ -131,7 +131,7 @@ protected:
         SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Saving scene to {}...",
                            scene->path);
         json scenejs = scene->ToJson();
-        auto st = scenejs.dump();
+        auto st = scenejs.dump(2);
         FileUtil::SaveFile(scene->path, &st);
       }
     } else {

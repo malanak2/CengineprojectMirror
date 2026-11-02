@@ -3,12 +3,17 @@
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
 namespace Engine {
-class InvalidComponent : public IComponent {
-  REGISTER_CLASS(InvalidComponent)
-public:
-  json ToJson() override;
+  class InvalidComponent : public IComponent {
+  public:
+    static std::string_view GetNameS() { return "InvalidComponent"; }
+    std::string_view GetName() override {
+      return originalName.empty() ? GetNameS() : std::string_view(originalName);
+    }
+    json ToJson() override { return raw; }
+    void FromJson(json &js) override { raw = js; }
+    bool IsValid() override { return false; }
 
-  void FromJson(json &js) override;
-};
-
+    std::string originalName;
+    json raw;
+  };
 }; // namespace Engine

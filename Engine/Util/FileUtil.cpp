@@ -10,6 +10,8 @@
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
+#include <filesystem>
+
 #include "External/stb/stb_image.h"
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -33,16 +35,21 @@ int FileUtil::ReadFile(std::string path, std::string *result) {
 }
 
 int FileUtil::SaveFile(std::string path, std::string *content) {
-  std::ofstream file;
   path = sanitizePath(path);
-  file.open(path, std::ios::out);
-  if (!file.is_open()) {
-    return -1;
+  const std::string tmp = path + ".tmp";
+  {
+    std::ofstream f(tmp, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!f.is_open()) return -1;
+    f << *content;
+    f.flush();
+    if (!f) return -2;
   }
-  file << *content;
-  file.close();
-
-  return 0;
+  std::error_code ec;
+  if (std::filesystem::exists(path, ec))
+    std::filesystem::copy_file(path, path + ".bak",
+                               std::filesystem::copy_options::overwrite_existing, ec);
+  std::filesystem::rename(tmp, path, ec);
+  return ec ? -3 : 0;
 }
 
 /// Loads a binary file from the resources directory
