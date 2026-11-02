@@ -6,12 +6,3 @@ void Engine::TestComponent::Update() {
   auto o = object.lock();
   o->AddPosition(glm::vec3{0, amount, 0});
 }
-json Engine::TestComponent::ToJson() {
-  TestComponentJson t;
-  t.amount = amount;
-  return t;
-}
-void Engine::TestComponent::FromJson(json &js) {
-  TestComponentJson t = js;
-  amount = t.amount;
-}

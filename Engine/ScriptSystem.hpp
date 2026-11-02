@@ -3,7 +3,8 @@
 #include <map>
 #include <memory>
 #include <typeindex>
-
+#include "Util/GlmJson.hpp"
+// Attributes made with help of AI
 namespace Engine
 {
   namespace Attr
@@ -159,15 +160,43 @@ namespace Engine
         return attr.name; 
       }      
       template <typename T>
-      void RegisterScriptA()
+    void RegisterScriptA()
       {
-        // 2. Add static constexpr here so the FixedString buffers are never destroyed
         static constexpr Attr::Script attr = ScriptAttrOf<T>();
+
+        // Lambda that merges manual ToJson() with Reflected fields
+        auto toJsonWrapper = [](IComponent* ptr) -> json {
+          T* self = static_cast<T*>(ptr);
+        
+          // 1. Run the custom virtual ToJson() from the component
+          json j = self->ToJson(); 
+        
+          // 2. Append the reflected fields
+          template for (constexpr auto m : fields_with<T, Attr::Serialize>()) {
+            j[std::string(json_key(m))] = self->[:m:];
+          }
+          return j;
+        };
+
+        // Lambda that merges manual FromJson() with Reflected fields
+        auto fromJsonWrapper = [](IComponent* ptr, json& js) {
+          T* self = static_cast<T*>(ptr);
+        
+          // 1. Extract the reflected fields
+          template for (constexpr auto m : fields_with<T, Attr::Serialize>()) {
+            std::string k(json_key(m));
+            if (js.contains(k)) js.at(k).get_to(self->[:m:]);
+          }
+        
+          // 2. Run the custom virtual FromJson() from the component
+          self->FromJson(js); 
+        };
 
         auto [it, inserted] = by_type.try_emplace(
             std::type_index(typeid(T)),
             ScriptInfo{attr.name, attr.displayname, std::type_index(typeid(T)),
-                       &make<T>});
+                       &make<T>, toJsonWrapper, fromJsonWrapper});
+        
         if (inserted)
         {
           by_name[it->second.name] = &it->second;

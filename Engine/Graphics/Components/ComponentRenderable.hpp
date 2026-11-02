@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include "ScriptSystem.hpp"
 #include "Graphics/Program.hpp"
 
 using json = nlohmann::json;
@@ -20,26 +21,9 @@ public:
   std::map<std::string, std::shared_ptr<IUniform>> uniforms;
   std::vector<std::string> disabled_meshes;
 };
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RenderableDataJson, model_path, material_path, uniforms, disabled_meshes);
 
-inline void to_json(json &j, const RenderableDataJson &p) {
-  j = json{{"model_path", p.model_path},
-           {"material_path", p.material_path},
-           {"uniforms", p.uniforms},
-           {"disabled_meshes", p.disabled_meshes}};
-}
-
-inline void from_json(const json &j, RenderableDataJson &p) {
-  j.at("model_path").get_to(p.model_path);
-  j.at("material_path").get_to(p.material_path);
-  if (j.contains("uniforms")) {
-    j.at("uniforms").get_to(p.uniforms);
-  }
-  if (j.contains("disabled_meshes")) {
-    j.at("disabled_meshes").get_to(p.disabled_meshes);
-  }
-}
-
-class ComponentRenderable
+class [[=Attr::Script{}]]ComponentRenderable
     : public IComponent,
       public std::enable_shared_from_this<ComponentRenderable> {
   REGISTER_CLASS(ComponentRenderable);

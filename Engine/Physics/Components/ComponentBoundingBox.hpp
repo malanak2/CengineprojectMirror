@@ -16,7 +16,7 @@ class CollisionManifold;
 class Line;
 class Plane;
 // SZAUER, Gabor. Game Physics Cookbook. In: . S. 152-192. ISBN 978-1787120815.
-class OBB : public std::enable_shared_from_this<OBB> {
+class  OBB : public std::enable_shared_from_this<OBB> {
 public:
   glm::vec3 position;
   glm::vec3 size;
@@ -55,15 +55,13 @@ public:
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ComponentBBoxJson, position_offset, size,
                                    orientation, isTrigger);
 
-class ComponentBoundingBox
+class [[=Attr::Script{}]] ComponentBoundingBox
     : public IComponent,
       public std::enable_shared_from_this<ComponentBoundingBox> {
   REGISTER_CLASS(ComponentBoundingBox);
 
 public:
-  json ToJson() override;
 
-  void FromJson(json &js) override;
   void EarlySetup() override;
   void LateEnd() override;
   void Update() override;
@@ -72,7 +70,6 @@ public:
     return GetOBB()->Collides(other->GetOBB());
   }
   void InvalidateBB() { obb = nullptr; }
-  bool isTrigger = false;
   using ContactCallback =
       std::function<void(std::shared_ptr<ComponentBoundingBox> other)>;
 
@@ -83,15 +80,17 @@ public:
   ContactCallback OnTriggerEnter;
   ContactCallback OnTrigger;
   ContactCallback OnTriggerLeave;
-  glm::vec3 position_offset = {0, 0, 0};
-  glm::quat orientation_offset = glm::identity<glm::quat>();
-  glm::vec3 size = {
+  [[=Attr::Serialize{}]]glm::vec3 position_offset = {0, 0, 0};
+  [[=Attr::Serialize{}]]glm::quat orientation_offset = glm::identity<glm::quat>();
+  [[=Attr::Serialize{}]]glm::vec3 size = {
       1,
       1,
       1,
   };
+  
+  [[=Attr::Serialize{}]]bool isTrigger = false;
   bool FollowsPausedExecution() override { return false; }
-
+  ComponentBoundingBox() {}
 private:
   std::shared_ptr<OBB> obb = nullptr;
 };

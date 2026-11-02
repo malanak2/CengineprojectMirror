@@ -9,19 +9,11 @@ class [[=Engine::Attr::Script{}]] ComponentControllable : public Engine::ICompon
   REGISTER_CLASS(ComponentControllable);
 
 public:
-  json ToJson() override {
-    return {{"movespeed", movespeed}, {"sensitivity", sensitivity}};
-  }
-
-  void FromJson(json &js) override {
-    movespeed = js["movespeed"].get<float>();
-    sensitivity = js["sensitivity"].get<float>();
-  }
   void EarlySetup() override;
   void LateEnd() override;
   ~ComponentControllable() override;
-  float movespeed = 1;
-  float sensitivity = 1;
+  [[=Engine::Attr::Serialize{}]]float movespeed = 1;
+  [[=Engine::Attr::Serialize{}]]float sensitivity = 1;
   bool FollowsPausedExecution() override { return false; }
 
 private:

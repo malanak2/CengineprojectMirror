@@ -56,8 +56,6 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         External/glad/include/glad/glad.h
         Components/TestComponent.cpp
         Components/TestComponent.hpp
-        Components/RegisterComponents.hpp
-        Components/RegisterComponents.cpp
         Scene.cpp
         Scene.hpp
         Graphics/Interfaces/IUniform.hpp
@@ -76,10 +74,14 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Physics/Components/ComponentBoundingBox.cpp
         Physics/Ray.cpp
         Physics/Plane.cpp
-        Attributes.hpp
         Physics/Components/ComponentPhysics.hpp
         JsonFileBase.hpp
         Physics/Components/ComponentBoundingBox.hpp
+        Components/InvalidComponent.hpp
+        Physics/Line.hpp
+        Physics/PhysicsSystem.hpp
+        Physics/Plane.hpp
+        Physics/Ray.hpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)

@@ -16,7 +16,7 @@ public:
   void ResetCollisionManifold();
 };
 using json = nlohmann::json;
-  class [[=Attr::Script{ .displayname = "Test"}]] ComponentPhysics : public IComponent, public std::enable_shared_from_this<ComponentPhysics> {
+  class [[=Attr::Script{}]] ComponentPhysics : public IComponent, public std::enable_shared_from_this<ComponentPhysics> {
     REGISTER_CLASS(ComponentPhysics)
 public:
   void UpdatePhysics();
@@ -44,8 +44,6 @@ public:
   void EndTick();
   glm::vec3 GetRenderPosition();
     ComponentPhysics();
-  ::json ToJson() override {return {};}
-  void FromJson(::json& js) override {}
 
 private:
   [[=Attr::Serialize{}]] [[=Attr::Editor{}]]glm::vec3 velocities = {0, 0, 0};

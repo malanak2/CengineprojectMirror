@@ -51,22 +51,10 @@ CameraComponent::CameraComponent(std::shared_ptr<Object> object) {
 
 CameraComponent::~CameraComponent() {}
 
-void CameraComponent::FromJson(json &js) {
-  CameraComponentJson ccjs = js;
-  far = ccjs.far;
-  near = ccjs.near;
-}
-
-json CameraComponent::ToJson() {
-  CameraComponentJson ccjs;
-  ccjs.far = far;
-  ccjs.near = near;
-  return ccjs;
-}
 CameraComponent::CameraComponent(json &js, std::shared_ptr<Object> object) {
   this->object = object;
   FromJson(js);
-} //
+}
 glm::mat4 CameraComponent::GetProjMatrix() {
   if (!isUpToDate())
     recalculateMatrixes();
@@ -96,7 +84,7 @@ void CameraComponent::recalculateMatrixes() {
   this->up = glm::normalize(orientation * glm::vec3(0, 1, 0));
 
   projmat = glm::perspective(
-      glm::radians(45.0f),
+      glm::radians(fov),
       (float)Engine::Engine::width / (float)Engine::Engine::height, near, far);
 
   glm::vec3 camPos = obj->GetPosition();

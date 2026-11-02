@@ -3,15 +3,10 @@
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 
-#include "Editor/Components/Registrar.hpp"
-#include "Editor/Components/ComponentControllable.hpp"
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
-#include "Engine/Components/InvalidComponent.hpp"
-#include "Engine/Physics/Components/ComponentPhysics.hpp"
-#include "Editor/Components/TestInputComponent.hpp"
-
+#include "out/Debug/Generated/AllComponents.hpp"
 // No need to make allocations synchronous without Tracy enabled
 #ifdef TRACY_ENABLE
 std ::mutex memoryLock;
@@ -31,11 +26,9 @@ void operator delete(void *ptr) noexcept {
 int main() {
   Editor::ImGuiR::ImGuiRegistrar rg;
   ZoneScopedNS("main", 64);
-  Engine::Main::ScriptSystem::instance->create_global_registry<^^::>();
-  for (const auto& script_info : Engine::Main::ScriptSystem::instance->All()) {
-    if (script_info == nullptr) continue;
-    std::cout << "Found Script: " << std::string(script_info->name )
-              << "\n";
+  {
+    ZoneScopedN("Create script registry")
+    Engine::Main::ScriptSystem::instance->create_global_registry<^^::>();
   }
   /// Inject functions
   {
@@ -47,16 +40,19 @@ int main() {
     ZoneScopedN("Initialize Engine");
     Engine::Engine::Init();
   }
+  // Print found components - kindof debug
+  {
+    for (const auto& script_info : Engine::Main::ScriptSystem::instance->All())
+    {
+      if (script_info == nullptr) continue;
+      SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Registered script: {}, display name: {}", std::string(script_info->name), script_info->displayname);
+    }
+  }
   // Init editor ImGui
   {
     ZoneScopedN("Register imgui renderers");
     Editor::ImGuiR::ImGuiUniformRenderer::Init();
     Editor::ImGuiR::ImGuiComponentRenderer::Init();
-  }
-  /// Register components
-  {
-    ZoneScopedN("Register comonents");
-    Editor::Registrar::RegisterComponents();
   }
   /// Load scene
   {

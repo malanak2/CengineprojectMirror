@@ -11,6 +11,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <memory>
 #include <utility>
+#include "ScriptSystem.hpp"
 
 namespace Engine {
 
@@ -53,8 +54,9 @@ json Object::ToJson() {
   int i = 0;
   for (const auto &[key, val] : this->_components) {
     ComponentJson j;
-    auto val_js = std::static_pointer_cast<IJson>(val);
-    j.data = val_js->ToJson();
+    const auto* scriptInfo = Main::ScriptSystem::instance->GetScript(val->GetName());
+    json data = scriptInfo->toJson(val.get());
+    j.data = data;
     j.name = val->GetName();
     cmps.insert(cmps.end(), static_cast<ComponentJson>(j));
   }
@@ -104,14 +106,15 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
   cmps.reserve(jsobj.components.size());
   for (auto &c : jsobj.components) {
     auto scriptinfo =
-        Main::ScriptSystem::instance->GetScript(c.name); // was fetched twice
+        Main::ScriptSystem::instance->GetScript(c.name); 
     if (!scriptinfo) {
       SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
                          "Skipping unknown component {} in {}", c.name, path);
       continue;
     }
     auto script = scriptinfo->create();
-    script->FromJson(c.data);
+
+    scriptinfo->fromJson(script.get(), c.data);
     script->SetObject(self);
     cmps.insert(cmps.begin(), script);
     if (auto cam = std::dynamic_pointer_cast<Graphics::CameraComponent>(script))

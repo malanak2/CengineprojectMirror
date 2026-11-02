@@ -10,67 +10,79 @@
 #include <memory>
 #include <string_view>
 #define IMGUI_SCALE 1
-namespace Editor {
-namespace ImGuiR {
+
+namespace Editor
+{
+  namespace ImGuiR
+  {
 #define IMGUI_REGISTER_UNIFORM(p1, p2)                                         \
   {                                                                            \
     instance->Register(p1::GetNameS(), [                                       \
     ](const std::shared_ptr<Engine::Graphics::IUniform> &uniform) p2);         \
   }
-//!
-//! @brief Class for registering imgui renderers for Uniform types
-//!
-class ImGuiUniformRenderer {
-public:
-  //!
-  //! @brief Initializes the ImGuiUniformRenderer
-  //!
-  //!
-  static void Init();
-  void
-  Register(std::string_view type,
-           void (*func)(const std::shared_ptr<Engine::Graphics::IUniform> &));
-  void Render(const std::shared_ptr<Engine::Graphics::IUniform> &uni);
 
-  static std::shared_ptr<ImGuiUniformRenderer> instance;
+    //!
+    //! @brief Class for registering imgui renderers for Uniform types
+    //!
+    class ImGuiUniformRenderer
+    {
+    public:
+      //!
+      //! @brief Initializes the ImGuiUniformRenderer
+      //!
+      //!
+      static void Init();
+      void
+      Register(std::string_view type,
+               void (*func)(const std::shared_ptr<Engine::Graphics::IUniform>&));
+      void Render(const std::shared_ptr<Engine::Graphics::IUniform>& uni);
 
-private:
-  std::map<std::string_view,
-           void (*)(const std::shared_ptr<Engine::Graphics::IUniform> &)>
+      static std::shared_ptr<ImGuiUniformRenderer> instance;
+
+    private:
+      std::map<std::string_view,
+               void (*)(const std::shared_ptr<Engine::Graphics::IUniform>&)>
       funcs =
-          std::map<std::string_view,
-                   void (*)(
-                       const std::shared_ptr<Engine::Graphics::IUniform> &)>();
-};
-#define IMGUI_REGISTER_COMPONENT(p1, p2)                                       \
-  {                                                                            \
-    instance->Register(Engine::Main::ScriptSystem::instance->GetScript<p1>()->name,                                         \
-                       [](const std::shared_ptr<Engine::IComponent> &c) {      \
-                         auto component = std::static_pointer_cast<p1>(c);     \
-                         p2                                                    \
-                       });                                                     \
-  }
-//!
-//! @brief Class for registering imgui renderers for Component types
-//!
-class ImGuiComponentRenderer {
-public:
-  //!
-  //! @brief Initializes the ImGuiUniformRenderer
-  //!
-  //!
-  static void Init();
-  void Register(std::string_view type,
-                void (*func)(const std::shared_ptr<Engine::IComponent> &));
-  void Render(const std::shared_ptr<Engine::IComponent> &uni);
+        std::map<std::string_view,
+                 void (*)(
+                   const std::shared_ptr<Engine::Graphics::IUniform>&)>();
+    };
 
-  static std::shared_ptr<ImGuiComponentRenderer> instance;
+#define IMGUI_REGISTER_COMPONENT(p1, p2)                                                        \
+  {                                                                                             \
+    auto scriptinfo= Engine::Main::ScriptSystem::instance->GetScript<p1>();                     \
+    if (scriptinfo == nullptr) {                                                                \
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Tried to register a non existent component");    \
+    } else {                                                                                    \
+    instance->Register(scriptinfo->name,                                                        \
+                       [](const std::shared_ptr<Engine::IComponent> &c) {                       \
+                         auto component = std::static_pointer_cast<p1>(c);                      \
+                         p2                                                                     \
+                       });                                                                      \
+  }}
 
-private:
-  std::map<std::string_view,
-           void (*)(const std::shared_ptr<Engine::IComponent> &)>
+    //!
+    //! @brief Class for registering imgui renderers for Component types
+    //!
+    class ImGuiComponentRenderer
+    {
+    public:
+      //!
+      //! @brief Initializes the ImGuiUniformRenderer
+      //!
+      //!
+      static void Init();
+      void Register(std::string_view type,
+                    void (*func)(const std::shared_ptr<Engine::IComponent>&));
+      void Render(const std::shared_ptr<Engine::IComponent>& uni);
+
+      static std::shared_ptr<ImGuiComponentRenderer> instance;
+
+    private:
+      std::map<std::string_view,
+               void (*)(const std::shared_ptr<Engine::IComponent>&)>
       funcs = std::map<std::string_view,
-                       void (*)(const std::shared_ptr<Engine::IComponent> &)>();
-};
-} // namespace ImGuiR
+                       void (*)(const std::shared_ptr<Engine::IComponent>&)>();
+    };
+  } // namespace ImGuiR
 } // namespace Editor

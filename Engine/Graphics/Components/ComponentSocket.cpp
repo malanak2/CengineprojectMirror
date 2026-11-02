@@ -39,32 +39,3 @@ void Engine::Graphics::ComponentSocket::Update() {
   }
   owner->SetWorldRotation(glm::normalize(glm::quat_cast(rot)));
 }
-
-json Engine::Graphics::ComponentSocket::ToJson() {
-  ComponentSocketJson data;
-  data.target_object = target_object;
-  data.target_bone = target_bone;
-  data.position = {offset_position.x, offset_position.y, offset_position.z};
-  data.rotation = {offset_rotation.x, offset_rotation.y, offset_rotation.z};
-  data.scale = {offset_scale.x, offset_scale.y, offset_scale.z};
-  json j;
-  j["data"] = data;
-  return j;
-}
-
-void Engine::Graphics::ComponentSocket::FromJson(json &js) {
-  if (js.is_null())
-    return;
-  json data = js.contains("data") ? js["data"] : js;
-  if (data.is_null())
-    return;
-  ComponentSocketJson sj = data.get<ComponentSocketJson>();
-  target_object = sj.target_object;
-  target_bone = sj.target_bone;
-  if (sj.position.size() >= 3)
-    offset_position = glm::vec3(sj.position[0], sj.position[1], sj.position[2]);
-  if (sj.rotation.size() >= 3)
-    offset_rotation = glm::vec3(sj.rotation[0], sj.rotation[1], sj.rotation[2]);
-  if (sj.scale.size() >= 3)
-    offset_scale = glm::vec3(sj.scale[0], sj.scale[1], sj.scale[2]);
-}

@@ -76,6 +76,8 @@ public:
   //! @return .
   //!
   virtual bool IsValid() { return true; }
+  json ToJson() override {return {};}
+  void FromJson(json& js) override {}
   
 };
 } // namespace Engine

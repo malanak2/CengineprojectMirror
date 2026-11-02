@@ -9,15 +9,12 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "ScriptSystem.hpp"
+
 using json = nlohmann::json;
 
 namespace Engine {
 namespace Graphics {
-struct CameraComponentJson {
-public:
-  float near;
-  float far;
-};
 class Frustum {
 public:
   union Planes {
@@ -47,9 +44,8 @@ public:
   std::vector<glm::vec3> GetCorners();
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CameraComponentJson, near, far);
 
-class CameraComponent : public IComponent {
+class [[=Attr::Script{}]] CameraComponent : public IComponent {
   REGISTER_CLASS(CameraComponent);
 
 public:
@@ -102,18 +98,17 @@ public:
 
   void Update() override;
 
-  // IJson
-  json ToJson() override;
 
   // We do not need our camera to pause during execution paused - it only
   // updates its vectors
   bool FollowsPausedExecution() override { return false; }
-  void FromJson(json &js) override;
 
   glm::mat4 GetProjMatrix();
   glm::mat4 GetViewMatrix();
 
-  float near, far;
+  [[=Attr::Serialize{}]]float near=1;
+  [[=Attr::Serialize{}]]float far=2500;
+  [[=Attr::Serialize{}]]float fov = 45;
 
   glm::mat4 projmat;
   glm::mat4 viewmat;

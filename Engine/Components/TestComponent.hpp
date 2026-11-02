@@ -3,6 +3,9 @@
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
 #include <nlohmann/detail/macro_scope.hpp>
+
+#include "ScriptSystem.hpp"
+
 namespace Engine {
 
 class TestComponentJson {
@@ -11,17 +14,13 @@ public:
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TestComponentJson, amount);
 
-class TestComponent : public IComponent {
+class [[=Attr::Script{}]] TestComponent : public IComponent {
   REGISTER_CLASS(TestComponent);
 
 public:
   void Update() override;
 
-  json ToJson() override;
-
-  void FromJson(json &js) override;
-
-  float amount = 0;
+  [[=Attr::Serialize{}]]float amount = 0;
 
 private:
 };

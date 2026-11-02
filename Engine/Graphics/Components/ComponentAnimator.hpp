@@ -3,9 +3,12 @@
 #include "Graphics/Model.hpp"
 #include "Interfaces/IComponent.hpp"
 #include <string>
+
+#include "ScriptSystem.hpp"
+
 namespace Engine {
 namespace Graphics {
-class ComponentAnimator : public IComponent {
+class [[=Attr::Script{}]] ComponentAnimator : public IComponent {
   REGISTER_CLASS(ComponentAnimator);
 
 public:
@@ -36,9 +39,9 @@ public:
   std::vector<SocketAttachment> sockets;
   std::map<std::string, std::shared_ptr<Animation>> animations;
 
+  [[=Attr::Serialize{}]]bool isPlaying = true;
+  [[=Attr::Serialize{}]]std::string current_animation = "";
 private:
-  bool isPlaying = true;
-  std::string current_animation = "";
   std::shared_ptr<Animator> animator = std::make_shared<Animator>(nullptr);
   std::vector<glm::mat4> m_DefaultBoneMatrices;
 };

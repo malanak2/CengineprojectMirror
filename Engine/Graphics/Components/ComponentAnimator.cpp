@@ -13,8 +13,6 @@ json Engine::Graphics::ComponentAnimator::ToJson() {
     socketsJson.push_back(item);
   }
   js["sockets"] = socketsJson;
-  js["current_animation"] = current_animation;
-  js["is_playing"] = isPlaying;
   return js;
 }
 
@@ -35,9 +33,6 @@ void Engine::Graphics::ComponentAnimator::FromJson(json &js) {
     if (animations.contains(current_animation) || current_animation.empty()) {
       SetAnimation(current_animation);
     }
-  }
-  if (js.contains("is_playing") && js["is_playing"].is_boolean()) {
-    SetIsPlaying(js["is_playing"]);
   }
 }
 void Engine::Graphics::ComponentAnimator::Update() {

@@ -2,7 +2,6 @@
 // Created by malan on 20.04.2026.
 //
 #include "Engine.hpp"
-#include "Components/RegisterComponents.hpp"
 #include "Graphics/Components/ComponentRenderable.hpp"
 #include "Graphics/Graphics.hpp"
 #include "Graphics/Uniforms/UniformFloatVector.hpp"
@@ -30,7 +29,6 @@ void Engine::Engine::Init() {
   ZoneScoped;
   std::shared_ptr<Engine> e = std::make_shared<Engine>();
   e->setupLogger();
-  ScriptRegistrar::RegisterComponents();
   auto logger = spdlog::get("console");
 
   if (!Config::inst) {
@@ -77,7 +75,7 @@ void Engine::LoadScene(std::string path) {
     auto object_default = std::make_shared<Object>(e->current_scene);
     JsonFileBase jsbase = {};
     jsbase.object_type = ObjectType::Component;
-    Graphics::RenderableDataJson rdj;
+/*    Graphics::RenderableDataJson rdj;
     rdj.model_path = "models/pyramid.obj";
     rdj.material_path = "materials/basic.json";
     std::vector<float> unis = {0, 1, 0, 1};
@@ -90,7 +88,7 @@ void Engine::LoadScene(std::string path) {
     auto com_render =
         Graphics::ComponentRenderable::Create(jsbase_js, object_default);
     object_default->fromParams("Test object", {com_render});
-    e->current_scene->Instantiate(object_default);
+    e->current_scene->Instantiate(object_default);*/
     std::string scene_json = e->current_scene->ToJson().dump();
     // Probably better to not save automatically
     // FileUtil::SaveFile(path, &scene_json);
@@ -155,6 +153,8 @@ float Engine::GetDeltaTime() { return instance->deltaTime; }
 void Engine::Engine::setupLogger() {
   auto console = spdlog::stdout_color_mt("console");
   console->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%@] %v");
+  console->set_level(spdlog::level::debug);
+  console->flush_on(spdlog::level::debug);
   spdlog::set_level(spdlog::level::debug);
   spdlog::flush_on(spdlog::level::debug);
   SPDLOG_LOGGER_INFO(console, "Set up logger!");
