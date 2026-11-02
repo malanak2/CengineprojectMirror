@@ -19,6 +19,7 @@
 #include <set>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
+#include "ScriptSystem.hpp"
 
 namespace Editor::ImGuiR {
 

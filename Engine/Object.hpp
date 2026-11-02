@@ -197,7 +197,7 @@ public:
   //!
   //!
   template <typename T = IComponent> std::shared_ptr<T> GetComponent() {
-    std::string key(T::GetNameS());
+    std::string key(Main::ScriptSystem::instance->GetScript<T>()->name);
     if (!_components.contains(key))
       return nullptr;
     return std::static_pointer_cast<T>(_components[key]);

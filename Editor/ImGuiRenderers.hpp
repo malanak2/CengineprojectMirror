@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "ScriptSystem.hpp"
 #include <memory>
 #include <string_view>
 #define IMGUI_SCALE 1
@@ -43,7 +44,7 @@ private:
 };
 #define IMGUI_REGISTER_COMPONENT(p1, p2)                                       \
   {                                                                            \
-    instance->Register(p1::GetNameS(),                                         \
+    instance->Register(Engine::Main::ScriptSystem::instance->GetScript<p1>()->name,                                         \
                        [](const std::shared_ptr<Engine::IComponent> &c) {      \
                          auto component = std::static_pointer_cast<p1>(c);     \
                          p2                                                    \

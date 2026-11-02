@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Interfaces/IComponent.hpp"
-#include "Attributes.hpp"
 #include <glm/glm.hpp>
+#include "ScriptSystem.hpp"
 #include <memory>
 // SZAUER, Gabor. Game Physics Cookbook. In: . S. 152-192. ISBN 978-1787120815.
 namespace Engine {
@@ -16,9 +16,7 @@ public:
   void ResetCollisionManifold();
 };
 using json = nlohmann::json;
-  class [[=Attr::Script{ .displayname = "Test"}]] ComponentPhysics : public Attr::ReflectedComponent<ComponentPhysics>, public std::enable_shared_from_this<ComponentPhysics> {
-    SETUP_PRIVATE_ATTRIBS
-
+  class [[=Attr::Script{ .displayname = "Test"}]] ComponentPhysics : public IComponent, public std::enable_shared_from_this<ComponentPhysics> {
 public:
   void UpdatePhysics();
   void EarlySetup() override;
