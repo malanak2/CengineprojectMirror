@@ -19,6 +19,8 @@
 #include <set>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
+
+#include "ReflectionRegistrar.hpp"
 #include "ScriptSystem.hpp"
 
 namespace Editor::ImGuiR {
@@ -97,15 +99,23 @@ void ImGuiComponentRenderer::Render(
     const std::shared_ptr<Engine::IComponent> &uni) {
   ZoneScoped;
   auto t = uni->GetName();
-  if (funcs.contains(t)) {
-    funcs[t](uni);
-  } else {
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Typeid {} not registered", t);
+  bool drawn = false;
+  if (auto it = ReflectionRegistrar::Get().reflected.find(t); it != ReflectionRegistrar::Get().reflected.end()) {
+    it->second(uni.get());
+    drawn = true;
+  }
+  if (auto it = funcs.find(t); it != funcs.end()) {
+    it->second(uni);
+    drawn = true;
+  }
+  if (!drawn) {
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Typeid {} not registered", t);
   }
 }
 
 void ImGuiComponentRenderer::Init() {
   ZoneScoped;
+  ReflectionRegistrar::Get().RegisterReflectedScope<^^::>();
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
     ImGui::InputText("Model path", &component->_model_path[0], 100);
     ImGui::InputText("Material path", &component->_material_path[0], 100);
@@ -140,15 +150,6 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(Engine::InvalidComponent,
                            { ImGui::Text("Invalid Component"); })
 
-  IMGUI_REGISTER_COMPONENT(Engine::Graphics::CameraComponent, {
-    ImGui::InputFloat("Near", &component->near);
-    ImGui::InputFloat("Far", &component->far);
-  });
-
-  IMGUI_REGISTER_COMPONENT(Engine::TestComponent, {
-    ImGui::InputFloat("Amount", &component->amount);
-  });
-
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentAnimator, {
     if (ImGui::BeginCombo("Animation",
                           component->GetCurrentAnimation().c_str())) {
@@ -163,15 +164,6 @@ void ImGuiComponentRenderer::Init() {
         component->SetAnimation("");
       }
       ImGui::EndCombo();
-    }
-    if (component->GetIsPlaying()) {
-      if (ImGui::Button("Pause")) {
-        component->SetIsPlaying(false);
-      }
-    } else {
-      if (ImGui::Button("Play")) {
-        component->SetIsPlaying(true);
-      }
     }
 
     if (ImGui::CollapsingHeader("Socket Attachments")) {
@@ -265,18 +257,8 @@ void ImGuiComponentRenderer::Init() {
                       1.0f);
     ImGui::DragFloat3("Scale Offset", &component->offset_scale[0], 0.01f);
   });
-  IMGUI_REGISTER_COMPONENT(Editor::TestInputComponent, {
-
-                                                       });
   IMGUI_REGISTER_COMPONENT(Engine::Physics::ComponentPhysics, {
     auto o = component->object.lock();
-    auto vel = component->GetVelocities();
-    ImGui::Text("VelX %f", vel.x);
-    ImGui::Text("VelY %f", vel.y);
-    ImGui::Text("VelZ %f", vel.z);
-    ImGui::InputFloat("Friction", &component->friction);
-    ImGui::InputFloat("Mass", &component->mass);
-    ImGui::InputFloat("Cor", &component->cor);
     static double joltx = 0;
     static double jolty = 0;
     static double joltz = 0;
@@ -293,32 +275,6 @@ void ImGuiComponentRenderer::Init() {
   IMGUI_REGISTER_COMPONENT(ComponentControllable, {
     ImGui::InputFloat("Movespeed", &component->movespeed);
     ImGui::InputFloat("Sensitivity", &component->sensitivity);
-  });
-  IMGUI_REGISTER_COMPONENT(Engine::Physics::ComponentBoundingBox, {
-    ImGui::InputFloat3("Position offset", &component->position_offset[0]);
-    static glm::vec3 currentAngles = glm::vec3(0.0f);
-    static glm::quat lastRotation = glm::identity<glm::quat>();
-
-    if (component->orientation_offset != lastRotation) {
-      currentAngles =
-          glm::degrees(glm::eulerAngles(component->orientation_offset));
-      lastRotation = component->orientation_offset;
-    }
-
-    glm::vec3 newAngles = currentAngles;
-
-    if (ImGui::DragFloat3("Rotation##BoundingBox", &newAngles[0], 1.0f)) {
-      currentAngles = newAngles;
-
-      glm::vec3 radians = glm::radians(newAngles);
-      component->orientation_offset = glm::quat(radians);
-      component->orientation_offset =
-          glm::normalize(component->orientation_offset);
-
-      lastRotation = component->orientation_offset;
-    }
-    ImGui::InputFloat3("Size", &component->size[0]);
-    ImGui::Checkbox("Trigger", &component->isTrigger);
   });
 }
 } // namespace Editor::ImGuiR

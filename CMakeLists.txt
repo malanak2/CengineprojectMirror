@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)
-set(IMGUI true)
+set(DEBUG true)
 set(EDITOR true)
 set(PROFILE true)
 if (PROFILE)
@@ -58,11 +58,12 @@ foreach(HEADER ${ALL_HEADERS})
   file(READ "${HEADER}" FILE_CONTENT)
 
   # Fast string search for the different variations
-  string(FIND "${FILE_CONTENT}" "[[=Attr::Script" HAS_SHORT)
+  string(FIND "${FILE_CONTENT}" "[[=Attr::Script" HAS_NORM)
   string(FIND "${FILE_CONTENT}" "[[=Engine::Attr::Script" HAS_LONG)
+  string(FIND "${FILE_CONTENT}" "[[=Script" HAS_SHORT)
 
   # If ANY of the variations are found (meaning the result is NOT -1)
-  if(NOT HAS_SHORT EQUAL -1 OR NOT HAS_LONG EQUAL -1)
+  if(NOT HAS_SHORT EQUAL -1 OR NOT HAS_LONG EQUAL -1 OR NOT HAS_NORM EQUAL -1)
     string(APPEND UMBRELLA_INCLUDES "#include \"${HEADER}\"\n")
   endif()
 endforeach()
@@ -82,12 +83,12 @@ add_executable(cengineeditor main.cpp Editor/ImGuiRenderers.cpp Editor/ImGuiRend
         Editor/ImGui/WindowPhysicsSystemDebug.hpp
         Editor/ImGui/WindowToggles.hpp
         Editor/Components/ComponentTestTrigger.hpp
-        Editor/Components/ComponentControllable.hpp)
+        Editor/Components/ComponentControllable.hpp
+        Editor/ReflectionRegistrar.hpp)
+if (DEBUG)
 add_compile_definitions(DEBUG=1)
 
 target_compile_definitions(cengineeditor PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
-if (IMGUI)
-  add_compile_definitions(IMGUI=1)
 endif ()
 if (EDITOR)
   add_compile_definitions(EDITOR=1)

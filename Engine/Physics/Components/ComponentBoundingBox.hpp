@@ -80,15 +80,15 @@ public:
   ContactCallback OnTriggerEnter;
   ContactCallback OnTrigger;
   ContactCallback OnTriggerLeave;
-  [[=Attr::Serialize{}]]glm::vec3 position_offset = {0, 0, 0};
-  [[=Attr::Serialize{}]]glm::quat orientation_offset = glm::identity<glm::quat>();
-  [[=Attr::Serialize{}]]glm::vec3 size = {
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]glm::vec3 position_offset = {0, 0, 0};
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]glm::quat orientation_offset = glm::identity<glm::quat>();
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]glm::vec3 size = {
       1,
       1,
       1,
   };
   
-  [[=Attr::Serialize{}]]bool isTrigger = false;
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]bool isTrigger = false;
   bool FollowsPausedExecution() override { return false; }
   ComponentBoundingBox() {}
 private:

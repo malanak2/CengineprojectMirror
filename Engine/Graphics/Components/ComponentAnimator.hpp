@@ -39,7 +39,7 @@ public:
   std::vector<SocketAttachment> sockets;
   std::map<std::string, std::shared_ptr<Animation>> animations;
 
-  [[=Attr::Serialize{}]]bool isPlaying = true;
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]bool isPlaying = true;
   [[=Attr::Serialize{}]]std::string current_animation = "";
 private:
   std::shared_ptr<Animator> animator = std::make_shared<Animator>(nullptr);

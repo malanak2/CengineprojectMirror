@@ -1,4 +1,7 @@
 #include "ComponentControllable.hpp"
+
+#include <imgui.h>
+
 #include "InputSystem.hpp"
 #include "Object.hpp"
 #include "Util/LoggerUtil.hpp"
@@ -68,9 +71,13 @@ void Editor::ComponentControllable::EarlySetup() {
         if (keybindLook->isEnabled) {
           Engine::InputSystem::SetMouseEnabled(true);
           keybindLook->isEnabled = false;
+          ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+          ImGui::SetMouseCursor(0);
         } else {
           Engine::InputSystem::SetMouseEnabled(false);
           keybindLook->isEnabled = true;
+          ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+          ImGui::SetMouseCursor(-1);
         }
       },
       false);

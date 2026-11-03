@@ -77,7 +77,7 @@ namespace Editor
       void Render(const std::shared_ptr<Engine::IComponent>& uni);
 
       static std::shared_ptr<ImGuiComponentRenderer> instance;
-
+      bool HasManual(std::string_view n) const { return funcs.contains(n); }
     private:
       std::map<std::string_view,
                void (*)(const std::shared_ptr<Engine::IComponent>&)>

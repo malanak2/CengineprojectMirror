@@ -20,7 +20,7 @@ class [[=Attr::Script{}]] TestComponent : public IComponent {
 public:
   void Update() override;
 
-  [[=Attr::Serialize{}]]float amount = 0;
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]float amount = 0;
 
 private:
 };

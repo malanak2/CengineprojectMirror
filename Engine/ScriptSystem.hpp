@@ -62,7 +62,7 @@ namespace Engine
     {
     };
     
-    struct Editor {};
+    struct Editor {FixedString<64> displayname={};};
   }
 
   namespace Main

@@ -12,8 +12,8 @@ public:
   void EarlySetup() override;
   void LateEnd() override;
   ~ComponentControllable() override;
-  [[=Engine::Attr::Serialize{}]]float movespeed = 1;
-  [[=Engine::Attr::Serialize{}]]float sensitivity = 1;
+  [[=Engine::Attr::Serialize{}]][[=Engine::Attr::Editor{}]]float movespeed = 1;
+  [[=Engine::Attr::Serialize{}]][[=Engine::Attr::Editor{}]]float sensitivity = 1;
   bool FollowsPausedExecution() override { return false; }
 
 private:

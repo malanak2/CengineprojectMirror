@@ -106,9 +106,9 @@ public:
   glm::mat4 GetProjMatrix();
   glm::mat4 GetViewMatrix();
 
-  [[=Attr::Serialize{}]]float near=1;
-  [[=Attr::Serialize{}]]float far=2500;
-  [[=Attr::Serialize{}]]float fov = 45;
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]float near=1;
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]float far=2500;
+  [[=Attr::Serialize{}]][[=Attr::Editor{}]]float fov = 45;
 
   glm::mat4 projmat;
   glm::mat4 viewmat;

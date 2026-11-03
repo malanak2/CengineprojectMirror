@@ -9,7 +9,29 @@ namespace Editor {
 class WindowInputMaps : public Window {
 public:
   std::string GetName() override { return "Input Maps"; }
-
+private:
+  static std::string KeyLabel(int key, int scancode) {
+    if (const char *n = glfwGetKeyName(key, scancode))
+      return n;
+    switch (key) {
+    case GLFW_KEY_SPACE:         return "Space";
+    case GLFW_KEY_ESCAPE:        return "Escape";
+    case GLFW_KEY_ENTER:         return "Enter";
+    case GLFW_KEY_TAB:           return "Tab";
+    case GLFW_KEY_BACKSPACE:     return "Backspace";
+    case GLFW_KEY_LEFT:          return "Left";
+    case GLFW_KEY_RIGHT:         return "Right";
+    case GLFW_KEY_UP:            return "Up";
+    case GLFW_KEY_DOWN:          return "Down";
+    case GLFW_KEY_LEFT_SHIFT:    return "Left Shift";
+    case GLFW_KEY_RIGHT_SHIFT:   return "Right Shift";
+    case GLFW_KEY_LEFT_CONTROL:  return "Left Ctrl";
+    case GLFW_KEY_RIGHT_CONTROL: return "Right Ctrl";
+    case GLFW_KEY_LEFT_ALT:      return "Left Alt";
+    case GLFW_KEY_RIGHT_ALT:     return "Right Alt";
+    default:                     return "Key " + std::to_string(key);
+    }
+  }
 protected:
   void draw() override {
     ImGui::Begin("Input Maps");
@@ -42,7 +64,7 @@ protected:
         if (kvec.size() == 0)
           continue;
         ImGui::Indent(10);
-        if (ImGui::TreeNode(glfwGetKeyName(kvec[0]->key, scancode))) {
+        if (ImGui::TreeNode(KeyLabel(kvec[0]->key, scancode).c_str())) {
           for (auto keybind : kvec) {
             ImGui::Text(
                 "ID: %s, Default key: %s", keybind->name.c_str(),
