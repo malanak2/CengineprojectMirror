@@ -40,13 +40,16 @@ int main() {
     ZoneScopedN("Initialize Engine");
     Engine::Engine::Init();
   }
-  // Print found components - kindof debug
+  // Print found components
   {
+    // No zonescoped - come on, if this takes more than few microseconds there is something REALLY wrong (or you have like 100k components ig)
+#ifdef DEBUG
     for (const auto& script_info : Engine::Main::ScriptSystem::instance->All())
     {
       if (script_info == nullptr) continue;
       SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Registered script: {}, display name: {}", std::string(script_info->name), script_info->displayname);
     }
+#endif
   }
   // Init editor ImGui
   {

@@ -289,40 +289,5 @@ namespace Engine
     std::unordered_map<std::string_view, const ScriptInfo*> by_name;
       std::vector<const ScriptInfo*> ordered;
   };
-    /*
-      template <std::meta::info Scope>
-      void scan_scope()
-      {
-        template for (constexpr auto member : members<Scope>())
-        {
-          if constexpr (std::meta::is_namespace(member))
-          {
-            scan_scope<member>();
-          }
-          else if constexpr (std::meta::is_type(member) && is_script_candidate(member))
-          {
-            template for (constexpr auto anno : annotations<member>())
-            {
-              if constexpr (std::meta::type_of(anno) == ^^Attr::Script)
-              {
-                constexpr auto attr = std::meta::extract<Attr::Script>(anno);
-
-                constexpr std::string_view name = attr.name
-                    ? attr.name
-                    : std::define_static_string(std::meta::identifier_of(member));
-
-                map[name] = []() -> std::shared_ptr<IComponent> {
-                  return std::make_shared<typename [:member:]>();
-                };
-              }
-            }
-          }
-        }
-      }
-      static constexpr auto access_ctx = std::meta::access_context::unchecked();
-      void create_global_registry() {
-        scan_scope<^^::>();
-      }
-    };*/
   } // namespace Main
 } // namespace Engine
