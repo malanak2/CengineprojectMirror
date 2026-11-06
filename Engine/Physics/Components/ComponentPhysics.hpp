@@ -34,6 +34,7 @@ public:
   glm::vec3 oldPos;
   [[=Attr::Serialize{}]] [[=Attr::Editor{}]] float mass = 1;
   [[=Attr::Serialize{}]] [[=Attr::Editor{}]] float cor = 0; 
+    [[=Attr::Serialize{}]] [[=Attr::Editor{}]] float bounceThreshold = 1.0f;
   [[=Attr::Serialize{}]] [[=Attr::Editor{}]] float friction = 1;
   void ApplyForces();
 

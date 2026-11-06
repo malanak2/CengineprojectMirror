@@ -4,7 +4,7 @@
 Engine::Physics::RaycastResult
 
 Engine::Physics::Ray::Intersects(std::shared_ptr<OBB> obb) {
-  auto o = glm::transpose(obb->orientation);
+  auto &o = obb->orientation;
   auto size = obb->size;
   // X, Y and Z axis of OBB
   glm::vec3 X(o[0][0], o[0][1], o[0][2]);

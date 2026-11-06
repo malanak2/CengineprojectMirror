@@ -207,7 +207,7 @@ JsonFileBase PrefabSceneObject::ToJson() {
                         "Could not convert object to json: {}", e.what());
   }
 
-  SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Saving prefab to {}", prefab_path);
+  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Saving prefab to {}", prefab_path);
   auto save = std::make_shared<SceneObjectJson>();
   try {
     save->data = instance->ToJson();

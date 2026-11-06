@@ -166,8 +166,7 @@ void PhysicsSystem::ApplyStaticImpulse(
   if (vn <= 0.0f)
     return;
 
-  float e = (vn < 0.35f) ? 0.0f : body->cor;
-
+  float e = (vn < body->bounceThreshold) ? 0.0f : body->cor;
   float dvn = (1.0f + e) * vn;
   v -= n * dvn;
 
@@ -202,6 +201,16 @@ void Engine::Physics::PhysicsSystem::ProcessPhysics() {
 }
 void Engine::Physics::PhysicsSystem::phystick() {
   ZoneScoped;
+  static int dbg = 0;
+  if (++dbg % 30 == 0)
+    for (auto &bb : boundingBoxes)
+      if (auto o = bb->object.lock()) {
+        auto p = o->GetPosition();
+        auto q = o->GetRotation();
+        SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
+            "{} pos=({:.2f},{:.2f},{:.2f}) rot wxyz=({:.2f},{:.2f},{:.2f},{:.2f})",
+            o->_name, p.x, p.y, p.z, q.w, q.x, q.y, q.z);
+      }
   for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
     cphysics[i]->BeginTick();
   }
@@ -236,6 +245,7 @@ void Engine::Physics::PhysicsSystem::phystick() {
       auto result = m1->FindCollisionFeatures(m2);
 
       if (result && result->colliding) {
+        
         const bool trigger =
             physBBoxComp->isTrigger || boundingBoxes[j]->isTrigger;
         // Deduplicate

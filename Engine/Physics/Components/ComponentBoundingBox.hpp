@@ -93,6 +93,9 @@ public:
   ComponentBoundingBox() {}
 private:
   std::shared_ptr<OBB> obb = nullptr;
+  glm::vec3 cachedPos{0.0f};
+  glm::quat cachedRot = glm::identity<glm::quat>();
+  glm::vec3 cachedSize{1.0f};
 };
 
 } // namespace Physics

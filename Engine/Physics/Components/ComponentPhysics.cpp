@@ -64,8 +64,8 @@ void Physics::ComponentPhysics::ApplyForces() {
 
   oldPos = o->GetPosition();
   o->AddPosition(velocities * GetDeltaTime());
-  auto obb = o->GetComponent<ComponentBoundingBox>();
-  obb->InvalidateBB();
+  if (auto bb = o->GetComponent<ComponentBoundingBox>())
+    bb->InvalidateBB();
 }
 void Physics::ComponentPhysics::ApplyImpulse(
     const std::shared_ptr<ComponentPhysics> &B,
@@ -89,7 +89,8 @@ void Physics::ComponentPhysics::ApplyImpulse(
 
   float e = B ? std::min(cor, B->cor) : cor;
 
-  const float minBounceVel = 0.55f;
+  const float minBounceVel =
+      B ? std::max(bounceThreshold, B->bounceThreshold) : bounceThreshold;
   if (std::abs(velAlongNormal) < minBounceVel) {
     e = 0.0f;
   }

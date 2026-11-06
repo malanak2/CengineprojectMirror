@@ -33,7 +33,7 @@
                       "name": "ComponentBoundingBox"
                     }
                   ],
-                  "inherit_parent_rotation": false,
+                  "inherit_parent_rotation": true,
                   "name": "Wall right",
                   "position": [
                     10.0,
@@ -86,7 +86,7 @@
                       "name": "ComponentBoundingBox"
                     }
                   ],
-                  "inherit_parent_rotation": false,
+                  "inherit_parent_rotation": true,
                   "name": "Wall left",
                   "position": [
                     -10.0,
@@ -139,7 +139,7 @@
                       "name": "ComponentBoundingBox"
                     }
                   ],
-                  "inherit_parent_rotation": false,
+                  "inherit_parent_rotation": true,
                   "name": "Wall front",
                   "position": [
                     0.0,
@@ -192,7 +192,7 @@
                       "name": "ComponentBoundingBox"
                     }
                   ],
-                  "inherit_parent_rotation": false,
+                  "inherit_parent_rotation": true,
                   "name": "Wall back",
                   "position": [
                     0.0,
@@ -245,7 +245,7 @@
                       "name": "ComponentBoundingBox"
                     }
                   ],
-                  "inherit_parent_rotation": false,
+                  "inherit_parent_rotation": true,
                   "name": "Ceiling",
                   "position": [
                     0.0,
@@ -298,7 +298,7 @@
                       "name": "ComponentBoundingBox"
                     }
                   ],
-                  "inherit_parent_rotation": false,
+                  "inherit_parent_rotation": true,
                   "name": "Trigger",
                   "position": [
                     0.0,
@@ -461,6 +461,52 @@
               "prefab_path": "resources/prefabs/Asdf.json"
             },
             "object_type": "object"
+          },
+          {
+            "data": {
+              "children": [],
+              "data": {
+                "data": {
+                  "components": [
+                    {
+                      "data": {
+                        "far": 2500.0,
+                        "fov": 45.0,
+                        "near": 0.10000000149011612
+                      },
+                      "name": "CameraComponent"
+                    },
+                    {
+                      "data": {
+                        "movespeed": 10.0,
+                        "sensitivity": 0.10000000149011612
+                      },
+                      "name": "ComponentControllable"
+                    }
+                  ],
+                  "inherit_parent_rotation": false,
+                  "name": "Camera",
+                  "position": [
+                    -35.67396545410156,
+                    13.68872356414795,
+                    -400.0
+                  ],
+                  "rotation": [
+                    0.675261378288269,
+                    -0.14121808111667633,
+                    -0.70860356092453,
+                    -0.14819097518920898
+                  ],
+                  "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                  ]
+                },
+                "object_type": "object"
+              }
+            },
+            "object_type": "object"
           }
         ],
         "data": {
@@ -518,54 +564,7 @@
     },
     {
       "data": {
-        "children": [
-          {
-            "data": {
-              "children": [],
-              "data": {
-                "data": {
-                  "components": [
-                    {
-                      "data": {
-                        "far": 2500.0,
-                        "fov": 45.0,
-                        "near": 0.10000000149011612
-                      },
-                      "name": "CameraComponent"
-                    },
-                    {
-                      "data": {
-                        "movespeed": 10.0,
-                        "sensitivity": 0.10000000149011612
-                      },
-                      "name": "ComponentControllable"
-                    }
-                  ],
-                  "inherit_parent_rotation": false,
-                  "name": "Camera",
-                  "position": [
-                    -18.259056091308594,
-                    7.033967971801758,
-                    3.0974857807159424
-                  ],
-                  "rotation": [
-                    0.6813969016075134,
-                    -0.11575587838888168,
-                    -0.7124946117401123,
-                    -0.1210387721657753
-                  ],
-                  "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                  ]
-                },
-                "object_type": "object"
-              }
-            },
-            "object_type": "object"
-          }
-        ],
+        "children": [],
         "data": {
           "data": {
             "components": [
@@ -601,6 +600,7 @@
               },
               {
                 "data": {
+                  "bounceThreshold": 1.0,
                   "cor": 0.5,
                   "friction": 0.20000000298023224,
                   "gravity_scale": [
@@ -614,7 +614,7 @@
                   "useGlobalGravity": true,
                   "velocities": [
                     0.0,
-                    0.054633334279060364,
+                    0.0,
                     0.0
                   ],
                   "world_direction": [
@@ -644,7 +644,7 @@
             "name": "Animation test",
             "position": [
               -2.545128107070923,
-              -1.8976614475250244,
+              -1.9010000228881836,
               -3.2589235305786133
             ],
             "rotation": [

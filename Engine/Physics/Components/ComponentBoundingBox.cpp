@@ -198,19 +198,29 @@ Engine::Physics::OBB::FindCollisionFeatures(std::shared_ptr<OBB> B) {
     float lenSq = glm::dot(test[i], test[i]);
     if (lenSq < 0.0001f)
       continue; // Skip parallel edges
-
     glm::vec3 axis = test[i] / std::sqrt(lenSq);
-    auto r = PenetrationDepth(B, axis);
-    float depth = r.second;
 
-    if (depth <= 0.0f) {
-      return result;
+    auto i1 = GetInterval(axis);
+    auto i2 = B->GetInterval(axis);
+    if (i2.first > i1.second || i1.first > i2.second)
+      return result; // separating axis
+
+    // Orient the axis from this -> B using the box centres, not interval starts
+    if (glm::dot(B->position - position, axis) < 0.0f) {
+      axis = -axis;
+      i1 = {-i1.second, -i1.first};
+      i2 = {-i2.second, -i2.first};
     }
+
+    // Distance to move this box back along -axis so it clears B
+    float depth = static_cast<float>(i1.second - i2.first);
+    if (depth <= 0.0f)
+      return result;
 
     if (depth < result->depth) {
       result->depth = depth;
       bestAxis = i;
-      bestNormalizedAxis = r.first ? -axis : axis;
+      bestNormalizedAxis = axis;
     }
   }
 
@@ -270,17 +280,23 @@ void Engine::Physics::ComponentBoundingBox::LateEnd() {
   PhysicsSystem::UnregisterBBox(this->shared_from_this());
 }
 void Engine::Physics::ComponentBoundingBox::Update() { InvalidateBB(); }
-
 std::shared_ptr<Engine::Physics::OBB>
 Engine::Physics::ComponentBoundingBox::GetOBB() {
-  if (obb != nullptr)
-    return obb;
   auto o = object.lock();
-  auto obb = std::make_shared<OBB>();
-  obb->position = (o->GetPosition() + position_offset);
-  obb->size = size;
-  obb->orientation =
-      glm::toMat3(glm::normalize(o->GetRotation() * orientation_offset));
-  this->obb = obb;
-  return obb;
+  if (!o)
+    return nullptr;
+  const glm::vec3 pos = o->GetPosition() + o->GetRotation() * position_offset;
+  const glm::quat rot = glm::normalize(o->GetRotation() * orientation_offset);
+  if (obb != nullptr && pos == cachedPos && rot == cachedRot &&
+      size == cachedSize)
+    return obb;
+  auto n = std::make_shared<OBB>();
+  n->position = pos;
+  n->size = size;
+  n->orientation = glm::toMat3(rot);
+  cachedPos = pos;
+  cachedRot = rot;
+  cachedSize = size;
+  this->obb = n;
+  return n;
 }
