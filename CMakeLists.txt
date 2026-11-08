@@ -74,6 +74,9 @@ file(WRITE "${TEMP_HEADER}" "${UMBRELLA_INCLUDES}")
 
 configure_file("${TEMP_HEADER}" "${UMBRELLA_HEADER}" COPYONLY)
 
+if (WIN32)
+  add_compile_options(-freflection)
+endif ()
 
 add_executable(cengineeditor main.cpp Editor/ImGuiRenderers.cpp Editor/ImGuiRenderers.hpp Editor/ImGuiMacros.hpp Editor/ImGuiRegistrar.hpp Editor/Components/TestInputComponent.hpp Editor/Components/TestInputComponent.cpp Editor/ImGui/Window.hpp Editor/ImGui/WindowScene.hpp Editor/Components/ComponentControllable.cpp Editor/Components/ComponentTestTrigger.cpp
         Editor/ImGui/WindowObjectInspector.hpp
@@ -98,7 +101,6 @@ endif ()
 if (WIN32)
   get_target_property(IMGUI_INCLUDE_DIR imgui::imgui INTERFACE_INCLUDE_DIRECTORIES)
 
-  target_compile_options(cengineeditor PUBLIC -freflection)
   target_link_libraries(cengineeditor PUBLIC stdc++exp)
   target_sources(cengineeditor PRIVATE
           ${IMGUI_INCLUDE_DIR}/imgui_impl_glfw.h

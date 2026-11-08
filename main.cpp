@@ -6,7 +6,11 @@
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
+#ifdef WIN32
+#include "out/Generated/AllComponents.hpp"
+#elif
 #include "out/Debug/Generated/AllComponents.hpp"
+#endif
 // No need to make allocations synchronous without Tracy enabled
 #ifdef TRACY_ENABLE
 std ::mutex memoryLock;

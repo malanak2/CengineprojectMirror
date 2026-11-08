@@ -10,7 +10,7 @@ Engine::Physics::OBB::GetInterval(const glm::vec3 &axis) const {
   glm::vec3 vertex[8];
   glm::vec3 C = this->position; // OBB Center
   glm::vec3 E = this->size;     // OBB Extents
-  auto o1 = glm::transpose(this->orientation);
+  auto o1 = this->orientation;
 
   glm::vec3 A[] = {o1[0], o1[1], o1[2]};
   // OBB Axis
