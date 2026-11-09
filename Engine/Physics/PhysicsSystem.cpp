@@ -201,25 +201,12 @@ void Engine::Physics::PhysicsSystem::ProcessPhysics() {
 }
 void Engine::Physics::PhysicsSystem::phystick() {
   ZoneScoped;
-  static int dbg = 0;
-  if (++dbg % 30 == 0)
-    for (auto &bb : boundingBoxes)
-      if (auto o = bb->object.lock()) {
-        auto p = o->GetPosition();
-        auto q = o->GetRotation();
-        SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
-            "{} pos=({:.2f},{:.2f},{:.2f}) rot wxyz=({:.2f},{:.2f},{:.2f},{:.2f})",
-            o->_name, p.x, p.y, p.z, q.w, q.x, q.y, q.z);
-      }
   for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
     cphysics[i]->BeginTick();
+    cphysics[i]->UpdatePhysics();
   }
   collisions.clear();
   currentContacts.clear();
-
-  for (size_t i = 0, size = cphysics.size(); i < size; ++i) {
-    cphysics[i]->UpdatePhysics();
-  }
 
   for (size_t i = 0, cSize = cphysics.size(); i < cSize; ++i) {
     auto physObj = cphysics[i]->object.lock();
