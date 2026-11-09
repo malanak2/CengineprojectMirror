@@ -87,8 +87,8 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
 target_include_directories(cengine PUBLIC External/glad/include)
 target_include_directories(cengine PUBLIC .)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(cengine PUBLIC -freflection)
     target_link_libraries(cengine PUBLIC stdc++exp)
-    add_compile_options(-freflection)
 endif()
 add_subdirectory(Util)
 

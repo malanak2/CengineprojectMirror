@@ -8,7 +8,7 @@
 #include "Engine/Engine.hpp"
 #ifdef WIN32
 #include "out/Generated/AllComponents.hpp"
-#elif
+#else
 #include "out/Debug/Generated/AllComponents.hpp"
 #endif
 // No need to make allocations synchronous without Tracy enabled

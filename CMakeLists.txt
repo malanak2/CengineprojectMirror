@@ -110,6 +110,7 @@ endif ()
 
 target_include_directories(cengineeditor PUBLIC Editor)
 add_subdirectory(Engine)
+target_compile_options(cengineeditor PUBLIC -freflection)
 target_link_libraries(cengineeditor PRIVATE cengine spdlog::spdlog imgui::imgui implot::implot)
 if (PROFILE)
   target_link_libraries(cengineeditor PRIVATE Tracy::TracyClient)
