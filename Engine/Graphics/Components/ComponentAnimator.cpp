@@ -4,6 +4,9 @@
 #include "Util/LoggerUtil.hpp"
 #include <memory>
 #include <tracy/Tracy.hpp>
+
+
+std::map<std::string, Engine::Graphics::ComponentAnimator> Engine::Graphics::ComponentAnimator::cache = {};
 json Engine::Graphics::ComponentAnimator::ToJson() {
   json js;
   json socketsJson = json::array();
@@ -42,6 +45,7 @@ void Engine::Graphics::ComponentAnimator::Update() {
   }
 }
 void Engine::Graphics::ComponentAnimator::EarlySetup() {
+  ZoneScoped;
   auto obj = object.lock();
   if (!obj)
     return;
@@ -55,7 +59,16 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
   std::string sanitized_path = (modelPath.rfind("resources/", 0) == 0)
                                    ? modelPath
                                    : ("resources/" + modelPath);
-
+  if (cache.contains(sanitized_path))
+  {
+    this->animations = cache.at(sanitized_path).animations;
+    this->animator = cache.at(sanitized_path).animator;
+    this->isPlaying = cache.at(sanitized_path).isPlaying;
+    this->sockets = cache.at(sanitized_path).sockets;
+    this->current_animation = cache.at(sanitized_path).current_animation;
+    this->m_DefaultBoneMatrices = cache.at(sanitized_path).m_DefaultBoneMatrices;
+    return;
+  }
   Assimp::Importer importer;
   const aiScene *scene =
       importer.ReadFile(sanitized_path, aiProcess_Triangulate);
@@ -87,6 +100,14 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
     SetAnimation(current_animation);
   else if (!animations.empty())
     SetAnimation(animations.begin()->first);
+  ComponentAnimator cac;
+  cac.animations = this->animations;
+  cac.animator = this->animator;
+  cac.isPlaying = this->isPlaying;
+  cac.sockets = this->sockets;
+  cac.current_animation = this->current_animation;
+  cac.m_DefaultBoneMatrices = this->m_DefaultBoneMatrices;
+  cache[sanitized_path] = cac;
 }
 
 void Engine::Graphics::ComponentAnimator::SetSockets(

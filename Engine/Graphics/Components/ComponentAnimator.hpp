@@ -41,6 +41,9 @@ public:
 
   [[=Attr::Serialize{}]][[=Attr::Editor{}]]bool isPlaying = true;
   [[=Attr::Serialize{}]]std::string current_animation = "";
+  
+  
+  static std::map<std::string, ComponentAnimator> cache;
 private:
   std::shared_ptr<Animator> animator = std::make_shared<Animator>(nullptr);
   std::vector<glm::mat4> m_DefaultBoneMatrices;

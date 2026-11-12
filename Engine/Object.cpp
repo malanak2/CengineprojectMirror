@@ -248,6 +248,7 @@ void Object::SetWorldRotation(glm::quat w) {
   }
 }
 void Object::UpdateWorldTransform() {
+  ZoneScoped;
   // Compute world position: parent world pos + local position (optionally rotated by parent)
   glm::vec3 parentWorldPos = {0, 0, 0};
   glm::quat parentWorldRot = glm::identity<glm::quat>();

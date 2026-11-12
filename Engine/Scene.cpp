@@ -193,12 +193,14 @@ namespace Engine
 
   void SceneObject::EarlySetup()
   {
+    ZoneScoped;
     if (instance) instance->EarlySetup();
     for (const auto& var : this->Children) var->EarlySetup();
   }
 
   void SceneObject::Setup()
   {
+    ZoneScoped;
     if (instance) instance->Setup();
     for (const auto& var : this->Children) var->Setup();
   }
@@ -227,6 +229,7 @@ namespace Engine
 
   void SceneObject::OnEnable()
   {
+    ZoneScoped;
     if (isEnabled && instance) instance->OnEnable();
     for (const auto& var : this->Children) var->OnEnable();
   }
@@ -308,6 +311,7 @@ namespace Engine
 
   bool Scene::WouldCycle() const
   {
+    ZoneScoped;
     const std::string mine = NormalizePath(path);
     int depth = 0;
     for (auto p = Parent.lock(); p; p = p->Parent.lock())
@@ -324,6 +328,7 @@ namespace Engine
 
   CameraList Scene::LoadFromFile()
   {
+    ZoneScoped;
     std::string res;
     if (FileUtil::ReadFile(path, &res) != 0)
     {
@@ -411,6 +416,7 @@ namespace Engine
 
   void Scene::ApplyRootOverrides(const json& objectJson)
   {
+    ZoneScoped;
     if (!instance || !objectJson.is_object() || objectJson.empty())
       return;
     JsonFileBase base = objectJson.get<JsonFileBase>();
@@ -431,6 +437,7 @@ namespace Engine
 
   bool Scene::Reload()
   {
+    ZoneScoped;
     auto self = SelfScene();
     auto root = GetRootScene();
     if (!root)
@@ -483,9 +490,12 @@ namespace Engine
       auto o = root->camera->object.lock();
       activeLost = !o || isInside(o->sceneobject.lock());
     }
-    OnDisable();
-    End();
-    LateEnd();
+    {
+      ZoneScopedN("Disable");
+      OnDisable();
+      End();
+      LateEnd();
+    }
     std::erase_if(root->cameras, [&](const auto& cam)
     {
       auto o = cam->object.lock();
@@ -551,10 +561,12 @@ namespace Engine
         }
       }
     }
-
-    EarlySetup();
-    Setup();
-    OnEnable();
+    {
+      ZoneScopedN("Enable");
+      EarlySetup();
+      Setup();
+      OnEnable();
+    }
     return true;
   }
 
@@ -594,6 +606,7 @@ namespace Engine
 
   void Scene::FinalizeCameras(const CameraList& found)
   {
+    ZoneScoped;
     this->cameras = found;
     this->camera = nullptr;
     auto self = SelfScene();

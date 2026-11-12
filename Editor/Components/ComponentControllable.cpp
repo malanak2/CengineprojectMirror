@@ -7,6 +7,7 @@
 #include "Util/LoggerUtil.hpp"
 #include <GLFW/glfw3.h>
 void Editor::ComponentControllable::EarlySetup() {
+  ZoneScoped;
   auto o = object.lock();
   auto cam = o->GetComponent<Engine::Graphics::CameraComponent>();
 
