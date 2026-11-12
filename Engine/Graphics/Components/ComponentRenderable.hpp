@@ -39,8 +39,8 @@ public:
   void FromJson(json &js) override;
 
   json ToJson() override;
-  void EarlySetup() override;
-  void LateEnd() override;
+  void OnEnable() override;
+  void OnDisable() override;
 
   ComponentRenderable(json &js);
   std::shared_ptr<Material> material;

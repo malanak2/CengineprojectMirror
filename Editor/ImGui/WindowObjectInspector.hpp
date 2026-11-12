@@ -50,9 +50,36 @@ protected:
         preso->prefab_path = buf;
       }
     }
+    auto nestedScene = std::dynamic_pointer_cast<Engine::Scene>(sceneObject);
+    if (nestedScene != nullptr) {
+      char buf[256] = {0};
+      strncpy(buf, nestedScene->path.c_str(), 255);
+      if (ImGui::InputText("Scene file", buf, 256)) {
+        nestedScene->path = buf;
+      }
+      if (nestedScene->loadFailed) {
+        ImGui::TextUnformatted("Failed to load - reference is kept as-is");
+      }
+      if (ImGui::Button("Save scene file")) {
+        nestedScene->Save();
+      }
+    }
     if (ImGui::CollapsingHeader("Values")) {
       auto obj = sceneObject->instance;
       if (obj) {
+        if (obj->sceneobject.lock()->IsEnabled())
+        {
+          if (ImGui::Button("Disable"))
+          {
+            obj->sceneobject.lock()->SetIsEnabled(false);
+          }
+        } else
+        {
+          if (ImGui::Button("Enable"))
+          {
+            obj->sceneobject.lock()->SetIsEnabled(true);
+          }
+        }
         glm::vec3 localPos = obj->GetLocalPosition();
         if (ImGui::InputFloat3("XYZ", &localPos[0])) {
           obj->SetPosition(localPos);

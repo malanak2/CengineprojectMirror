@@ -25,6 +25,9 @@ protected:
   char matbuf[64];
   float coords[3];
   float rotation[4];
+  char nestedPathBuf[128] = {0};
+  std::shared_ptr<Engine::Scene> pendingReload;
+  bool openReloadPopup = false;
   void draw() override {
     ZoneScoped;
     auto scene = Engine::Engine::instance->current_scene;
@@ -57,13 +60,9 @@ protected:
                       &Config::inst->graphics->renderBoundingBox);
       ImGui::Checkbox("Enable simulation",
                       &Engine::Engine::isSimulationEnabled);
-      if (ImGui::BeginCombo(
-              "Scene camera",
-              Engine::Engine::instance->current_scene->camera->object.lock()
-                  ? Engine::Engine::instance->current_scene->camera->object
-                        .lock()
-                        ->_name.c_str()
-                  : "nullptr")) {
+      auto activeCam = scene->camera;
+      auto activeCamObj = activeCam ? activeCam->object.lock() : nullptr;
+      if (ImGui::BeginCombo("Scene camera", activeCamObj ? activeCamObj->_name.c_str() : "nullptr")) {
         for (auto &cam : Engine::Engine::instance->current_scene->cameras) {
           bool is_selected =
               (Engine::Engine::instance->current_scene->camera == cam);
@@ -98,17 +97,18 @@ protected:
       }
     }
     if (ImGui::CollapsingHeader("Objects")) {
-      ShowSceneObjectMenu(&scene->objects);
+      ShowSceneObjectMenu(&scene->Children);
     }
     if (sceneObject != nullptr) {
       ImGui::Text("Scene object %s", sceneObject->instance->_name.c_str());
       if (ImGui::Button("Deselect"))
         sceneObject = nullptr;
       else {
-        ImGui::Text("Parent: %s",
-                    sceneObject->Parent.lock()
-                        ? sceneObject->Parent.lock()->instance->_name.c_str()
-                        : "nullptr");
+        auto parentSo = sceneObject->Parent.lock();
+        ImGui::Text("Parent: %s", parentSo && parentSo->instance ? parentSo->instance->_name.c_str() : "none");
+        if (ImGui::Button("Move to owning scene")) {
+          sceneObject->SetParent(nullptr);
+        }
         if (ImGui::BeginDragDropTarget()) {
           if (const ImGuiPayload *payload =
                   ImGui::AcceptDragDropPayload("OBJ_PARENT")) {
@@ -123,21 +123,48 @@ protected:
       }
     }
     ImGui::Text("File scene controls");
-    ImGui::InputText("Scene location", &scene->path[0], 100);
-
+    char pathbuf[256] = {0};
+    strncpy(pathbuf, scene->path.c_str(), sizeof(pathbuf) - 1);
+    if (ImGui::InputText("Scene location", pathbuf, sizeof(pathbuf))) {
+      scene->path = pathbuf;
+    }
     if (ImGui::Button("Save scene")) {
       if (!wasSavePressedThisFrame) {
         wasSavePressedThisFrame = true;
-        SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Saving scene to {}...",
-                           scene->path);
-        json scenejs = scene->ToJson();
-        auto st = scenejs.dump(2);
-        FileUtil::SaveFile(scene->path, &st);
+        scene->Save();
       }
     } else {
       wasSavePressedThisFrame = false;
     }
-
+    if (ImGui::Button("Reload scene")) {
+      pendingReload = scene;
+      openReloadPopup = true;
+    }
+    if (openReloadPopup) {
+      ImGui::OpenPopup("Reload scene?");
+      openReloadPopup = false;
+    }
+    if (ImGui::BeginPopupModal("Reload scene?", nullptr,
+                               ImGuiWindowFlags_AlwaysAutoResize)) {
+      ImGui::Text("Reload \"%s\" from %s?\nUnsaved changes to it will be lost.",
+                  pendingReload && pendingReload->instance
+                      ? pendingReload->instance->_name.c_str()
+                      : "?",
+                  pendingReload ? pendingReload->path.c_str() : "?");
+      if (ImGui::Button("Reload")) {
+        if (pendingReload)
+          pendingReload->Reload();
+        sceneObject = nullptr;
+        pendingReload = nullptr;
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel")) {
+        pendingReload = nullptr;
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+     }
     ImGui::End();
   }
   void ShowSceneObjectMenu(
@@ -158,7 +185,10 @@ protected:
         flags |= ImGuiTreeNodeFlags_Leaf;
       }
 
-      bool open = ImGui::TreeNodeEx(obj->instance->_name.c_str(), flags);
+      std::string label = obj->instance->_name;
+      if (auto nested = std::dynamic_pointer_cast<Engine::Scene>(obj))
+        label += nested->loadFailed ? " [scene: MISSING]" : " [scene]";
+      bool open = ImGui::TreeNodeEx(label.c_str(), flags);
       ContextMenu(obj->instance);
 
       if (ImGui::BeginDragDropSource()) {
@@ -192,12 +222,13 @@ protected:
     if (ImGui::BeginPopupContextItem(("ContextMenu##" + objName).c_str())) {
       auto so = obj->sceneobject.lock();
       auto preso = std::dynamic_pointer_cast<Engine::PrefabSceneObject>(so);
+      auto nestedScene = std::dynamic_pointer_cast<Engine::Scene>(so);
       if (preso != nullptr) {
         if (ImGui::MenuItem(("Save prefab##" + objName).c_str())) {
-          preso->ToJson();
+          preso->SavePrefab();
         }
       }
-      if (preso == nullptr && so != nullptr) {
+      if (preso == nullptr && nestedScene == nullptr && so != nullptr) {
         if (ImGui::MenuItem(("To prefab##" + objName).c_str())) {
           auto newSo = std::make_shared<Engine::PrefabSceneObject>(so);
 
@@ -210,10 +241,6 @@ protected:
             }
           }
 
-          auto scene = newSo->scene.lock();
-          if (!scene) {
-            scene = Engine::Engine::instance->current_scene;
-          }
 
           if (auto parent = newSo->Parent.lock()) {
             auto it =
@@ -221,13 +248,7 @@ protected:
             if (it != parent->Children.end()) {
               *it = newSo;
             }
-          } else if (scene) {
-            auto it =
-                std::find(scene->objects.begin(), scene->objects.end(), so);
-            if (it != scene->objects.end()) {
-              *it = newSo;
-            }
-          }
+          } 
 
           if (sceneObject == so) {
             sceneObject = newSo;
@@ -235,6 +256,18 @@ protected:
           ImGui::EndPopup();
           return;
         }
+      }
+      if (nestedScene != nullptr) {
+        if (ImGui::MenuItem(("Reload scene file##" + objName).c_str())) {
+          pendingReload = nestedScene;
+          openReloadPopup = true;
+        }       
+        if (ImGui::MenuItem(("Save nested scene file##" + objName).c_str()))
+          nestedScene->Save();
+      }
+      ImGui::InputText(("Scene file##" + objName).c_str(), nestedPathBuf, sizeof(nestedPathBuf));
+      if (ImGui::MenuItem(("Add nested scene here##" + objName).c_str())) {
+        Engine::Engine::instance->current_scene->InstantiateScene(nestedPathBuf, so);
       }
       if (ImGui::MenuItem(("New Object##" + objName).c_str())) {
         auto o = std::make_shared<Engine::Object>();

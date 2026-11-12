@@ -114,7 +114,7 @@ void Engine::Physics::PhysicsSystem::RegisterCPhysics(
 
 void Engine::Physics::PhysicsSystem::UnregisterCPhysics(
     std::shared_ptr<ComponentPhysics> c) {
-  auto pos = std::find(cphysics.begin(), cphysics.end(), c);
+  auto pos = std::ranges::find(cphysics, c);
   if (pos == cphysics.end()) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
                         "Tried to unregister nonexistent CPhysics");
@@ -133,7 +133,7 @@ void Engine::Physics::PhysicsSystem::UnregisterBBox(
   auto pos = std::find(boundingBoxes.begin(), boundingBoxes.end(), c);
   if (pos == boundingBoxes.end()) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                        "Tried to unregister nonexistent CPhysics");
+                        "Tried to unregister nonexistent bounding box");
     return;
   }
   boundingBoxes.erase(pos);

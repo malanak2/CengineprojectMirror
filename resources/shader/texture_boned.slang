@@ -14,7 +14,7 @@ struct Data {
 ConstantBuffer<Data> data;
 
 [vk::binding(1,0)]
-uniform Sampler2D texture;
+uniform Sampler2D mtexture;
 
 [vk::binding(2,0)]
 StructuredBuffer<float4x4> instanceTransforms;
@@ -31,7 +31,9 @@ VSOutput mainVertex(float3 aPos : POSITION,
   float2 aUV                    : TEXCOORD0,
   int4   boneIds                : BLENDINDICES,
   float4 weights                : BLENDWEIGHT,
-  uint   instanceID             : SV_InstanceID)
+  int instanceID : SV_VulkanInstanceID,
+  int baseInstance : SV_StartInstanceLocation
+)
 {
     VSOutput output;
 
@@ -68,8 +70,8 @@ VSOutput mainVertex(float3 aPos : POSITION,
         totalPosition = float4(aPos, 1.0f);
         totalNormal   = aNormal;
     }
-
-    float4x4 modelMatrix = instanceTransforms[instanceID];
+    int absoluteIndex = instanceID + baseInstance;
+    float4x4 modelMatrix = instanceTransforms[absoluteIndex];
     float4 worldPos = mul(modelMatrix, totalPosition);
 
     output.pos    = mul(data.proj, mul(data.view, worldPos));
@@ -83,7 +85,7 @@ VSOutput mainVertex(float3 aPos : POSITION,
 [shader("pixel")]
 float4 mainPixel(VSOutput out) : SV_Target
 {
-    float4 texColor = texture.Sample(out.uv);
+    float4 texColor = mtexture.Sample(out.uv);
     if (texColor.a < 0.05f) {
       discard;
     }

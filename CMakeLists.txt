@@ -87,7 +87,9 @@ add_executable(cengineeditor main.cpp Editor/ImGuiRenderers.cpp Editor/ImGuiRend
         Editor/ImGui/WindowToggles.hpp
         Editor/Components/ComponentTestTrigger.hpp
         Editor/Components/ComponentControllable.hpp
-        Editor/ReflectionRegistrar.hpp)
+        Editor/ReflectionRegistrar.hpp
+        Editor/ImGui/WindowReflectionOverview.hpp
+        )
 if (DEBUG)
 add_compile_definitions(DEBUG=1)
 

@@ -62,8 +62,8 @@ class [[=Attr::Script{}]] ComponentBoundingBox
 
 public:
 
-  void EarlySetup() override;
-  void LateEnd() override;
+  void OnEnable() override;
+  void OnDisable() override;
   void Update() override;
   std::shared_ptr<OBB> GetOBB();
   bool Collides(const std::shared_ptr<ComponentBoundingBox> &other) {
@@ -89,7 +89,6 @@ public:
   };
   
   [[=Attr::Serialize{}]][[=Attr::Editor{}]]bool isTrigger = false;
-  bool FollowsPausedExecution() override { return false; }
   ComponentBoundingBox() {}
 private:
   std::shared_ptr<OBB> obb = nullptr;

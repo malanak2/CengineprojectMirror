@@ -52,7 +52,16 @@ public:
   //!
   //!
   virtual void LateEnd();
+  
+  //!
+  //! @brief Called when object enabled
+  //!
+  virtual void OnEnable();
 
+  //!
+  //! @brief Called when object disabled
+  //!
+  virtual void OnDisable();
   virtual float GetDeltaTime();
 
   virtual void SetObject(const std::shared_ptr<Object> &object);

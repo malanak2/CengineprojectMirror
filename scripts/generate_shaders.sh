@@ -18,7 +18,7 @@ for inputFile in "$shaderDir"/*; do
   if [ -f "$inputFile" ]; then
     basename_with_ext=$(basename "$inputFile")
     filename="${basename_with_ext%.*}"
-
+    
     outputFile="$spirvDir/$filename.spv"
 
     echo "Compiling: $basename_with_ext -> $filename.spv"
@@ -27,6 +27,7 @@ for inputFile in "$shaderDir"/*; do
       -no-mangle \
       -fvk-use-gl-layout \
       -o "$outputFile"
+      
     spirv-dis "$outputFile" |
       sed 's/BuiltIn InstanceIndex/BuiltIn InstanceId/' |
       spirv-as --target-env spv1.5 - -o "$outputFile"

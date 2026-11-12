@@ -208,19 +208,10 @@ int Main::Tick(
 
 void Main::Terminate() {
   if (auto engine = Engine::Engine::instance; engine && engine->current_scene) {
-    std::function<void(const std::shared_ptr<SceneObject> &)> endAll =
-        [&](const std::shared_ptr<SceneObject> &so) {
-          if (!so)
-            return;
-          auto children = so->Children;
-          for (auto &child : children)
-            endAll(child);
-          so->End();
-        };
-    auto roots = engine->current_scene->objects;
-    for (auto &so : roots)
-      endAll(so);
-    engine->current_scene.reset();
+    engine->current_scene->OnDisable();
+    engine->current_scene->End();
+    engine->current_scene->LateEnd();
+    engine->current_scene.reset(); 
   }
   ReleaseDebugResources();
   materials.clear();

@@ -273,10 +273,10 @@ bool Engine::Physics::OBB::PointInOBB(glm::vec3 point) {
   return true;
 }
 
-void Engine::Physics::ComponentBoundingBox::EarlySetup() {
+void Engine::Physics::ComponentBoundingBox::OnEnable() {
   PhysicsSystem::RegisterBBox(this->shared_from_this());
 }
-void Engine::Physics::ComponentBoundingBox::LateEnd() {
+void Engine::Physics::ComponentBoundingBox::OnDisable() {
   PhysicsSystem::UnregisterBBox(this->shared_from_this());
 }
 void Engine::Physics::ComponentBoundingBox::Update() { InvalidateBB(); }

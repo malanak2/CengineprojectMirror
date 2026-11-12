@@ -36,7 +36,10 @@ void ComponentRenderable::FromData(
     SPDLOG_LOGGER_ERROR(logger, "Failed to load material at {}", material_path);
     return;
   }
-  for (auto &[key, val] : material->program->uniforms) {
+  
+    auto unis = &material->program->uniforms;
+#ifdef DEBUG
+  for (auto &[key, val] : *unis) {
     if (!uniforms.contains(key) && key != "camera") {
       SPDLOG_LOGGER_WARN(
           spdlog::get("console"),
@@ -44,20 +47,24 @@ void ComponentRenderable::FromData(
           "%instantiated%", key);
     }
   }
+#endif
   for (auto &[key, val] : uniforms) {
-    if (!material->program->uniforms.contains(key) && key != "camera") {
+#ifdef DEBUG
+    if (!unis->contains(key) && key != "camera") {
       SPDLOG_LOGGER_WARN(spdlog::get("console"),
                          "Component at {} specifies uniform {} that is not "
                          "specified in material",
                          "%instantiated%", key);
-    } else if (material->program->uniforms.contains(key)) {
+    } else
+#endif
+      if (unis->contains(key)) {
       if (!val) {
-        val = material->program->uniforms[key];
-      } else if (material->program->uniforms[key]) {
-        val->info.id = material->program->uniforms[key]->info.id;
-        val->info.offset = material->program->uniforms[key]->info.offset;
+        val = unis->at(key);
+      } else if (unis->at(key)) {
+        val->info.id = unis->at(key)->info.id;
+        val->info.offset = unis->at(key)->info.offset;
         if (!val->info.name || val->info.name->empty()) {
-          val->info.name = material->program->uniforms[key]->info.name;
+          val->info.name = unis->at(key)->info.name;
         }
       }
     }
@@ -117,18 +124,17 @@ json ComponentRenderable::ToJson() {
   jb.data = j;
   return jb;
 }
-void Engine::Graphics::ComponentRenderable::EarlySetup() {
+void Engine::Graphics::ComponentRenderable::OnEnable() {
   if (!material)
     return;
   material->renderableObjects.push_back(shared_from_this());
 }
 
-void Engine::Graphics::ComponentRenderable::LateEnd() {
+void Engine::Graphics::ComponentRenderable::OnDisable() {
   if (!material)
     return;
   material->renderableObjects.erase(
-      std::find(material->renderableObjects.begin(),
-                material->renderableObjects.end(), shared_from_this()));
+      std::ranges::find(material->renderableObjects, shared_from_this()));
 }
 
 std::shared_ptr<ComponentRenderable>

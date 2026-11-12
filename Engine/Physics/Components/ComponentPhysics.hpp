@@ -20,8 +20,8 @@ using json = nlohmann::json;
     REGISTER_CLASS(ComponentPhysics)
 public:
   void UpdatePhysics();
-  void EarlySetup() override;
-  void LateEnd() override;
+  void OnEnable() override;
+  void OnDisable() override;
   void SetVelocities(glm::dvec3 newv) { velocities = newv; }
   void SetVelocityX(float newx) { velocities.x = newx; }
   void SetVelocityY(float newy) { velocities.y = newy; }

@@ -14,7 +14,7 @@ struct Data {
 ConstantBuffer<Data> data;
 
 [vk::binding(1,0)]
-uniform Sampler2D texture;
+uniform Sampler2D mtexture;
 
 [vk::binding(2,0)]
 StructuredBuffer<float4x4> instanceTransforms;
@@ -34,7 +34,7 @@ VSOutput mainVertex(float3 aPos : POSITION, float3 aNormal : NORMAL, float2 aUV 
 [shader("pixel")]
 float4 mainPixel(VSOutput out) : SV_Target
 {
-    float4 texColor = texture.Sample(out.uv);
+    float4 texColor = mtexture.Sample(out.uv);
     if (texColor.a < 0.05f) {
       discard;
     }

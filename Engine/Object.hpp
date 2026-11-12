@@ -123,6 +123,17 @@ public:
   //!
   //!
   void LateEnd();
+  
+  
+  
+  //!
+  //! @brief Called when object enabled
+  //!
+  virtual void OnEnable();
+  //!
+  //! @brief Called when object disabled
+  //!
+  virtual void OnDisable();
   void Save();
   void Load();
   json ToJson() override;
@@ -167,6 +178,7 @@ public:
     component->SetObject(shared_from_this());
     component->EarlySetup();
     component->Setup();
+    component->OnEnable();
     _components[key] = component;
   }
   //!
@@ -189,6 +201,7 @@ public:
       return;
     }
     auto component = GetComponent(key);
+    component->OnDisable();
     component->End();
     component->LateEnd();
     _components.erase(_components.find(key));

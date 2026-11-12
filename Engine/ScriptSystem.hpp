@@ -275,7 +275,6 @@ namespace Engine
 
     static constexpr auto access_ctx = std::meta::access_context::unchecked();
       
-
   private:
     template <typename T>
     static std::shared_ptr<IComponent> make() { return std::make_shared<T>(); }

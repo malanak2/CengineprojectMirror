@@ -185,7 +185,7 @@ void Object::Setup() {
 }
 void Object::Update() {
   for (auto &[key, comp] : this->_components) {
-    if (comp->FollowsPausedExecution() && !Engine::Engine::isSimulationEnabled)
+    if (comp->FollowsPausedExecution() && !Engine::instance->isSimulationEnabled && !sceneobject.lock()->IsEnabled())
       continue;
     comp->Update();
   }
@@ -202,6 +202,21 @@ void Object::LateEnd() {
     comp->LateEnd();
   }
 }
+
+void Object::OnEnable()
+{
+  for (auto &[key, comp] : this->_components) {
+    comp->OnEnable();
+  }
+}
+
+void Object::OnDisable()
+{
+  for (auto &[key, comp] : this->_components) {
+    comp->OnDisable();
+  }
+}
+
 void Object::GetParentWorld(glm::vec3 &pos, glm::quat &rot) const {
   pos = {0, 0, 0};
   rot = glm::identity<glm::quat>();

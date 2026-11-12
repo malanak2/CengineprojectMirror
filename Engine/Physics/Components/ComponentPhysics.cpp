@@ -27,7 +27,7 @@ glm::vec3 Physics::ComponentPhysics::GetRenderPosition() {
   if (!o)
     return glm::vec3(0.0f);
   if (!hasTickState || !PhysicsSystem::interpolateRendering ||
-      !Engine::Engine::isSimulationEnabled)
+      !Engine::Engine::isSimulationEnabled || !object.lock()->sceneobject.lock()->IsEnabled())
     return o->GetPosition();
   if (o->GetPosition() != currPos)
     return o->GetPosition();
@@ -49,11 +49,11 @@ void ComponentPhysics::UpdatePhysics() {
   }
 }
 
-void Physics::ComponentPhysics::EarlySetup() {
+void Physics::ComponentPhysics::OnEnable() {
   PhysicsSystem::RegisterCPhysics(this->shared_from_this());
 }
 
-void Physics::ComponentPhysics::LateEnd() {
+void Physics::ComponentPhysics::OnDisable() {
   PhysicsSystem::UnregisterCPhysics(this->shared_from_this());
 }
 

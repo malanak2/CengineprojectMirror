@@ -5,7 +5,7 @@
 using json = nlohmann::json;
 
 namespace Engine {
-enum class ObjectType { Component, Object, Material, Shader, Texture, Invalid };
+enum class ObjectType { Component, Object, Material, Shader, Texture, Scene, Invalid };
 NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
                              {
                                  {ObjectType::Component, "component"},
@@ -13,6 +13,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
                                  {ObjectType::Material, "material"},
                                  {ObjectType::Shader, "shader"},
                                  {ObjectType::Texture, "texture"},
+                                 {ObjectType::Scene, "scene"},
                                  {ObjectType::Invalid, nullptr},
                              });
 
@@ -22,7 +23,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ObjectType,
 //!
 struct JsonFileBase {
 public:
-  ObjectType object_type;
+  ObjectType object_type = ObjectType::Invalid;
   json data;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(JsonFileBase, object_type, data)

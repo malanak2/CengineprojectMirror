@@ -61,38 +61,14 @@ void Engine::LoadScene(std::string path) {
   try {
     e->current_scene = Scene::Load(path);
   } catch (const std::exception &ex) {
-    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Failed to load scene at {} : {}",
-                       path, ex.what());
-#ifdef DEBUG
-    e->current_scene = std::make_shared<Scene>();
-    auto camera_obj = std::make_shared<Object>(e->current_scene);
-    auto camera_comp = std::make_shared<Graphics::CameraComponent>(camera_obj);
-    camera_obj->fromParams("Main Camera", {camera_comp}, {0.0f, 0.0f, 5.0f},
-                           {0.0f, -90.0f, 0.0f});
-    e->current_scene->Instantiate(camera_obj);
-    e->current_scene->camera = camera_comp;
-
-    auto object_default = std::make_shared<Object>(e->current_scene);
-    JsonFileBase jsbase = {};
-    jsbase.object_type = ObjectType::Component;
-/*    Graphics::RenderableDataJson rdj;
-    rdj.model_path = "models/pyramid.obj";
-    rdj.material_path = "materials/basic.json";
-    std::vector<float> unis = {0, 1, 0, 1};
-    rdj.uniforms = {
-        {"color", std::make_shared<Graphics::UniformFloatVector>(
-                      Graphics::Vector, 0, 0,
-                      std::make_shared<std::string>("color"), unis)}};
-    jsbase.data = rdj;
-    json jsbase_js = jsbase;
-    auto com_render =
-        Graphics::ComponentRenderable::Create(jsbase_js, object_default);
-    object_default->fromParams("Test object", {com_render});
-    e->current_scene->Instantiate(object_default);*/
-    std::string scene_json = e->current_scene->ToJson().dump();
-    // Probably better to not save automatically
-    // FileUtil::SaveFile(path, &scene_json);
-#endif
+    
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                           "Failed to load scene at {} : {}. Using an empty scene.",
+                           path, ex.what());
+    auto fallback = Scene::Create();
+    fallback->path = path;
+    fallback->FinalizeCameras({});
+    e->current_scene = fallback;
   }
   CHECK_GL_ERROR();
 }
@@ -103,7 +79,9 @@ void Engine::Engine::Run() {
 
   // Handle
   std::chrono::time_point last_tick_begin = std::chrono::steady_clock::now();
+  current_scene->EarlySetup();
   current_scene->Setup();
+  current_scene->OnEnable();
 
   SPDLOG_LOGGER_INFO(logger, "Running...");
   while (true) {
