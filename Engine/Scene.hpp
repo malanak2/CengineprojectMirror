@@ -229,6 +229,14 @@ public:
   std::shared_ptr<Graphics::CameraComponent> camera = nullptr; // root scene only
   std::string default_camera;                                  // root scene only
   CameraList cameras;                                          // root scene only
+  void Unload();
+  bool isInside(std::shared_ptr<SceneObject> o)
+  {
+    for (auto p = o; p; p = p->Parent.lock())
+      if (p.get() == this)
+        return true;
+    return false;
+  }
 
 private:
   void Init();

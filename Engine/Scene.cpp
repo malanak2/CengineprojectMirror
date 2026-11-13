@@ -291,6 +291,22 @@ namespace Engine
     return s;
   }
 
+  void Scene::Unload()
+  {
+    ZoneScoped;
+    OnDisable();
+    End();
+    LateEnd();
+    auto root = GetRootScene();
+    std::erase_if(root->cameras, [&](const auto& cam)
+    {
+      auto o = cam->object.lock();
+      return !o || isInside(o->sceneobject.lock());
+    });
+    
+    Children.clear();
+  }
+
   void Scene::Init()
   {
     auto self = SelfScene();
@@ -476,31 +492,14 @@ namespace Engine
       return false;
     }
 
-    auto isInside = [this](const std::shared_ptr<SceneObject>& so)
-    {
-      for (auto p = so; p; p = p->Parent.lock())
-        if (p.get() == this)
-          return true;
-      return false;
-    };
-
     bool activeLost = false;
     if (root->camera)
     {
       auto o = root->camera->object.lock();
       activeLost = !o || isInside(o->sceneobject.lock());
     }
-    {
-      ZoneScopedN("Disable");
-      OnDisable();
-      End();
-      LateEnd();
-    }
-    std::erase_if(root->cameras, [&](const auto& cam)
-    {
-      auto o = cam->object.lock();
-      return !o || isInside(o->sceneobject.lock());
-    });
+    
+    Unload();
 
     Children = std::move(fresh->Children);
     fresh->Children.clear();

@@ -62,11 +62,16 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
   if (cache.contains(sanitized_path))
   {
     this->animations = cache.at(sanitized_path).animations;
-    this->animator = cache.at(sanitized_path).animator;
     this->isPlaying = cache.at(sanitized_path).isPlaying;
     this->sockets = cache.at(sanitized_path).sockets;
+    this->animator->SetSockets(sockets);
     this->current_animation = cache.at(sanitized_path).current_animation;
     this->m_DefaultBoneMatrices = cache.at(sanitized_path).m_DefaultBoneMatrices;
+    
+    if (!current_animation.empty() && animations.contains(current_animation))
+      SetAnimation(current_animation);
+    else if (!animations.empty())
+      SetAnimation(animations.begin()->first);
     return;
   }
   Assimp::Importer importer;
@@ -102,7 +107,6 @@ void Engine::Graphics::ComponentAnimator::LoadAnimationsFromModel(
     SetAnimation(animations.begin()->first);
   ComponentAnimator cac;
   cac.animations = this->animations;
-  cac.animator = this->animator;
   cac.isPlaying = this->isPlaying;
   cac.sockets = this->sockets;
   cac.current_animation = this->current_animation;
