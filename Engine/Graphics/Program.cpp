@@ -71,7 +71,7 @@ Program::Program(std::vector<UniformJson> uniforms_json,
     uniforms_info[uniform.bind_point] = uniform.name;
     total_size += ui.offset;
     CHECK_GL_ERROR();
-    SPDLOG_LOGGER_INFO(spdlog::get("console"),
+    SPDLOG_LOGGER_DEBUG(spdlog::get("console"),
                        "Created buffer {} with pos {} and size {}",
                        uniform.name, uniform.bind_point, uniform.size);
   }

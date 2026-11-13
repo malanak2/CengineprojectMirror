@@ -41,7 +41,7 @@ void Engine::Graphics::Texture::FromJson(json &js) {
 
 Engine::Graphics::Texture::Texture(std::string json_path) {
   ZoneScoped;
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading texture at {}", json_path);
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Loading texture at {}", json_path);
   this->path = json_path;
   std::string js;
   {
@@ -62,7 +62,7 @@ Engine::Graphics::Texture::Texture(std::string json_path) {
     json parsed = json::parse(js);
     FromJson(parsed);
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER,
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER,
                      "Loading texture at {}, with image at {}", this->path,
                      this->texture_path);
   std::shared_ptr<FileUtil::ImageFile> tex;

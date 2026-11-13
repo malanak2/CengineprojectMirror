@@ -32,19 +32,22 @@ void Engine::Engine::Init() {
   auto logger = spdlog::get("console");
 
   if (!Config::inst) {
-    SPDLOG_LOGGER_INFO(logger, "Loading config...");
+    SPDLOG_LOGGER_DEBUG(logger, "Loading config...");
     Config::inst = std::make_shared<Config>("Engine.ini");
-    SPDLOG_LOGGER_INFO(logger, "Loading Graphics::Main::instance...");
+    SPDLOG_LOGGER_INFO(logger, "Loaded config");
   }
+  SPDLOG_LOGGER_DEBUG(logger, "Loading Graphics::Main::instance...");
   auto config = Config::inst;
-  //  Graphics::Main::instance = std::make_unique<Graphics::Main>();
 
   if (Graphics::Main::Init(config) != 0) {
     SPDLOG_LOGGER_ERROR(logger,
                         "Failed to initialize Graphics::Main::instance!");
     throw std::logic_error("Failed to initialize Graphics::Main::instance!");
   }
+  SPDLOG_LOGGER_INFO(logger, "Loaded Graphics::Main::instance");
+  SPDLOG_LOGGER_DEBUG(logger, "Loading InputSystem");
   InputSystem::Init();
+  SPDLOG_LOGGER_INFO(logger, "Loaded InputSystem");
   instance = e;
 }
 void Engine::LoadScene() {

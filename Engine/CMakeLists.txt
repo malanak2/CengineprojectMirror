@@ -92,6 +92,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 add_subdirectory(Util)
 
+if (DEBUG)
+
+  target_compile_definitions(cengine PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+endif()
+
 set_target_properties(cengine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 target_link_libraries(cengine PUBLIC cengineutil spdlog::spdlog )
 target_link_libraries(cengine PUBLIC  glfw inicpp::inicpp cengineutil OpenGL::GL nlohmann_json::nlohmann_json glm::glm assimp::assimp)

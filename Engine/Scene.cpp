@@ -94,7 +94,7 @@ namespace Engine
 
   void SceneObject::OnDisable()
   {
-    if (!isEnabled && instance) instance->OnDisable();
+    if (instance) instance->OnDisable();
     for (const auto& var : this->Children) var->OnDisable();
   }
 
@@ -230,7 +230,7 @@ namespace Engine
   void SceneObject::OnEnable()
   {
     ZoneScoped;
-    if (isEnabled && instance) instance->OnEnable();
+    if (instance) instance->OnEnable();
     for (const auto& var : this->Children) var->OnEnable();
   }
 
@@ -441,8 +441,8 @@ namespace Engine
     auto self = SelfScene();
     auto root = GetRootScene();
     if (!root)
-      return false;
-
+      return false; // Hmm
+    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Reloading scene {}", path);
     json placement;
     if (!IsRootScene())
     {

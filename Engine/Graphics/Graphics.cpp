@@ -16,9 +16,8 @@
 #include <chrono>
 #include <ctime>
 #include <glm/gtc/type_ptr.hpp>
-#ifdef IMGUI
-#include <imgui_impl_glfw.h>
-#endif
+
+#include "Components/ComponentAnimator.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
@@ -78,7 +77,7 @@ int Main::Init(const std::shared_ptr<Config> &config) {
   auto logger = ENGINE_UTIL_LOGGER;
   glfwSetErrorCallback(glfw_error_callback);
   instance->config = config;
-  SPDLOG_LOGGER_INFO(logger, "Initializing GLFW...");
+  SPDLOG_LOGGER_DEBUG(logger, "Initializing GLFW...");
   if (!glfwInit()) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to initialize GLFW.");
     return -1;
@@ -89,7 +88,7 @@ int Main::Init(const std::shared_ptr<Config> &config) {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_SAMPLES, 4);
   glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
-  SPDLOG_LOGGER_INFO(logger, "Creating GLFW window (Fullscreen, title: {})...",
+  SPDLOG_LOGGER_DEBUG(logger, "Creating GLFW window (Fullscreen, title: {})...",
                      config->window->title);
   instance->window =
       glfwCreateWindow(800, 600, config->window->title.c_str(), NULL, NULL);
@@ -97,7 +96,7 @@ int Main::Init(const std::shared_ptr<Config> &config) {
   glfwGetWindowSize(instance->window, &Engine::Engine::width,
                     &Engine::Engine::height);
 
-  SPDLOG_LOGGER_INFO(logger, "Glfw window created, {}x{}",
+  SPDLOG_LOGGER_DEBUG(logger, "Glfw window created, {}x{}",
                      Engine::Engine::width, Engine::Engine::height);
   if (instance->window == NULL) {
     SPDLOG_LOGGER_ERROR(logger, "Failed to create GLFW window.");
@@ -141,7 +140,7 @@ int Main::Init(const std::shared_ptr<Config> &config) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to load fallback texture.");
     return 1;
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loaded fallback texture to {}",
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Loaded fallback texture to {}",
                      FallbackTexture->texture);
   auto func = &Main::keyCallback;
   glfwSetKeyCallback(instance->window, func);
@@ -218,6 +217,7 @@ void Main::Terminate() {
   textures.clear();
   FallbackTexture.reset();
   Model::models.clear();
+  ComponentAnimator::cache.clear();
   vertexShaders.clear();
   fragmentShaders.clear();
   for (const auto &f : *instance->terminate)

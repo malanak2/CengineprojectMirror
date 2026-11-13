@@ -23,7 +23,7 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
   }
   std::vector<unsigned char> spirv;
 
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loading shader at {}", path);
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Loading shader at {}", path);
   if (FileUtil::LoadBinary(path, &spirv) != 0) {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Failed to load spirv at {}", path);
     isValid = false;
@@ -95,7 +95,7 @@ Shader::Shader(ShaderType type, std::string path, std::string entrypoint,
     break;
   }
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Loaded shader at {} with id {}", path,
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Loaded shader at {} with id {}", path,
                      id);
 }
 

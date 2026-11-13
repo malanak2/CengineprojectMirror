@@ -425,9 +425,9 @@ InputSystem::NewKeybind(std::string id, int default_key, int key, int mods,
   if (std::find(vec.begin(), vec.end(), k) == vec.end()) {
     vec.push_back(k);
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New keybind with id {}", id);
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "New keybind with id {}", id);
   if (isnew) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Keybind {} is completly new", id);
+    SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Keybind {} is completly new", id);
     Save();
   }
   return k;
@@ -582,10 +582,10 @@ InputSystem::NewKeybindMouseMove(std::string id, MOVE_TYPE mtype,
   if (std::find(vec.begin(), vec.end(), k) == vec.end()) {
     vec.push_back(k);
   }
-  SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "New mouse move keybind with id {}",
+  SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "New mouse move keybind with id {}",
                      id);
   if (isnew) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Mouse keybind {} is completely new",
+    SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Mouse keybind {} is completely new",
                        id);
     Save();
   }

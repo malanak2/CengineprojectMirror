@@ -305,7 +305,7 @@ void Material::RenderObjects() {
 std::shared_ptr<Material> Material::Create(std::string path) {
   ZoneScoped;
   if (Main::materials.contains(path)) {
-    SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Hit cache for material {}", path);
+    SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Hit cache for material {}", path);
     return Main::materials[path];
   }
   ran_from_create = true;

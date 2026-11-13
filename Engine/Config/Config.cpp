@@ -102,5 +102,4 @@ Config::Config(std::string file_path) {
   graphics->scenePath = cfg["Graphics"]["ScenePath"].as<std::string>();
   graphics->renderBoundingBox =
       cfg["Graphics"]["RenderBoundingBoxes"].as<bool>();
-  SPDLOG_LOGGER_INFO(logger, "Loaded config!");
 }
