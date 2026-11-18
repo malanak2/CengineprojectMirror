@@ -6,14 +6,18 @@
 #include <memory>
 #include <tracy/Tracy.hpp>
 
+#include "Components/ComponentAnimator.hpp"
+
 using namespace Engine::Graphics;
 
 std::unordered_map<std::string, std::shared_ptr<Model>> Model::models = {};
 
-std::shared_ptr<Model> Model::Create(const std::string &path) {
+std::shared_ptr<Model> Model::Create(const std::string& path)
+{
   ZoneScoped;
   ZoneText(path.c_str(), path.size());
-  if (models.contains(path)) {
+  if (models.contains(path))
+  {
     return models[path];
   }
   auto m = std::make_shared<Model>(path);
@@ -23,7 +27,8 @@ std::shared_ptr<Model> Model::Create(const std::string &path) {
 
 Engine::Graphics::Mesh::Mesh(std::string name, std::vector<MVertex> vertices,
                              std::vector<unsigned int> indices,
-                             std::vector<MTexture> textures) {
+                             std::vector<MTexture> textures)
+{
   ZoneScoped;
   this->name = name;
   this->vertices = vertices;
@@ -36,22 +41,27 @@ Engine::Graphics::Mesh::Mesh(std::string name, std::vector<MVertex> vertices,
 Engine::Graphics::Mesh::Mesh(std::vector<MVertex> vertices,
                              std::vector<unsigned int> indices,
                              std::vector<MTexture> textures)
-    : Mesh("", vertices, indices, textures) {}
+  : Mesh("", vertices, indices, textures)
+{
+}
 
-void Engine::Graphics::Mesh::Draw(Engine::Graphics::Program &program) {
+void Engine::Graphics::Mesh::Draw(Engine::Graphics::Program& program)
+{
   ZoneScopedN("Mesh::Draw");
   TracyGpuZone("Mesh::Draw");
   DrawInstanced(program, 1);
 }
 
-void Engine::Graphics::Mesh::DrawInstanced(Engine::Graphics::Program &program,
-                                           unsigned int instanceCount) {
+void Engine::Graphics::Mesh::DrawInstanced(Engine::Graphics::Program& program,
+                                           unsigned int instanceCount)
+{
   ZoneScopedN("Mesh::DrawInstanced");
   TracyGpuZone("Mesh::DrawInstanced");
   if (instanceCount == 0)
     return;
   if (!textures.empty() && textures[0].texture &&
-      textures[0].texture->texture != (unsigned int)-1) {
+    textures[0].texture->texture != (unsigned int)-1)
+  {
     ZoneScopedN("BindTexture");
     TracyGpuZone("BindTexture");
     glActiveTexture(GL_TEXTURE1);
@@ -68,7 +78,8 @@ void Engine::Graphics::Mesh::DrawInstanced(Engine::Graphics::Program &program,
   }
 }
 
-void Engine::Graphics::Mesh::setupMesh() {
+void Engine::Graphics::Mesh::setupMesh()
+{
   ZoneScoped;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -86,62 +97,67 @@ void Engine::Graphics::Mesh::setupMesh() {
 
   // vertex positions
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MVertex), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MVertex), (void*)0);
   // vertex normals
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(MVertex),
-                        (void *)offsetof(MVertex, Normal));
+                        (void*)offsetof(MVertex, Normal));
   // vertex texture coords
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MVertex),
-                        (void *)offsetof(MVertex, TexCoords));
+                        (void*)offsetof(MVertex, TexCoords));
   glEnableVertexAttribArray(3);
   // ids
   glEnableVertexAttribArray(3);
   glVertexAttribIPointer(3, 4, GL_INT, sizeof(MVertex),
-                         (void *)offsetof(MVertex, m_BoneIDs));
+                         (void*)offsetof(MVertex, m_BoneIDs));
 
   // weights
   glEnableVertexAttribArray(4);
   glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(MVertex),
-                        (void *)offsetof(MVertex, m_Weights));
+                        (void*)offsetof(MVertex, m_Weights));
 
   glBindVertexArray(0);
 }
 
-Engine::Graphics::Model::Model(const std::string &path) {
+Engine::Graphics::Model::Model(const std::string& path)
+{
   ZoneScoped;
   ZoneText(path.c_str(), path.size());
   this->path = path;
   loadModel(path);
 }
 
-void Engine::Graphics::Model::Draw(Engine::Graphics::Program &program) {
+void Engine::Graphics::Model::Draw(Engine::Graphics::Program& program)
+{
   ZoneScopedN("Model::Draw");
   TracyGpuZone("Model::Draw");
   DrawInstanced(program, 1);
 }
 
 void Engine::Graphics::Model::DrawInstanced(
-    Engine::Graphics::Program &program, unsigned int instanceCount,
-    const std::vector<bool> &enabledMeshes) {
+  Engine::Graphics::Program& program, unsigned int instanceCount,
+  const std::vector<bool>& enabledMeshes)
+{
   ZoneScopedN("Model::DrawInstanced");
   TracyGpuZone("Model::DrawInstanced");
-  for (size_t i = 0; i < meshes.size(); ++i) {
+  for (size_t i = 0; i < meshes.size(); ++i)
+  {
     if (!enabledMeshes.empty() && i < enabledMeshes.size() && !enabledMeshes[i])
       continue;
     meshes[i].DrawInstanced(program, instanceCount);
   }
 }
 
-void Engine::Graphics::Model::loadModel(std::string path) {
+void Engine::Graphics::Model::loadModel(std::string path)
+{
   ZoneScoped;
   ZoneText(path.c_str(), path.size());
   Assimp::Importer import;
   std::string sanitized_path =
-      (path.rfind("resources/", 0) == 0) ? path : ("resources/" + path);
+    (path.rfind("resources/", 0) == 0) ? path : ("resources/" + path);
 
-  const aiScene *scene = nullptr;
+  const aiScene* scene = nullptr;
   {
     ZoneScopedN("Loading file");
     scene = import.ReadFile(sanitized_path,
@@ -149,7 +165,8 @@ void Engine::Graphics::Model::loadModel(std::string path) {
   }
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
-      !scene->mRootNode) {
+    !scene->mRootNode)
+  {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "ERROR::ASSIMP::{}",
                         import.GetErrorString());
     isValid = false;
@@ -157,32 +174,37 @@ void Engine::Graphics::Model::loadModel(std::string path) {
   }
   size_t last_slash = path.find_last_of("/\\");
   directory =
-      (last_slash != std::string::npos) ? path.substr(0, last_slash) : "";
+    (last_slash != std::string::npos) ? path.substr(0, last_slash) : "";
 
   processNode(scene->mRootNode, scene);
 }
 
-void Engine::Graphics::Model::processNode(aiNode *node, const aiScene *scene) {
+void Engine::Graphics::Model::processNode(aiNode* node, const aiScene* scene)
+{
   ZoneScoped;
   // process all the node's meshes (if any)
-  for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-    aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+  for (unsigned int i = 0; i < node->mNumMeshes; i++)
+  {
+    aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
     meshes.push_back(processMesh(mesh, scene));
   }
   // then do the same for each of its children
-  for (unsigned int i = 0; i < node->mNumChildren; i++) {
+  for (unsigned int i = 0; i < node->mNumChildren; i++)
+  {
     processNode(node->mChildren[i], scene);
   }
 }
 
 Engine::Graphics::Mesh
-Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
+Engine::Graphics::Model::processMesh(aiMesh* mesh, const aiScene* scene)
+{
   ZoneScoped;
   std::vector<MVertex> vertices;
   std::vector<unsigned int> indices;
   std::vector<MTexture> textures;
 
-  for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+  for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+  {
     MVertex vertex;
     SetVertexBoneDataToDefault(vertex);
     glm::vec3 vector;
@@ -191,41 +213,49 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     vector.z = mesh->mVertices[i].z;
     vertex.Position = vector;
 
-    if (mesh->HasNormals()) {
+    if (mesh->HasNormals())
+    {
       vector.x = mesh->mNormals[i].x;
       vector.y = mesh->mNormals[i].y;
       vector.z = mesh->mNormals[i].z;
       vertex.Normal = vector;
-    } else {
+    }
+    else
+    {
       vertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);
     }
 
-    if (mesh->mTextureCoords[0]) {
+    if (mesh->mTextureCoords[0])
+    {
       glm::vec2 vec;
       vec.x = mesh->mTextureCoords[0][i].x;
       vec.y = mesh->mTextureCoords[0][i].y;
       vertex.TexCoords = vec;
-    } else {
+    }
+    else
+    {
       vertex.TexCoords = glm::vec2(0.0f, 0.0f);
     }
     vertices.push_back(vertex);
   }
 
   // process indices
-  for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+  for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+  {
     aiFace face = mesh->mFaces[i];
     for (unsigned int j = 0; j < face.mNumIndices; j++)
       indices.push_back(face.mIndices[j]);
   }
 
   // process material
-  if (mesh->mMaterialIndex >= 0) {
-    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+  if (mesh->mMaterialIndex >= 0)
+  {
+    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     std::vector<MTexture> diffuseMaps = loadMaterialTextures(
-        material, aiTextureType_DIFFUSE, "texture_diffuse");
+      material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     std::vector<MTexture> specularMaps = loadMaterialTextures(
-        material, aiTextureType_SPECULAR, "texture_specular");
+      material, aiTextureType_SPECULAR, "texture_specular");
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
   }
   ExtractBoneWeightForVertices(vertices, mesh, scene);
@@ -234,10 +264,12 @@ Engine::Graphics::Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 }
 
 std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
-    aiMaterial *mat, aiTextureType type, std::string typeName) {
+  aiMaterial* mat, aiTextureType type, std::string typeName)
+{
   ZoneScoped;
   std::vector<MTexture> textures;
-  for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+  for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+  {
     aiString str;
     mat->GetTexture(type, i, &str);
     MTexture texture;
@@ -247,35 +279,48 @@ std::vector<MTexture> Engine::Graphics::Model::loadMaterialTextures(
   }
   return textures;
 }
-void Engine::Graphics::Model::SetVertexBoneDataToDefault(MVertex &vertex) {
-  for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+
+void Engine::Graphics::Model::SetVertexBoneDataToDefault(MVertex& vertex)
+{
+  for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+  {
     vertex.m_BoneIDs[i] = -1;
     vertex.m_Weights[i] = 0.0f;
   }
 }
-void Engine::Graphics::Model::SetVertexBoneData(MVertex &vertex, int boneID,
-                                                float weight) {
-  for (int i = 0; i < MAX_BONE_INFLUENCE; ++i) {
-    if (vertex.m_BoneIDs[i] < 0) {
+
+void Engine::Graphics::Model::SetVertexBoneData(MVertex& vertex, int boneID,
+                                                float weight)
+{
+  for (int i = 0; i < MAX_BONE_INFLUENCE; ++i)
+  {
+    if (vertex.m_BoneIDs[i] < 0)
+    {
       vertex.m_Weights[i] = weight;
       vertex.m_BoneIDs[i] = boneID;
       break;
     }
   }
 }
+
 void Engine::Graphics::Model::ExtractBoneWeightForVertices(
-    std::vector<MVertex> &vertices, aiMesh *mesh, const aiScene *scene) {
-  for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+  std::vector<MVertex>& vertices, aiMesh* mesh, const aiScene* scene)
+{
+  for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+  {
     if (mesh->mBones[boneIndex]->mNumWeights == 0)
       continue;
     int boneID = -1;
     std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
-    if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()) {
+    if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end())
+    {
       BoneInfo newBoneInfo;
       newBoneInfo.id = m_BoneCounter;
       glm::mat4 mat;
-      for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
+      for (int i = 0; i < 4; i++)
+      {
+        for (int j = 0; j < 4; j++)
+        {
           mat[j][i] = mesh->mBones[boneIndex]->mOffsetMatrix[i][j];
         }
       }
@@ -283,7 +328,9 @@ void Engine::Graphics::Model::ExtractBoneWeightForVertices(
       m_BoneInfoMap[boneName] = newBoneInfo;
       boneID = m_BoneCounter;
       m_BoneCounter++;
-    } else {
+    }
+    else
+    {
       boneID = m_BoneInfoMap[boneName].id;
     }
 
@@ -291,7 +338,8 @@ void Engine::Graphics::Model::ExtractBoneWeightForVertices(
     auto weights = mesh->mBones[boneIndex]->mWeights;
     int numWeights = mesh->mBones[boneIndex]->mNumWeights;
 
-    for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
+    for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+    {
       int vertexId = weights[weightIndex].mVertexId;
       float weight = weights[weightIndex].mWeight;
       if (vertexId < 0 || static_cast<size_t>(vertexId) >= vertices.size())
@@ -301,12 +349,15 @@ void Engine::Graphics::Model::ExtractBoneWeightForVertices(
     }
   }
 }
-Engine::Graphics::Bone::Bone(const std::string &name, int ID,
-                             const aiNodeAnim *channel)
-    : m_Name(name), m_ID(ID), m_LocalTransform(1.0f) {
+
+Engine::Graphics::Bone::Bone(const std::string& name, int ID,
+                             const aiNodeAnim* channel)
+  : m_Name(name), m_ID(ID), m_LocalTransform(1.0f)
+{
   m_NumPositions = channel->mNumPositionKeys;
   m_Positions.reserve(m_NumPositions);
-  for (int positionIndex = 0; positionIndex < m_NumPositions; ++positionIndex) {
+  for (int positionIndex = 0; positionIndex < m_NumPositions; ++positionIndex)
+  {
     aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
     float timeStamp = channel->mPositionKeys[positionIndex].mTime;
     KeyPosition data;
@@ -317,7 +368,8 @@ Engine::Graphics::Bone::Bone(const std::string &name, int ID,
 
   m_NumRotations = channel->mNumRotationKeys;
   m_Rotations.reserve(m_NumRotations);
-  for (int rotationIndex = 0; rotationIndex < m_NumRotations; ++rotationIndex) {
+  for (int rotationIndex = 0; rotationIndex < m_NumRotations; ++rotationIndex)
+  {
     aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
     float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
     KeyRotation data;
@@ -329,7 +381,8 @@ Engine::Graphics::Bone::Bone(const std::string &name, int ID,
 
   m_NumScalings = channel->mNumScalingKeys;
   m_Scales.reserve(m_NumScalings);
-  for (int keyIndex = 0; keyIndex < m_NumScalings; ++keyIndex) {
+  for (int keyIndex = 0; keyIndex < m_NumScalings; ++keyIndex)
+  {
     aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
     float timeStamp = channel->mScalingKeys[keyIndex].mTime;
     KeyScale data;
@@ -338,84 +391,100 @@ Engine::Graphics::Bone::Bone(const std::string &name, int ID,
     m_Scales.push_back(data);
   }
 }
-void Engine::Graphics::Bone::Update(float animationTime) {
+
+void Engine::Graphics::Bone::Update(float animationTime)
+{
   glm::mat4 translation = InterpolatePosition(animationTime);
   glm::mat4 rotation = InterpolateRotation(animationTime);
   glm::mat4 scale = InterpolateScaling(animationTime);
   m_LocalTransform = translation * rotation * scale;
 }
 
-int Engine::Graphics::Bone::GetPositionIndex(float animationTime) {
+int Engine::Graphics::Bone::GetPositionIndex(float animationTime)
+{
   if (m_NumPositions <= 1)
     return 0;
   if (m_LastPositionIndex < m_NumPositions - 1 &&
-      animationTime >= m_Positions[m_LastPositionIndex].timeStamp &&
-      animationTime < m_Positions[m_LastPositionIndex + 1].timeStamp) {
+    animationTime >= m_Positions[m_LastPositionIndex].timeStamp &&
+    animationTime < m_Positions[m_LastPositionIndex + 1].timeStamp)
+  {
     return m_LastPositionIndex;
   }
   if (m_LastPositionIndex + 1 < m_NumPositions - 1 &&
-      animationTime >= m_Positions[m_LastPositionIndex + 1].timeStamp &&
-      animationTime < m_Positions[m_LastPositionIndex + 2].timeStamp) {
+    animationTime >= m_Positions[m_LastPositionIndex + 1].timeStamp &&
+    animationTime < m_Positions[m_LastPositionIndex + 2].timeStamp)
+  {
     return ++m_LastPositionIndex;
   }
   auto it = std::upper_bound(
-      m_Positions.begin(), m_Positions.end() - 1, animationTime,
-      [](float val, const KeyPosition &k) { return val < k.timeStamp; });
+    m_Positions.begin(), m_Positions.end() - 1, animationTime,
+    [](float val, const KeyPosition& k) { return val < k.timeStamp; });
   m_LastPositionIndex =
-      std::max(0, static_cast<int>(std::distance(m_Positions.begin(), it) - 1));
+    std::max(0, static_cast<int>(std::distance(m_Positions.begin(), it) - 1));
   return m_LastPositionIndex;
 }
-int Engine::Graphics::Bone::GetRotationIndex(float animationTime) {
+
+int Engine::Graphics::Bone::GetRotationIndex(float animationTime)
+{
   if (m_NumRotations <= 1)
     return 0;
   if (m_LastRotationIndex < m_NumRotations - 1 &&
-      animationTime >= m_Rotations[m_LastRotationIndex].timeStamp &&
-      animationTime < m_Rotations[m_LastRotationIndex + 1].timeStamp) {
+    animationTime >= m_Rotations[m_LastRotationIndex].timeStamp &&
+    animationTime < m_Rotations[m_LastRotationIndex + 1].timeStamp)
+  {
     return m_LastRotationIndex;
   }
   if (m_LastRotationIndex + 1 < m_NumRotations - 1 &&
-      animationTime >= m_Rotations[m_LastRotationIndex + 1].timeStamp &&
-      animationTime < m_Rotations[m_LastRotationIndex + 2].timeStamp) {
+    animationTime >= m_Rotations[m_LastRotationIndex + 1].timeStamp &&
+    animationTime < m_Rotations[m_LastRotationIndex + 2].timeStamp)
+  {
     return ++m_LastRotationIndex;
   }
   auto it = std::upper_bound(
-      m_Rotations.begin(), m_Rotations.end() - 1, animationTime,
-      [](float val, const KeyRotation &k) { return val < k.timeStamp; });
+    m_Rotations.begin(), m_Rotations.end() - 1, animationTime,
+    [](float val, const KeyRotation& k) { return val < k.timeStamp; });
   m_LastRotationIndex =
-      std::max(0, static_cast<int>(std::distance(m_Rotations.begin(), it) - 1));
+    std::max(0, static_cast<int>(std::distance(m_Rotations.begin(), it) - 1));
   return m_LastRotationIndex;
 }
-int Engine::Graphics::Bone::GetScaleIndex(float animationTime) {
+
+int Engine::Graphics::Bone::GetScaleIndex(float animationTime)
+{
   if (m_NumScalings <= 1)
     return 0;
   if (m_LastScaleIndex < m_NumScalings - 1 &&
-      animationTime >= m_Scales[m_LastScaleIndex].timeStamp &&
-      animationTime < m_Scales[m_LastScaleIndex + 1].timeStamp) {
+    animationTime >= m_Scales[m_LastScaleIndex].timeStamp &&
+    animationTime < m_Scales[m_LastScaleIndex + 1].timeStamp)
+  {
     return m_LastScaleIndex;
   }
   if (m_LastScaleIndex + 1 < m_NumScalings - 1 &&
-      animationTime >= m_Scales[m_LastScaleIndex + 1].timeStamp &&
-      animationTime < m_Scales[m_LastScaleIndex + 2].timeStamp) {
+    animationTime >= m_Scales[m_LastScaleIndex + 1].timeStamp &&
+    animationTime < m_Scales[m_LastScaleIndex + 2].timeStamp)
+  {
     return ++m_LastScaleIndex;
   }
   auto it = std::upper_bound(
-      m_Scales.begin(), m_Scales.end() - 1, animationTime,
-      [](float val, const KeyScale &k) { return val < k.timeStamp; });
+    m_Scales.begin(), m_Scales.end() - 1, animationTime,
+    [](float val, const KeyScale& k) { return val < k.timeStamp; });
   m_LastScaleIndex =
-      std::max(0, static_cast<int>(std::distance(m_Scales.begin(), it) - 1));
+    std::max(0, static_cast<int>(std::distance(m_Scales.begin(), it) - 1));
   return m_LastScaleIndex;
 }
+
 float Engine::Graphics::Bone::GetScaleFactor(float lastTimeStamp,
                                              float nextTimeStamp,
-                                             float animationTime) {
-
+                                             float animationTime)
+{
   float framesDiff = nextTimeStamp - lastTimeStamp;
   if (framesDiff <= 0.0f)
     return 0.0f;
   float midWayLength = animationTime - lastTimeStamp;
   return std::clamp(midWayLength / framesDiff, 0.0f, 1.0f);
 }
-glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
+
+glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime)
+{
   if (m_NumPositions <= 0)
     return glm::translate(glm::mat4(1.0f), m_RestT);
   if (m_NumRotations <= 0)
@@ -428,21 +497,24 @@ glm::mat4 Engine::Graphics::Bone::InterpolatePosition(float animationTime) {
   int p0Index = GetPositionIndex(animationTime);
   int p1Index = p0Index + 1;
   float scaleFactor =
-      GetScaleFactor(m_Positions[p0Index].timeStamp,
-                     m_Positions[p1Index].timeStamp, animationTime);
+    GetScaleFactor(m_Positions[p0Index].timeStamp,
+                   m_Positions[p1Index].timeStamp, animationTime);
   glm::vec3 finalPosition =
-      glm::mix(m_Positions[p0Index].position, m_Positions[p1Index].position,
-               scaleFactor);
+    glm::mix(m_Positions[p0Index].position, m_Positions[p1Index].position,
+             scaleFactor);
   return glm::translate(glm::mat4(1.0f), finalPosition);
 }
-glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
+
+glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime)
+{
   if (m_NumPositions <= 0)
     return glm::translate(glm::mat4(1.0f), m_RestT);
   if (m_NumRotations <= 0)
     return glm::mat4_cast(m_RestR);
   if (m_NumScalings <= 0)
     return glm::scale(glm::mat4(1.0f), m_RestS);
-  if (1 == m_NumRotations) {
+  if (1 == m_NumRotations)
+  {
     auto rotation = glm::normalize(m_Rotations[0].orientation);
     return glm::mat4_cast(rotation);
   }
@@ -450,15 +522,17 @@ glm::mat4 Engine::Graphics::Bone::InterpolateRotation(float animationTime) {
   int p0Index = GetRotationIndex(animationTime);
   int p1Index = p0Index + 1;
   float scaleFactor =
-      GetScaleFactor(m_Rotations[p0Index].timeStamp,
-                     m_Rotations[p1Index].timeStamp, animationTime);
+    GetScaleFactor(m_Rotations[p0Index].timeStamp,
+                   m_Rotations[p1Index].timeStamp, animationTime);
   glm::quat finalRotation =
-      glm::slerp(m_Rotations[p0Index].orientation,
-                 m_Rotations[p1Index].orientation, scaleFactor);
+    glm::slerp(m_Rotations[p0Index].orientation,
+               m_Rotations[p1Index].orientation, scaleFactor);
   finalRotation = glm::normalize(finalRotation);
   return glm::mat4_cast(finalRotation);
 }
-glm::mat4 Engine::Graphics::Bone::InterpolateScaling(float animationTime) {
+
+glm::mat4 Engine::Graphics::Bone::InterpolateScaling(float animationTime)
+{
   if (m_NumPositions <= 0)
     return glm::translate(glm::mat4(1.0f), m_RestT);
   if (m_NumRotations <= 0)
@@ -472,109 +546,168 @@ glm::mat4 Engine::Graphics::Bone::InterpolateScaling(float animationTime) {
   int p0Index = GetScaleIndex(animationTime);
   int p1Index = p0Index + 1;
   float scaleFactor = GetScaleFactor(
-      m_Scales[p0Index].timeStamp, m_Scales[p1Index].timeStamp, animationTime);
+    m_Scales[p0Index].timeStamp, m_Scales[p1Index].timeStamp, animationTime);
   glm::vec3 finalScale =
-      glm::mix(m_Scales[p0Index].scale, m_Scales[p1Index].scale, scaleFactor);
+    glm::mix(m_Scales[p0Index].scale, m_Scales[p1Index].scale, scaleFactor);
   return glm::scale(glm::mat4(1.0f), finalScale);
 }
+
 Engine::Graphics::Animator::Animator(
-    std::shared_ptr<Animation> currentAnimation) {
+  std::shared_ptr<Animation> currentAnimation)
+{
   m_CurrentTime = 0.0;
   m_CurrentAnimation = currentAnimation;
 
   if (m_CurrentAnimation &&
-      !m_CurrentAnimation->GetDefaultBoneMatrices().empty()) {
+    !m_CurrentAnimation->GetDefaultBoneMatrices().empty())
+  {
     m_FinalBoneMatrices = m_CurrentAnimation->GetDefaultBoneMatrices();
-  } else {
+  }
+  else
+  {
     m_FinalBoneMatrices.assign(500, glm::mat4(1.0f));
   }
 }
-void Engine::Graphics::Animator::UpdateAnimation(float dt) {
+
+void Engine::Graphics::Animator::UpdateAnimation(float dt)
+{
   ZoneScoped;
   m_DeltaTime = dt;
-  if (m_CurrentAnimation) {
+  if (hasFinished) return;
+  if (m_CurrentAnimation)
+  {
     m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
     const float duration = m_CurrentAnimation->GetDuration();
     if (duration > 0.0f)
+    {
+      switch (this->animType)
+      {
+      case LOOP:
+        break;
+      case ONETIME:
+        if (m_CurrentTime == fmod(m_CurrentTime, duration))
+        {
+          break;
+        }
+        if (onFinish) onFinish();
+        hasFinished = true;
+        CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+        return;
+      default: ;
+      }
+      
       m_CurrentTime = fmod(m_CurrentTime, duration);
+    }
     else
+    {
       m_CurrentTime = 0.0f;
+    }
 
     CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
   }
 }
+
 void Engine::Graphics::Animator::PlayAnimation(
-    std::shared_ptr<Animation> pAnimation) {
+  std::shared_ptr<Animation> pAnimation)
+{
+  if (!hasFinished && onInterrupt)
+  {
+    onInterrupt();
+  }
+  hasFinished = false;
+  onInterrupt = nullptr;
+  onFinish = nullptr;
+
   m_CurrentAnimation = std::move(pAnimation);
   m_CurrentTime = 0.0f;
   m_GlobalNodeTransforms.clear();
 
-  if (m_CurrentAnimation) {
+  if (m_CurrentAnimation)
+  {
     CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
-  } else {
+  }
+  else
+  {
     m_FinalBoneMatrices.assign(MAX_BONE_WEIGHTS, glm::mat4(1.0f));
   }
 }
+
 void Engine::Graphics::Animator::SetSockets(
-    const std::vector<SocketAttachment> &sockets) {
+  const std::vector<SocketAttachment>& sockets)
+{
   m_Sockets = sockets;
-  if (m_CurrentAnimation) {
+  if (m_CurrentAnimation)
+  {
     CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
   }
 }
 
 glm::mat4 Engine::Graphics::Animator::GetBoneGlobalTransform(
-    const std::string &boneName) const {
+  const std::string& boneName) const
+{
   auto it = m_GlobalNodeTransforms.find(boneName);
-  if (it != m_GlobalNodeTransforms.end()) {
+  if (it != m_GlobalNodeTransforms.end())
+  {
     return it->second;
   }
   return glm::mat4(1.0f);
 }
 
 void Engine::Graphics::Animator::CalculateBoneTransform(
-    const AssimpNodeData *node, const glm::mat4 &parentTransform) {
+  const AssimpNodeData* node, const glm::mat4& parentTransform)
+{
   m_GlobalNodeTransforms.clear();
   m_FinalBoneMatrices.assign(MAX_BONE_WEIGHTS, glm::mat4(1.0f));
 
-  std::unordered_map<std::string, const SocketAttachment *> activeSockets;
-  for (const auto &s : m_Sockets) {
-    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+  std::unordered_map<std::string, const SocketAttachment*> activeSockets;
+  for (const auto& s : m_Sockets)
+  {
+    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty())
+    {
       activeSockets[s.targetNode] = &s;
     }
   }
 
   CalculateBoneTransformInternal(node, parentTransform, activeSockets);
 
-  if (m_CurrentAnimation) {
-    std::vector<const SocketAttachment *> pendingSockets;
-    for (const auto &s : m_Sockets) {
-      if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+  if (m_CurrentAnimation)
+  {
+    std::vector<const SocketAttachment*> pendingSockets;
+    for (const auto& s : m_Sockets)
+    {
+      if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty())
+      {
         pendingSockets.push_back(&s);
       }
     }
 
     bool progress = true;
-    while (!pendingSockets.empty() && progress) {
+    while (!pendingSockets.empty() && progress)
+    {
       progress = false;
-      for (auto it = pendingSockets.begin(); it != pendingSockets.end();) {
-        const SocketAttachment *socket = *it;
+      for (auto it = pendingSockets.begin(); it != pendingSockets.end();)
+      {
+        const SocketAttachment* socket = *it;
         auto boneIt = m_GlobalNodeTransforms.find(socket->targetBone);
-        if (boneIt != m_GlobalNodeTransforms.end()) {
-          const AssimpNodeData *targetNode =
-              m_CurrentAnimation->FindNode(socket->targetNode);
-          if (targetNode) {
+        if (boneIt != m_GlobalNodeTransforms.end())
+        {
+          const AssimpNodeData* targetNode =
+            m_CurrentAnimation->FindNode(socket->targetNode);
+          if (targetNode)
+          {
             glm::mat4 socketOffset =
-                glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
-                glm::mat4_cast(
-                    glm::quat(glm::radians(socket->offsetRotation))) *
-                glm::scale(glm::mat4(1.0f), socket->offsetScale);
+              glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
+              glm::mat4_cast(
+                glm::quat(glm::radians(socket->offsetRotation))) *
+              glm::scale(glm::mat4(1.0f), socket->offsetScale);
             glm::mat4 socketParentTransform = boneIt->second * socketOffset;
             CalculateSocketSubtree(targetNode, socketParentTransform, true);
           }
           it = pendingSockets.erase(it);
           progress = true;
-        } else {
+        }
+        else
+        {
           ++it;
         }
       }
@@ -583,15 +716,18 @@ void Engine::Graphics::Animator::CalculateBoneTransform(
 }
 
 void Engine::Graphics::Animator::CalculateBoneTransformInternal(
-    const AssimpNodeData *node, const glm::mat4 &parentTransform,
-    const std::unordered_map<std::string, const SocketAttachment *>
-        &activeSockets) {
-  if (activeSockets.contains(node->name)) {
+  const AssimpNodeData* node, const glm::mat4& parentTransform,
+  const std::unordered_map<std::string, const SocketAttachment*>
+  & activeSockets)
+{
+  if (activeSockets.contains(node->name))
+  {
     return;
   }
 
   glm::mat4 nodeTransform = node->transformation;
-  if (node->bone) {
+  if (node->bone)
+  {
     node->bone->Update(m_CurrentTime);
     nodeTransform = node->bone->GetLocalTransform();
   }
@@ -600,23 +736,27 @@ void Engine::Graphics::Animator::CalculateBoneTransformInternal(
   m_GlobalNodeTransforms[node->name] = globalTransformation;
 
   if (node->boneInfoId >= 0 &&
-      node->boneInfoId < (int)m_FinalBoneMatrices.size()) {
+    node->boneInfoId < (int)m_FinalBoneMatrices.size())
+  {
     m_FinalBoneMatrices[node->boneInfoId] =
-        globalTransformation * node->offsetMatrix;
+      globalTransformation * node->offsetMatrix;
   }
 
-  for (int i = 0; i < node->childrenCount; i++) {
+  for (int i = 0; i < node->childrenCount; i++)
+  {
     CalculateBoneTransformInternal(&node->children[i], globalTransformation,
                                    activeSockets);
   }
 }
 
 void Engine::Graphics::Animator::CalculateSocketSubtree(
-    const AssimpNodeData *node, const glm::mat4 &parentTransform,
-    bool isSocketRoot) {
+  const AssimpNodeData* node, const glm::mat4& parentTransform,
+  bool isSocketRoot)
+{
   glm::mat4 nodeTransform =
-      isSocketRoot ? glm::mat4(1.0f) : node->transformation;
-  if (!isSocketRoot && node->bone) {
+    isSocketRoot ? glm::mat4(1.0f) : node->transformation;
+  if (!isSocketRoot && node->bone)
+  {
     node->bone->Update(m_CurrentTime);
     nodeTransform = node->bone->GetLocalTransform();
   }
@@ -625,48 +765,58 @@ void Engine::Graphics::Animator::CalculateSocketSubtree(
   m_GlobalNodeTransforms[node->name] = globalTransformation;
 
   if (node->boneInfoId >= 0 &&
-      node->boneInfoId < (int)m_FinalBoneMatrices.size()) {
+    node->boneInfoId < (int)m_FinalBoneMatrices.size())
+  {
     m_FinalBoneMatrices[node->boneInfoId] =
-        globalTransformation * node->offsetMatrix;
+      globalTransformation * node->offsetMatrix;
   }
 
-  for (int i = 0; i < node->childrenCount; i++) {
+  for (int i = 0; i < node->childrenCount; i++)
+  {
     CalculateSocketSubtree(&node->children[i], globalTransformation, false);
   }
 }
-Engine::Graphics::Animation::Animation(const std::string &animationPath,
+
+Engine::Graphics::Animation::Animation(const std::string& animationPath,
                                        std::shared_ptr<Model> model,
-                                       int animationIndex) {
+                                       int animationIndex)
+{
   std::string sanitized_path = (animationPath.rfind("resources/", 0) == 0)
-                                   ? animationPath
-                                   : ("resources/" + animationPath);
+                                 ? animationPath
+                                 : ("resources/" + animationPath);
   Assimp::Importer importer;
-  const aiScene *scene =
-      importer.ReadFile(sanitized_path, aiProcess_Triangulate);
-  if (!scene || !scene->mRootNode) {
+  const aiScene* scene =
+    importer.ReadFile(sanitized_path, aiProcess_Triangulate);
+  if (!scene || !scene->mRootNode)
+  {
     throw std::runtime_error("Failed to load animation file " + sanitized_path +
-                             ": " + importer.GetErrorString());
+      ": " + importer.GetErrorString());
   }
   if (animationIndex < 0 ||
-      static_cast<unsigned int>(animationIndex) >= scene->mNumAnimations) {
+    static_cast<unsigned int>(animationIndex) >= scene->mNumAnimations)
+  {
     throw std::out_of_range("Animation index " +
-                            std::to_string(animationIndex) +
-                            " is out of range for " + sanitized_path);
+      std::to_string(animationIndex) +
+      " is out of range for " + sanitized_path);
   }
   auto animation = scene->mAnimations[animationIndex];
   m_Name = animation->mName.C_Str();
-  if (m_Name.empty()) {
+  if (m_Name.empty())
+  {
     m_Name = "Animation_" + std::to_string(animationIndex);
   }
   m_Duration = animation->mDuration;
-  if (animation->mTicksPerSecond > 0.0) {
+  if (animation->mTicksPerSecond > 0.0)
+  {
     m_TicksPerSecond = static_cast<float>(animation->mTicksPerSecond);
-  } else {
+  }
+  else
+  {
     m_TicksPerSecond = 25.0f;
     SPDLOG_LOGGER_WARN(
-        ENGINE_UTIL_LOGGER,
-        "Animation '{}' in {} has no ticks per second, assuming {}", m_Name,
-        sanitized_path, m_TicksPerSecond);
+      ENGINE_UTIL_LOGGER,
+      "Animation '{}' in {} has no ticks per second, assuming {}", m_Name,
+      sanitized_path, m_TicksPerSecond);
   }
   ReadHeirarchyData(m_RootNode, scene->mRootNode);
   ReadMissingBones(animation, *model);
@@ -674,34 +824,40 @@ Engine::Graphics::Animation::Animation(const std::string &animationPath,
   m_DefaultBoneMatrices.assign(500, glm::mat4(1.0f));
   CalculateRestPose(&m_RootNode, glm::mat4(1.0f), m_DefaultBoneMatrices);
 }
-Engine::Graphics::Bone *
-Engine::Graphics::Animation::FindBone(const std::string &name) {
+
+Engine::Graphics::Bone*
+Engine::Graphics::Animation::FindBone(const std::string& name)
+{
   ZoneScoped;
   auto iter =
-      std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone &Bone) {
-        return Bone.GetBoneName() == name;
-      });
+    std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone& Bone)
+    {
+      return Bone.GetBoneName() == name;
+    });
   if (iter == m_Bones.end())
     return nullptr;
   else
     return &(*iter);
 }
 
-void Engine::Graphics::Animation::ReadMissingBones(const aiAnimation *animation,
-                                                   Model &model) {
+void Engine::Graphics::Animation::ReadMissingBones(const aiAnimation* animation,
+                                                   Model& model)
+{
   int size = animation->mNumChannels;
 
-  auto &boneInfoMap =
-      model.GetBoneInfoMap(); // getting m_BoneInfoMap from Model class
-  int &boneCount =
-      model.GetBoneCount(); // getting the m_BoneCounter from Model class
+  auto& boneInfoMap =
+    model.GetBoneInfoMap(); // getting m_BoneInfoMap from Model class
+  int& boneCount =
+    model.GetBoneCount(); // getting the m_BoneCounter from Model class
 
   // reading channels(bones engaged in an animation and their keyframes)
-  for (int i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++)
+  {
     auto channel = animation->mChannels[i];
     std::string boneName = channel->mNodeName.data;
 
-    if (boneInfoMap.find(boneName) == boneInfoMap.end()) {
+    if (boneInfoMap.find(boneName) == boneInfoMap.end())
+    {
       boneInfoMap[boneName].id = boneCount;
       boneInfoMap[boneName].offset = glm::mat4(1.0f);
       boneCount++;
@@ -712,91 +868,112 @@ void Engine::Graphics::Animation::ReadMissingBones(const aiAnimation *animation,
 
   m_BoneInfoMap = boneInfoMap;
 }
-void Engine::Graphics::Animation::ReadHeirarchyData(AssimpNodeData &dest,
-                                                    const aiNode *src) {
+
+void Engine::Graphics::Animation::ReadHeirarchyData(AssimpNodeData& dest,
+                                                    const aiNode* src)
+{
   if (!src)
     throw std::invalid_argument("ReadHeirarchyData: null node");
 
   dest.name = src->mName.data;
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
       dest.transformation[j][i] = src->mTransformation[i][j];
     }
   }
   dest.childrenCount = src->mNumChildren;
 
-  for (int i = 0; i < src->mNumChildren; i++) {
+  for (int i = 0; i < src->mNumChildren; i++)
+  {
     AssimpNodeData newData;
     ReadHeirarchyData(newData, src->mChildren[i]);
     dest.children.push_back(newData);
   }
 }
 
-void Engine::Graphics::Animation::SetupNodeHierarchy(AssimpNodeData &node) {
+void Engine::Graphics::Animation::SetupNodeHierarchy(AssimpNodeData& node)
+{
   node.bone = FindBone(node.name);
   auto it = m_BoneInfoMap.find(node.name);
-  if (it != m_BoneInfoMap.end()) {
+  if (it != m_BoneInfoMap.end())
+  {
     node.boneInfoId = it->second.id;
     node.offsetMatrix = it->second.offset;
-  } else {
+  }
+  else
+  {
     node.boneInfoId = -1;
   }
-  for (auto &child : node.children) {
+  for (auto& child : node.children)
+  {
     SetupNodeHierarchy(child);
   }
 }
 
-static const Engine::Graphics::AssimpNodeData *
-FindNodeRecursive(const Engine::Graphics::AssimpNodeData *node,
-                  const std::string &name) {
+static const Engine::Graphics::AssimpNodeData*
+FindNodeRecursive(const Engine::Graphics::AssimpNodeData* node,
+                  const std::string& name)
+{
   if (node->name == name)
     return node;
-  for (int i = 0; i < node->childrenCount; ++i) {
-    const auto *found = FindNodeRecursive(&node->children[i], name);
+  for (int i = 0; i < node->childrenCount; ++i)
+  {
+    const auto* found = FindNodeRecursive(&node->children[i], name);
     if (found)
       return found;
   }
   return nullptr;
 }
 
-const Engine::Graphics::AssimpNodeData *
-Engine::Graphics::Animation::FindNode(const std::string &name) const {
+const Engine::Graphics::AssimpNodeData*
+Engine::Graphics::Animation::FindNode(const std::string& name) const
+{
   return FindNodeRecursive(&m_RootNode, name);
 }
 
 static void
-CollectNodeNamesRecursive(const Engine::Graphics::AssimpNodeData *node,
-                          std::vector<std::string> &names) {
+CollectNodeNamesRecursive(const Engine::Graphics::AssimpNodeData* node,
+                          std::vector<std::string>& names)
+{
   names.push_back(node->name);
-  for (int i = 0; i < node->childrenCount; ++i) {
+  for (int i = 0; i < node->childrenCount; ++i)
+  {
     CollectNodeNamesRecursive(&node->children[i], names);
   }
 }
 
-std::vector<std::string> Engine::Graphics::Animation::GetNodeNames() const {
+std::vector<std::string> Engine::Graphics::Animation::GetNodeNames() const
+{
   std::vector<std::string> names;
   CollectNodeNamesRecursive(&m_RootNode, names);
   return names;
 }
 
 void Engine::Graphics::Animation::SetSockets(
-    const std::vector<SocketAttachment> &sockets) {
+  const std::vector<SocketAttachment>& sockets)
+{
   m_Sockets = sockets;
   RecalculateRestPose();
 }
 
-void Engine::Graphics::Animation::RecalculateRestPose() {
+void Engine::Graphics::Animation::RecalculateRestPose()
+{
   m_DefaultBoneMatrices.assign(500, glm::mat4(1.0f));
   CalculateRestPose(&m_RootNode, glm::mat4(1.0f), m_DefaultBoneMatrices);
 }
 
 void Engine::Graphics::Animation::CalculateRestPose(
-    const AssimpNodeData *node, const glm::mat4 &parentTransform,
-    std::vector<glm::mat4> &outMatrices) const {
+  const AssimpNodeData* node, const glm::mat4& parentTransform,
+  std::vector<glm::mat4>& outMatrices) const
+{
   std::unordered_map<std::string, glm::mat4> globalTransforms;
-  std::unordered_map<std::string, const SocketAttachment *> activeSockets;
-  for (const auto &s : m_Sockets) {
-    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+  std::unordered_map<std::string, const SocketAttachment*> activeSockets;
+  for (const auto& s : m_Sockets)
+  {
+    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty())
+    {
       activeSockets[s.targetNode] = &s;
     }
   }
@@ -804,33 +981,41 @@ void Engine::Graphics::Animation::CalculateRestPose(
   CalculateRestPoseInternal(node, parentTransform, outMatrices,
                             globalTransforms, activeSockets);
 
-  std::vector<const SocketAttachment *> pendingSockets;
-  for (const auto &s : m_Sockets) {
-    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty()) {
+  std::vector<const SocketAttachment*> pendingSockets;
+  for (const auto& s : m_Sockets)
+  {
+    if (s.enabled && !s.targetNode.empty() && !s.targetBone.empty())
+    {
       pendingSockets.push_back(&s);
     }
   }
 
   bool progress = true;
-  while (!pendingSockets.empty() && progress) {
+  while (!pendingSockets.empty() && progress)
+  {
     progress = false;
-    for (auto it = pendingSockets.begin(); it != pendingSockets.end();) {
-      const SocketAttachment *socket = *it;
+    for (auto it = pendingSockets.begin(); it != pendingSockets.end();)
+    {
+      const SocketAttachment* socket = *it;
       auto boneIt = globalTransforms.find(socket->targetBone);
-      if (boneIt != globalTransforms.end()) {
-        const AssimpNodeData *targetNode = FindNode(socket->targetNode);
-        if (targetNode) {
+      if (boneIt != globalTransforms.end())
+      {
+        const AssimpNodeData* targetNode = FindNode(socket->targetNode);
+        if (targetNode)
+        {
           glm::mat4 socketOffset =
-              glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
-              glm::mat4_cast(glm::quat(glm::radians(socket->offsetRotation))) *
-              glm::scale(glm::mat4(1.0f), socket->offsetScale);
+            glm::translate(glm::mat4(1.0f), socket->offsetPosition) *
+            glm::mat4_cast(glm::quat(glm::radians(socket->offsetRotation))) *
+            glm::scale(glm::mat4(1.0f), socket->offsetScale);
           glm::mat4 socketParentTransform = boneIt->second * socketOffset;
           CalculateSocketSubtreeRestPose(targetNode, socketParentTransform,
                                          outMatrices, globalTransforms, true);
         }
         it = pendingSockets.erase(it);
         progress = true;
-      } else {
+      }
+      else
+      {
         ++it;
       }
     }
@@ -838,43 +1023,50 @@ void Engine::Graphics::Animation::CalculateRestPose(
 }
 
 void Engine::Graphics::Animation::CalculateRestPoseInternal(
-    const AssimpNodeData *node, const glm::mat4 &parentTransform,
-    std::vector<glm::mat4> &outMatrices,
-    std::unordered_map<std::string, glm::mat4> &globalTransforms,
-    const std::unordered_map<std::string, const SocketAttachment *>
-        &activeSockets) const {
-  if (activeSockets.contains(node->name)) {
+  const AssimpNodeData* node, const glm::mat4& parentTransform,
+  std::vector<glm::mat4>& outMatrices,
+  std::unordered_map<std::string, glm::mat4>& globalTransforms,
+  const std::unordered_map<std::string, const SocketAttachment*>
+  & activeSockets) const
+{
+  if (activeSockets.contains(node->name))
+  {
     return;
   }
 
   glm::mat4 globalTransformation = parentTransform * node->transformation;
   globalTransforms[node->name] = globalTransformation;
 
-  if (node->boneInfoId >= 0 && node->boneInfoId < (int)outMatrices.size()) {
+  if (node->boneInfoId >= 0 && node->boneInfoId < (int)outMatrices.size())
+  {
     outMatrices[node->boneInfoId] = globalTransformation * node->offsetMatrix;
   }
 
-  for (int i = 0; i < node->childrenCount; i++) {
+  for (int i = 0; i < node->childrenCount; i++)
+  {
     CalculateRestPoseInternal(&node->children[i], globalTransformation,
                               outMatrices, globalTransforms, activeSockets);
   }
 }
 
 void Engine::Graphics::Animation::CalculateSocketSubtreeRestPose(
-    const AssimpNodeData *node, const glm::mat4 &parentTransform,
-    std::vector<glm::mat4> &outMatrices,
-    std::unordered_map<std::string, glm::mat4> &globalTransforms,
-    bool isSocketRoot) const {
+  const AssimpNodeData* node, const glm::mat4& parentTransform,
+  std::vector<glm::mat4>& outMatrices,
+  std::unordered_map<std::string, glm::mat4>& globalTransforms,
+  bool isSocketRoot) const
+{
   glm::mat4 nodeTransform =
-      isSocketRoot ? glm::mat4(1.0f) : node->transformation;
+    isSocketRoot ? glm::mat4(1.0f) : node->transformation;
   glm::mat4 globalTransformation = parentTransform * nodeTransform;
   globalTransforms[node->name] = globalTransformation;
 
-  if (node->boneInfoId >= 0 && node->boneInfoId < (int)outMatrices.size()) {
+  if (node->boneInfoId >= 0 && node->boneInfoId < (int)outMatrices.size())
+  {
     outMatrices[node->boneInfoId] = globalTransformation * node->offsetMatrix;
   }
 
-  for (int i = 0; i < node->childrenCount; i++) {
+  for (int i = 0; i < node->childrenCount; i++)
+  {
     CalculateSocketSubtreeRestPose(&node->children[i], globalTransformation,
                                    outMatrices, globalTransforms, false);
   }

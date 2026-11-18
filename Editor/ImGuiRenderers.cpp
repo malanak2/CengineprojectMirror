@@ -22,6 +22,7 @@
 
 #include "ReflectionRegistrar.hpp"
 #include "ScriptSystem.hpp"
+#include "Util/EnumToString.hpp"
 
 namespace Editor::ImGuiR {
 
@@ -115,7 +116,6 @@ void ImGuiComponentRenderer::Render(
 
 void ImGuiComponentRenderer::Init() {
   ZoneScoped;
-  ReflectionRegistrar::Get().RegisterReflectedScope<^^::>();
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentRenderable, {
     ImGui::InputText("Model path", &component->_model_path[0], 100);
     ImGui::InputText("Material path", &component->_material_path[0], 100);
@@ -151,8 +151,37 @@ void ImGuiComponentRenderer::Init() {
                            { ImGui::Text("Invalid Component"); })
 
   IMGUI_REGISTER_COMPONENT(Engine::Graphics::ComponentAnimator, {
+    
+    ImGui::BeginDisabled();
+    bool hasFin = component->GetAnimator()->HasFinished();
+    ImGui::Checkbox("Has Finished", &hasFin);
+    bool hasOnInt = component->GetAnimator()->HasOnInterrupt();
+    ImGui::Checkbox("Has OnInterrupt", &(hasOnInt));
+    bool hasOnFin = component->GetAnimator()->HasOnFinish();
+    ImGui::Checkbox("Has OnFinish", &(hasOnFin));
+    ImGui::EndDisabled();
+    if (ImGui::Button("Reset"))
+    {
+      component->GetAnimator()->Reset();
+    }
+    if (ImGui::BeginCombo("Animation Type",
+      Util::enum_to_string<Engine::Graphics::AnimType>(component->GetAnimator()->GetAnimationType()).data()))
+    {
+        template for (constexpr auto en : std::define_static_array(std::meta::enumerators_of(^^Engine::Graphics::AnimType)))
+      {
+        constexpr Engine::Graphics::AnimType enumVal = [:en:];
+        bool isSelected = (component->GetAnimator()->GetAnimationType() == enumVal);
+        if (ImGui::Selectable(Util::enum_to_string<Engine::Graphics::AnimType>(enumVal).data()))
+        {
+          component->GetAnimator()->SetAnimationType(static_cast<Engine::Graphics::AnimType>(enumVal));
+        }
+      }
+      ImGui::EndCombo();
+    }
+    
     if (ImGui::BeginCombo("Animation",
                           component->GetCurrentAnimation().c_str())) {
+      
       for (const auto &[name, anim] : component->animations) {
         bool isSelected = (component->GetCurrentAnimation() == name);
         if (ImGui::Selectable(name.c_str(), isSelected)) {

@@ -45,6 +45,7 @@ namespace Engine
     {
       FixedString<64> name{};
       FixedString<64> displayname{};
+      bool intendedNoRenderers = false;
     };
 
     struct Serialize
@@ -103,6 +104,7 @@ namespace Engine
     {
       std::string_view name;
       std::string_view displayname;
+      bool intendedNoRenderers;
       std::type_index type;
       std::shared_ptr<IComponent> (*create)();
 
@@ -213,7 +215,7 @@ namespace Engine
         auto [it, inserted] = by_type.try_emplace(
           std::type_index(typeid(T)),
           ScriptInfo{
-            attr.name, attr.displayname, std::type_index(typeid(T)),
+            attr.name, attr.displayname, attr.intendedNoRenderers, std::type_index(typeid(T)),
             &make<T>, toJsonWrapper, fromJsonWrapper
           });
 

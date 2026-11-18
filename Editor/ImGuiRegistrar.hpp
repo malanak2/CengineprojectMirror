@@ -84,7 +84,15 @@ public:
               w->Draw();
             }
             wtgles->Draw();
+#ifdef DEBUG
+            static bool open = true;
+            ImGuiTestEngine_ShowTestEngineWindows(Testing::engine, &open);
+#endif
           }
+          
+#ifdef DEBUG
+          ImGuiTestEngine_PreSwap(Testing::engine);
+#endif
         });
     Engine::Graphics::Main::instance->postRender->insert(
         Engine::Graphics::Main::instance->postRender->end(), []() {
@@ -97,14 +105,20 @@ public:
           if (Config::inst->graphics->enableAntiAliasing) {
             glEnable(GL_MULTISAMPLE);
           }
+          
+#ifdef DEBUG
+          ImGuiTestEngine_PostSwap(Testing::engine);
+#endif
         });
 
     Engine::Graphics::Main::instance->terminate->insert(
         Engine::Graphics::Main::instance->terminate->end(), []() {
+          ImGuiTestEngine_Stop(Testing::engine);
           ImGui_ImplOpenGL3_Shutdown();
           ImGui_ImplGlfw_Shutdown();
           ImPlot::DestroyContext();
           ImGui::DestroyContext();
+          ImGuiTestEngine_DestroyContext(Testing::engine);
         });
     Engine::InputSystem::onCallback.insert(
         Engine::InputSystem::onCallback.end(),

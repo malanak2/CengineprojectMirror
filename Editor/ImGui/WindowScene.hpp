@@ -96,7 +96,19 @@ protected:
         ImGui::EndCombo();
       }
     }
-    if (ImGui::CollapsingHeader("Objects")) {
+    bool oOpen = ImGui::CollapsingHeader("Objects");
+    
+    if (ImGui::BeginPopupContextItem())
+    {
+      if (ImGui::MenuItem("New object"))
+      {
+        auto o = std::make_shared<Engine::Object>();
+        Engine::Engine::instance->current_scene->Instantiate(
+            o, Engine::Engine::instance->current_scene->SelfScene()); 
+      }
+      ImGui::EndPopup();
+    }
+    if (oOpen) {
       ShowSceneObjectMenu(&scene->Children);
     }
     if (sceneObject != nullptr) {
@@ -167,6 +179,7 @@ protected:
      }
     ImGui::End();
   }
+  
   void ShowSceneObjectMenu(
       std::vector<std::shared_ptr<Engine::SceneObject>> *sceneObjects) {
     ZoneScoped;
@@ -177,11 +190,13 @@ protected:
         continue;
       ImGui::PushID(obj.get());
 
+      const bool hasChildren = !obj->Children.empty();
       ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
                                  ImGuiTreeNodeFlags_OpenOnDoubleClick |
                                  ImGuiTreeNodeFlags_SpanAvailWidth |
-                                 ImGuiTreeNodeFlags_AllowOverlap;
-      if (obj->Children.empty()) {
+                                 ImGuiTreeNodeFlags_AllowOverlap |
+                                 ImGuiTreeNodeFlags_NoTreePushOnOpen;
+      if (!hasChildren) {
         flags |= ImGuiTreeNodeFlags_Leaf;
       }
 
@@ -202,12 +217,13 @@ protected:
 
       if (sceneObject != obj) {
         ImGui::SameLine(ImGui::GetContentRegionAvail().x - 50);
-        if (ImGui::Button("Select")) {
+        if (ImGui::Button(("Select##" + obj->instance->_name).c_str())) {
           sceneObject = obj;
         }
       }
 
-      if (open) {
+      if (hasChildren && open) {
+        ImGui::TreePush(label.c_str());
         ShowSceneObjectMenu(&obj->Children);
         ImGui::TreePop();
       }

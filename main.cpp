@@ -3,6 +3,8 @@
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
 
+#include "Testing/Testing.hpp"
+
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
@@ -11,6 +13,8 @@
 #else
 #include "out/Debug/Generated/AllComponents.hpp"
 #endif
+
+
 // No need to make allocations synchronous without Tracy enabled
 #ifdef TRACY_ENABLE
 std ::mutex memoryLock;
@@ -33,6 +37,7 @@ int main() {
   {
     ZoneScopedN("Create script registry")
     Engine::Main::ScriptSystem::instance->create_global_registry<^^::>();
+    ReflectionRegistrar::Get().RegisterReflectedScope<^^::>();
   }
   /// Inject functions
   {
@@ -60,6 +65,9 @@ int main() {
     ZoneScopedN("Register imgui renderers");
     Editor::ImGuiR::ImGuiUniformRenderer::Init();
     Editor::ImGuiR::ImGuiComponentRenderer::Init();
+  }
+  {
+    Editor::Testing::Setup();
   }
   /// Load scene
   {

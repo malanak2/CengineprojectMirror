@@ -16,340 +16,410 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #define MAX_BONE_INFLUENCE 4
 #define MAX_BONE_WEIGHTS 500
+
 /// Mesh logic in this file is from https://learnopengl.com/Model-Loading/Mesh
 /// Model logic in this file is from https://learnopengl.com/Model-Loading/Model
 /// and bone logic is from
 /// https://learnopengl.com/Guest-Articles/2020/Skeletal-Animation
 /// TODO: Rewrite/kinda optimise - probably before/during Phys sys
-namespace Engine {
-namespace Graphics {
-struct MVertex {
-  glm::vec3 Position;
-  glm::vec3 Normal;
-  glm::vec2 TexCoords;
-  // tangent
-  glm::vec3 Tangent;
-  // bitangent
-  glm::vec3 Bitangent;
+namespace Engine
+{
+  namespace Graphics
+  {
+    struct MVertex
+    {
+      glm::vec3 Position;
+      glm::vec3 Normal;
+      glm::vec2 TexCoords;
+      // tangent
+      glm::vec3 Tangent;
+      // bitangent
+      glm::vec3 Bitangent;
 
-  // bone indexes which will influence this vertex
-  int m_BoneIDs[MAX_BONE_INFLUENCE];
-  // weights from each bone
-  float m_Weights[MAX_BONE_INFLUENCE];
-};
-struct BoneInfo {
-  /*id is index in finalBoneMatrices*/
-  int id;
+      // bone indexes which will influence this vertex
+      int m_BoneIDs[MAX_BONE_INFLUENCE];
+      // weights from each bone
+      float m_Weights[MAX_BONE_INFLUENCE];
+    };
 
-  /*offset matrix transforms vertex from model space to bone space*/
-  glm::mat4 offset;
-};
-struct MTexture {
-  std::shared_ptr<Texture> texture;
-  std::string type;
-};
-class Mesh {
-public:
-  // mesh data
-  std::string name;
-  std::vector<MVertex> vertices;
-  std::vector<unsigned int> indices;
-  std::vector<MTexture> textures;
+    struct BoneInfo
+    {
+      /*id is index in finalBoneMatrices*/
+      int id;
 
-  Mesh(std::string name, std::vector<MVertex> vertices,
-       std::vector<unsigned int> indices, std::vector<MTexture> textures);
-  Mesh(std::vector<MVertex> vertices, std::vector<unsigned int> indices,
-       std::vector<MTexture> textures);
-  void Draw(Engine::Graphics::Program &program);
-  void DrawInstanced(Engine::Graphics::Program &program,
-                     unsigned int instanceCount);
+      /*offset matrix transforms vertex from model space to bone space*/
+      glm::mat4 offset;
+    };
 
-  unsigned int GetVAO() const { return VAO; }
-  unsigned int GetIndexCount() const {
-    return static_cast<unsigned int>(indices.size());
-  }
+    struct MTexture
+    {
+      std::shared_ptr<Texture> texture;
+      std::string type;
+    };
 
-private:
-  //  render data
-  unsigned int VAO = 0, VBO = 0, EBO = 0;
+    class Mesh
+    {
+    public:
+      // mesh data
+      std::string name;
+      std::vector<MVertex> vertices;
+      std::vector<unsigned int> indices;
+      std::vector<MTexture> textures;
 
-  void setupMesh();
-};
-class Model {
-public:
-  static std::shared_ptr<Model> Create(const std::string &path);
-  static std::unordered_map<std::string, std::shared_ptr<Model>> models;
+      Mesh(std::string name, std::vector<MVertex> vertices,
+           std::vector<unsigned int> indices, std::vector<MTexture> textures);
+      Mesh(std::vector<MVertex> vertices, std::vector<unsigned int> indices,
+           std::vector<MTexture> textures);
+      void Draw(Engine::Graphics::Program& program);
+      void DrawInstanced(Engine::Graphics::Program& program,
+                         unsigned int instanceCount);
 
-  Model(const std::string &path);
-  Model() = default;
-  void Draw(Engine::Graphics::Program &program);
-  void DrawInstanced(Engine::Graphics::Program &program,
-                     unsigned int instanceCount,
-                     const std::vector<bool> &enabledMeshes = {});
+      unsigned int GetVAO() const { return VAO; }
 
-  const std::vector<Mesh> &GetMeshes() const { return meshes; }
-  std::string path;
+      unsigned int GetIndexCount() const
+      {
+        return static_cast<unsigned int>(indices.size());
+      }
 
-  std::map<std::string, BoneInfo> m_BoneInfoMap;
-  int m_BoneCounter = 0;
+    private:
+      //  render data
+      unsigned int VAO = 0, VBO = 0, EBO = 0;
 
-  auto &GetBoneInfoMap() { return m_BoneInfoMap; }
-  int &GetBoneCount() { return m_BoneCounter; }
+      void setupMesh();
+    };
 
-  void SetVertexBoneDataToDefault(MVertex &vertex);
+    class Model
+    {
+    public:
+      static std::shared_ptr<Model> Create(const std::string& path);
+      static std::unordered_map<std::string, std::shared_ptr<Model>> models;
 
-  void SetVertexBoneData(MVertex &vertex, int boneID, float weight);
+      Model(const std::string& path);
+      Model() = default;
+      void Draw(Engine::Graphics::Program& program);
+      void DrawInstanced(Engine::Graphics::Program& program,
+                         unsigned int instanceCount,
+                         const std::vector<bool>& enabledMeshes = {});
 
-  void ExtractBoneWeightForVertices(std::vector<MVertex> &vertices,
-                                    aiMesh *mesh, const aiScene *scene);
-  bool isValid = true;
+      const std::vector<Mesh>& GetMeshes() const { return meshes; }
+      std::string path;
 
-private:
-  // model data
-  std::vector<Mesh> meshes;
-  std::string directory;
+      std::map<std::string, BoneInfo> m_BoneInfoMap;
+      int m_BoneCounter = 0;
 
-  void loadModel(std::string path);
-  void processNode(aiNode *node, const aiScene *scene);
-  Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-  std::vector<MTexture> loadMaterialTextures(aiMaterial *mat,
-                                             aiTextureType type,
-                                             std::string typeName);
-};
-struct KeyPosition {
-  glm::vec3 position;
-  float timeStamp;
-};
+      auto& GetBoneInfoMap() { return m_BoneInfoMap; }
+      int& GetBoneCount() { return m_BoneCounter; }
 
-struct KeyRotation {
-  glm::quat orientation;
-  float timeStamp;
-};
+      void SetVertexBoneDataToDefault(MVertex& vertex);
 
-struct KeyScale {
-  glm::vec3 scale;
-  float timeStamp;
-};
+      void SetVertexBoneData(MVertex& vertex, int boneID, float weight);
 
-class Bone {
-private:
-  std::vector<KeyPosition> m_Positions;
-  std::vector<KeyRotation> m_Rotations;
-  std::vector<KeyScale> m_Scales;
-  int m_NumPositions;
-  int m_NumRotations;
-  int m_NumScalings;
+      void ExtractBoneWeightForVertices(std::vector<MVertex>& vertices,
+                                        aiMesh* mesh, const aiScene* scene);
+      bool isValid = true;
 
-  glm::mat4 m_LocalTransform;
-  std::string m_Name;
-  int m_ID;
+    private:
+      // model data
+      std::vector<Mesh> meshes;
+      std::string directory;
 
-  int m_LastPositionIndex = 0;
-  int m_LastRotationIndex = 0;
-  int m_LastScaleIndex = 0;
+      void loadModel(std::string path);
+      void processNode(aiNode* node, const aiScene* scene);
+      Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+      std::vector<MTexture> loadMaterialTextures(aiMaterial* mat,
+                                                 aiTextureType type,
+                                                 std::string typeName);
+    };
 
-  glm::vec3 m_RestT{0}, m_RestS{1};
-  glm::quat m_RestR{1, 0, 0, 0};
-  void SetRest(const glm::mat4 &m) {
-    glm::vec3 skew;
-    glm::vec4 persp;
-    glm::decompose(m, m_RestS, m_RestR, m_RestT, skew,
-                   persp); // gtx/matrix_decompose.hpp
-  }
+    struct KeyPosition
+    {
+      glm::vec3 position;
+      float timeStamp;
+    };
 
-public:
-  /*reads keyframes from aiNodeAnim*/
-  Bone(const std::string &name, int ID, const aiNodeAnim *channel);
+    struct KeyRotation
+    {
+      glm::quat orientation;
+      float timeStamp;
+    };
 
-  /*interpolates  b/w positions,rotations & scaling keys based on the curren
-  time of the animation and prepares the local transformation matrix by
-  combining all keys tranformations*/
-  void Update(float animationTime);
+    struct KeyScale
+    {
+      glm::vec3 scale;
+      float timeStamp;
+    };
 
-  glm::mat4 GetLocalTransform() { return m_LocalTransform; }
-  std::string GetBoneName() const { return m_Name; }
-  int GetBoneID() const { return m_ID; }
+    class Bone
+    {
+    private:
+      std::vector<KeyPosition> m_Positions;
+      std::vector<KeyRotation> m_Rotations;
+      std::vector<KeyScale> m_Scales;
+      int m_NumPositions;
+      int m_NumRotations;
+      int m_NumScalings;
 
-  /* Gets the current index on mKeyPositions to interpolate to based on
-  the current animation time*/
-  int GetPositionIndex(float animationTime);
+      glm::mat4 m_LocalTransform;
+      std::string m_Name;
+      int m_ID;
 
-  /* Gets the current index on mKeyRotations to interpolate to based on the
-  current animation time*/
-  int GetRotationIndex(float animationTime);
+      int m_LastPositionIndex = 0;
+      int m_LastRotationIndex = 0;
+      int m_LastScaleIndex = 0;
 
-  /* Gets the current index on mKeyScalings to interpolate to based on the
-  current animation time */
-  int GetScaleIndex(float animationTime);
+      glm::vec3 m_RestT{0}, m_RestS{1};
+      glm::quat m_RestR{1, 0, 0, 0};
 
-  /* Gets normalized value for Lerp & Slerp*/
-  float GetScaleFactor(float lastTimeStamp, float nextTimeStamp,
-                       float animationTime);
+      void SetRest(const glm::mat4& m)
+      {
+        glm::vec3 skew;
+        glm::vec4 persp;
+        glm::decompose(m, m_RestS, m_RestR, m_RestT, skew,
+                       persp); // gtx/matrix_decompose.hpp
+      }
 
-  /*figures out which position keys to interpolate b/w and performs the
-  interpolation and returns the translation matrix*/
-  glm::mat4 InterpolatePosition(float animationTime);
+    public:
+      /*reads keyframes from aiNodeAnim*/
+      Bone(const std::string& name, int ID, const aiNodeAnim* channel);
 
-  /*figures out which rotations keys to interpolate b/w and performs the
-  interpolation and returns the rotation matrix*/
-  glm::mat4 InterpolateRotation(float animationTime);
+      /*interpolates  b/w positions,rotations & scaling keys based on the curren
+      time of the animation and prepares the local transformation matrix by
+      combining all keys tranformations*/
+      void Update(float animationTime);
 
-  /*figures out which scaling keys to interpolate b/w and performs the
-  interpolation and returns the scale matrix*/
-  glm::mat4 InterpolateScaling(float animationTime);
-};
-struct AssimpNodeData {
-  glm::mat4 transformation{1.0f};
-  std::string name;
-  int childrenCount = 0;
-  std::vector<AssimpNodeData> children;
-  Bone *bone = nullptr;
-  int boneInfoId = -1;
-  glm::mat4 offsetMatrix{1.0f};
-};
+      glm::mat4 GetLocalTransform() { return m_LocalTransform; }
+      std::string GetBoneName() const { return m_Name; }
+      int GetBoneID() const { return m_ID; }
 
-struct SocketAttachment {
-  std::string targetNode;
-  std::string targetBone;
-  glm::vec3 offsetPosition = glm::vec3(0.0f);
-  glm::vec3 offsetRotation = glm::vec3(0.0f); // Euler in degrees
-  glm::vec3 offsetScale = glm::vec3(1.0f);
-  bool enabled = true;
-};
+      /* Gets the current index on mKeyPositions to interpolate to based on
+      the current animation time*/
+      int GetPositionIndex(float animationTime);
 
-inline void to_json(nlohmann::json &j, const SocketAttachment &s) {
-  j = nlohmann::json{
-      {"target_node", s.targetNode},
-      {"target_bone", s.targetBone},
-      {"position",
-       {s.offsetPosition.x, s.offsetPosition.y, s.offsetPosition.z}},
-      {"rotation",
-       {s.offsetRotation.x, s.offsetRotation.y, s.offsetRotation.z}},
-      {"scale", {s.offsetScale.x, s.offsetScale.y, s.offsetScale.z}},
-      {"enabled", s.enabled}};
-}
+      /* Gets the current index on mKeyRotations to interpolate to based on the
+      current animation time*/
+      int GetRotationIndex(float animationTime);
 
-inline void from_json(const nlohmann::json &j, SocketAttachment &s) {
-  if (j.contains("target_node"))
-    j.at("target_node").get_to(s.targetNode);
-  if (j.contains("target_bone"))
-    j.at("target_bone").get_to(s.targetBone);
-  if (j.contains("position") && j["position"].is_array() &&
-      j["position"].size() >= 3) {
-    s.offsetPosition =
-        glm::vec3(j["position"][0], j["position"][1], j["position"][2]);
-  }
-  if (j.contains("rotation") && j["rotation"].is_array() &&
-      j["rotation"].size() >= 3) {
-    s.offsetRotation =
-        glm::vec3(j["rotation"][0], j["rotation"][1], j["rotation"][2]);
-  }
-  if (j.contains("scale") && j["scale"].is_array() && j["scale"].size() >= 3) {
-    s.offsetScale = glm::vec3(j["scale"][0], j["scale"][1], j["scale"][2]);
-  }
-  if (j.contains("enabled"))
-    j.at("enabled").get_to(s.enabled);
-}
+      /* Gets the current index on mKeyScalings to interpolate to based on the
+      current animation time */
+      int GetScaleIndex(float animationTime);
 
-class Animation {
-public:
-  Animation() = default;
+      /* Gets normalized value for Lerp & Slerp*/
+      float GetScaleFactor(float lastTimeStamp, float nextTimeStamp,
+                           float animationTime);
 
-  Animation(const std::string &animationPath, std::shared_ptr<Model> model,
-            int animationIndex = 0);
+      /*figures out which position keys to interpolate b/w and performs the
+      interpolation and returns the translation matrix*/
+      glm::mat4 InterpolatePosition(float animationTime);
 
-  ~Animation() {}
+      /*figures out which rotations keys to interpolate b/w and performs the
+      interpolation and returns the rotation matrix*/
+      glm::mat4 InterpolateRotation(float animationTime);
 
-  Bone *FindBone(const std::string &name);
-  inline const std::string &GetName() const { return m_Name; }
-  inline float GetTicksPerSecond() const { return m_TicksPerSecond; }
+      /*figures out which scaling keys to interpolate b/w and performs the
+      interpolation and returns the scale matrix*/
+      glm::mat4 InterpolateScaling(float animationTime);
+    };
 
-  inline float GetDuration() const { return m_Duration; }
+    struct AssimpNodeData
+    {
+      glm::mat4 transformation{1.0f};
+      std::string name;
+      int childrenCount = 0;
+      std::vector<AssimpNodeData> children;
+      Bone* bone = nullptr;
+      int boneInfoId = -1;
+      glm::mat4 offsetMatrix{1.0f};
+    };
 
-  inline const AssimpNodeData &GetRootNode() { return m_RootNode; }
+    struct SocketAttachment
+    {
+      std::string targetNode;
+      std::string targetBone;
+      glm::vec3 offsetPosition = glm::vec3(0.0f);
+      glm::vec3 offsetRotation = glm::vec3(0.0f); // Euler in degrees
+      glm::vec3 offsetScale = glm::vec3(1.0f);
+      bool enabled = true;
+    };
 
-  inline const std::map<std::string, BoneInfo> &GetBoneIDMap() {
-    return m_BoneInfoMap;
-  }
-  inline const std::vector<glm::mat4> &GetDefaultBoneMatrices() const {
-    return m_DefaultBoneMatrices;
-  }
+    inline void to_json(nlohmann::json& j, const SocketAttachment& s)
+    {
+      j = nlohmann::json{
+        {"target_node", s.targetNode},
+        {"target_bone", s.targetBone},
+        {
+          "position",
+          {s.offsetPosition.x, s.offsetPosition.y, s.offsetPosition.z}
+        },
+        {
+          "rotation",
+          {s.offsetRotation.x, s.offsetRotation.y, s.offsetRotation.z}
+        },
+        {"scale", {s.offsetScale.x, s.offsetScale.y, s.offsetScale.z}},
+        {"enabled", s.enabled}
+      };
+    }
 
-  void SetSockets(const std::vector<SocketAttachment> &sockets);
-  const std::vector<SocketAttachment> &GetSockets() const { return m_Sockets; }
-  void RecalculateRestPose();
-  const AssimpNodeData *FindNode(const std::string &name) const;
-  std::vector<std::string> GetNodeNames() const;
+    inline void from_json(const nlohmann::json& j, SocketAttachment& s)
+    {
+      if (j.contains("target_node"))
+        j.at("target_node").get_to(s.targetNode);
+      if (j.contains("target_bone"))
+        j.at("target_bone").get_to(s.targetBone);
+      if (j.contains("position") && j["position"].is_array() &&
+        j["position"].size() >= 3)
+      {
+        s.offsetPosition =
+          glm::vec3(j["position"][0], j["position"][1], j["position"][2]);
+      }
+      if (j.contains("rotation") && j["rotation"].is_array() &&
+        j["rotation"].size() >= 3)
+      {
+        s.offsetRotation =
+          glm::vec3(j["rotation"][0], j["rotation"][1], j["rotation"][2]);
+      }
+      if (j.contains("scale") && j["scale"].is_array() && j["scale"].size() >= 3)
+      {
+        s.offsetScale = glm::vec3(j["scale"][0], j["scale"][1], j["scale"][2]);
+      }
+      if (j.contains("enabled"))
+        j.at("enabled").get_to(s.enabled);
+    }
 
-  void CalculateRestPose(const AssimpNodeData *node,
-                         const glm::mat4 &parentTransform,
-                         std::vector<glm::mat4> &outMatrices) const;
+    class Animation
+    {
+    public:
+      Animation() = default;
 
-private:
-  void CalculateRestPoseInternal(
-      const AssimpNodeData *node, const glm::mat4 &parentTransform,
-      std::vector<glm::mat4> &outMatrices,
-      std::unordered_map<std::string, glm::mat4> &globalTransforms,
-      const std::unordered_map<std::string, const SocketAttachment *>
-          &activeSockets) const;
-  void CalculateSocketSubtreeRestPose(
-      const AssimpNodeData *node, const glm::mat4 &parentTransform,
-      std::vector<glm::mat4> &outMatrices,
-      std::unordered_map<std::string, glm::mat4> &globalTransforms,
-      bool isSocketRoot) const;
+      Animation(const std::string& animationPath, std::shared_ptr<Model> model,
+                int animationIndex = 0);
 
-  void ReadMissingBones(const aiAnimation *animation, Model &model);
+      ~Animation()
+      {
+      }
 
-  void ReadHeirarchyData(AssimpNodeData &dest, const aiNode *src);
-  void SetupNodeHierarchy(AssimpNodeData &node);
-  std::string m_Name;
-  float m_Duration = 0;
-  float m_TicksPerSecond = 25.0f;
-  std::vector<Bone> m_Bones;
-  AssimpNodeData m_RootNode;
-  std::map<std::string, BoneInfo> m_BoneInfoMap;
-  std::vector<glm::mat4> m_DefaultBoneMatrices;
-  std::vector<SocketAttachment> m_Sockets;
-};
+      Bone* FindBone(const std::string& name);
+      inline const std::string& GetName() const { return m_Name; }
+      inline float GetTicksPerSecond() const { return m_TicksPerSecond; }
 
-class Animator {
-public:
-  Animator(std::shared_ptr<Animation> currentAnimation);
+      inline float GetDuration() const { return m_Duration; }
 
-  void UpdateAnimation(float dt);
+      inline const AssimpNodeData& GetRootNode() { return m_RootNode; }
 
-  void PlayAnimation(std::shared_ptr<Animation> pAnimation);
+      inline const std::map<std::string, BoneInfo>& GetBoneIDMap()
+      {
+        return m_BoneInfoMap;
+      }
 
-  void CalculateBoneTransform(const AssimpNodeData *node,
-                              const glm::mat4 &parentTransform);
+      inline const std::vector<glm::mat4>& GetDefaultBoneMatrices() const
+      {
+        return m_DefaultBoneMatrices;
+      }
 
-  const std::vector<glm::mat4> &GetFinalBoneMatrices() const {
-    return m_FinalBoneMatrices;
-  }
+      void SetSockets(const std::vector<SocketAttachment>& sockets);
+      const std::vector<SocketAttachment>& GetSockets() const { return m_Sockets; }
+      void RecalculateRestPose();
+      const AssimpNodeData* FindNode(const std::string& name) const;
+      std::vector<std::string> GetNodeNames() const;
 
-  void SetSockets(const std::vector<SocketAttachment> &sockets);
-  const std::vector<SocketAttachment> &GetSockets() const { return m_Sockets; }
-  glm::mat4 GetBoneGlobalTransform(const std::string &boneName) const;
-  const std::unordered_map<std::string, glm::mat4> &
-  GetGlobalNodeTransforms() const {
-    return m_GlobalNodeTransforms;
-  }
+      void CalculateRestPose(const AssimpNodeData* node,
+                             const glm::mat4& parentTransform,
+                             std::vector<glm::mat4>& outMatrices) const;
 
-private:
-  void CalculateBoneTransformInternal(
-      const AssimpNodeData *node, const glm::mat4 &parentTransform,
-      const std::unordered_map<std::string, const SocketAttachment *>
-          &activeSockets);
-  void CalculateSocketSubtree(const AssimpNodeData *node,
-                              const glm::mat4 &parentTransform,
-                              bool isSocketRoot);
+    private:
+      void CalculateRestPoseInternal(
+        const AssimpNodeData* node, const glm::mat4& parentTransform,
+        std::vector<glm::mat4>& outMatrices,
+        std::unordered_map<std::string, glm::mat4>& globalTransforms,
+        const std::unordered_map<std::string, const SocketAttachment*>
+        & activeSockets) const;
+      void CalculateSocketSubtreeRestPose(
+        const AssimpNodeData* node, const glm::mat4& parentTransform,
+        std::vector<glm::mat4>& outMatrices,
+        std::unordered_map<std::string, glm::mat4>& globalTransforms,
+        bool isSocketRoot) const;
 
-  std::vector<glm::mat4> m_FinalBoneMatrices;
-  std::shared_ptr<Animation> m_CurrentAnimation;
-  float m_CurrentTime;
-  float m_DeltaTime;
-  std::vector<SocketAttachment> m_Sockets;
-  std::unordered_map<std::string, glm::mat4> m_GlobalNodeTransforms;
-};
-} // namespace Graphics
+      void ReadMissingBones(const aiAnimation* animation, Model& model);
+
+      void ReadHeirarchyData(AssimpNodeData& dest, const aiNode* src);
+      void SetupNodeHierarchy(AssimpNodeData& node);
+      std::string m_Name;
+      float m_Duration = 0;
+      float m_TicksPerSecond = 25.0f;
+      std::vector<Bone> m_Bones;
+      AssimpNodeData m_RootNode;
+      std::map<std::string, BoneInfo> m_BoneInfoMap;
+      std::vector<glm::mat4> m_DefaultBoneMatrices;
+      std::vector<SocketAttachment> m_Sockets;
+    };
+
+    enum AnimType
+    {
+      LOOP,
+      ONETIME
+    };
+
+    class Animator
+    {
+    public:
+      Animator(std::shared_ptr<Animation> currentAnimation);
+
+      void UpdateAnimation(float dt);
+
+      void PlayAnimation(std::shared_ptr<Animation> pAnimation);
+
+      void CalculateBoneTransform(const AssimpNodeData* node,
+                                  const glm::mat4& parentTransform);
+
+      const std::vector<glm::mat4>& GetFinalBoneMatrices() const
+      {
+        return m_FinalBoneMatrices;
+      }
+
+      void SetSockets(const std::vector<SocketAttachment>& sockets);
+      const std::vector<SocketAttachment>& GetSockets() const { return m_Sockets; }
+      glm::mat4 GetBoneGlobalTransform(const std::string& boneName) const;
+
+      const std::unordered_map<std::string, glm::mat4>&
+      GetGlobalNodeTransforms() const
+      {
+        return m_GlobalNodeTransforms;
+      }
+
+      void SetOnInterrupt(std::function<void()> func) { onInterrupt = func; }
+      void SetOnFinish(std::function<void()> func) { onFinish = func; }
+
+      void Reset()
+      {
+        hasFinished = false;
+        m_CurrentTime = 0;
+      }
+
+      void SetAnimationType(AnimType t) { animType = t; }
+      AnimType GetAnimationType() const { return animType; }
+      bool HasFinished() const { return hasFinished; }
+      bool HasOnInterrupt() const { return onInterrupt ? true : false; }
+      bool HasOnFinish() const { return onFinish ? true : false; }
+
+    private:
+      void CalculateBoneTransformInternal(
+        const AssimpNodeData* node, const glm::mat4& parentTransform,
+        const std::unordered_map<std::string, const SocketAttachment*>
+        & activeSockets);
+      void CalculateSocketSubtree(const AssimpNodeData* node,
+                                  const glm::mat4& parentTransform,
+                                  bool isSocketRoot);
+
+      std::vector<glm::mat4> m_FinalBoneMatrices;
+      std::shared_ptr<Animation> m_CurrentAnimation;
+      float m_CurrentTime;
+      float m_DeltaTime;
+      std::vector<SocketAttachment> m_Sockets;
+      std::unordered_map<std::string, glm::mat4> m_GlobalNodeTransforms;
+
+      std::function<void()> onInterrupt;
+      std::function<void()> onFinish;
+      bool hasFinished = false;
+      AnimType animType;
+    };
+  } // namespace Graphics
 } // namespace Engine

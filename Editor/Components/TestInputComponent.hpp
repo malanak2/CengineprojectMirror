@@ -4,7 +4,7 @@
 #include "Interfaces/IComponent.hpp"
 #include "Interfaces/IIdentifiable.hpp"
 namespace Editor {
-class [[=Engine::Attr::Script{}]] TestInputComponent : public Engine::IComponent {
+class [[=Engine::Attr::Script{.intendedNoRenderers = true}]] TestInputComponent : public Engine::IComponent {
   REGISTER_CLASS(TestInputComponent);
 
 public:

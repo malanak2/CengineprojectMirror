@@ -29,7 +29,7 @@ protected:
   void draw() override {
     ZoneScoped;
     auto sceneObject = sceneWindow->sceneObject;
-    ImGui::Begin("Object inspetor");
+    ImGui::Begin(GetName().c_str());
     if (sceneObject == nullptr) {
       ImGui::Text("Please select an object");
       ImGui::End();

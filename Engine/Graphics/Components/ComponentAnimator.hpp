@@ -43,6 +43,11 @@ public:
   [[=Attr::Serialize{}]]std::string current_animation = "";
   
   
+  void SetOnInterrupt(std::function<void()> func) {animator->SetOnInterrupt(func);}
+  void SetOnFinish(std::function<void()> func) {animator->SetOnFinish(func);}
+  
+  void SetAnimationType(AnimType t) {animator->SetAnimationType(t);}
+  
   static std::map<std::string, ComponentAnimator> cache;
 private:
   std::shared_ptr<Animator> animator = std::make_shared<Animator>(nullptr);
