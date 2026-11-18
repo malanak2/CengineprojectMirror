@@ -13,9 +13,9 @@
 #include <implot.h>
 #include <memory>
 #include <tracy/Tracy.hpp>
-
+#ifdef DEBUG
 #include "ImGui/WindowReflectionOverview.hpp"
-
+#endif
 namespace Editor {
 namespace ImGuiR {
 class ImGuiRegistrar {
@@ -35,8 +35,9 @@ public:
     a->isOpen = false;
     windows.insert(windows.end(), std::make_shared<WindowPhysicsSystemDebug>());
     windows.insert(windows.end(), std::make_shared<WindowGraphicsDebug>());
-    windows.insert(windows.end(), std::make_shared<WindowReflectionDebug>(
-    std::static_pointer_cast<WindowScene>(windows[0])));
+    windows.insert(windows.end(),
+                   std::make_shared<WindowReflectionDebug>(
+                       std::static_pointer_cast<WindowScene>(windows[0])));
     wtgles = std::make_shared<WindowToggles>();
     wtgles->windows = &windows;
     Engine::Graphics::Main::instance->init->insert(
@@ -49,7 +50,7 @@ public:
           (void)io;
           io.ConfigFlags |=
               ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-          
+
           io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
           ImGui::StyleColorsDark();
@@ -89,7 +90,7 @@ public:
             ImGuiTestEngine_ShowTestEngineWindows(Testing::engine, &open);
 #endif
           }
-          
+
 #ifdef DEBUG
           ImGuiTestEngine_PreSwap(Testing::engine);
 #endif
@@ -105,7 +106,7 @@ public:
           if (Config::inst->graphics->enableAntiAliasing) {
             glEnable(GL_MULTISAMPLE);
           }
-          
+
 #ifdef DEBUG
           ImGuiTestEngine_PostSwap(Testing::engine);
 #endif
