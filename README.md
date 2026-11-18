@@ -13,13 +13,14 @@
 * [stb_image](https://github.com/nothings/stb)
   * Put into Engine/Util/External/stb/stb_image.h
 * [JSON](https://github.com/nlohmann/json)
-* [Dear ImGui](https://github.com/ocornut/imgui)
-* [ImPlot](https://github.com/epezent/implot)
 * [spdlog](https://github.com/gabime/spdlog)
 * [ImGui Test Engine](https://github.com/ocornut/imgui_test_engine)
   * Clone into Editor/External
+  * Only required for DEBUG
 #### Automatically installed
-* [Tracy](https://github.com/wolfpld/tracy)[Engine](Engine)
+* [Tracy](https://github.com/wolfpld/tracy)
+* [Dear ImGui](https://github.com/ocornut/imgui)
+* [ImPlot](https://github.com/epezent/implot)
 
 ### Building
 ---
