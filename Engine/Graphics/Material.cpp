@@ -130,6 +130,13 @@ std::string UniformSignature(const ComponentRenderable &r) {
 void Material::RenderObjects() {
   ZoneScopedN("Material::RenderObjects");
   TracyGpuZone("Material::RenderObjects");
+  if (auto n = std::erase_if(renderableObjects, [](const auto &r) {
+      return !r || r->object.expired();
+    })) {
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
+                       "Material {}: pruned {} orphaned renderable(s), something skipped OnDisable",
+                       path, n);
+    }
   if (renderableObjects.size() == 0) {
     return;
   }

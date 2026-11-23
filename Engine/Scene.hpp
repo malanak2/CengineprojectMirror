@@ -137,6 +137,7 @@ public:
   //!
   
   bool isEnabled = true;
+  
 };
    //!
    //! @brief One object's changes relative to the prefab file
@@ -254,5 +255,8 @@ private:
   JsonFileBase FileToJson();
   JsonFileBase ReferenceToJson();
   json rawReference;
+  
+  std::string fileName;
+  void ResolveName(const std::string &instanceName = {});
 };
 } // namespace Engine

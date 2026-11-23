@@ -26,7 +26,9 @@ protected:
                             m.second->renderableObjects.size())
                     .c_str())) {
           for (const auto &o : m.second->renderableObjects) {
-            ImGui::Text("%s", o->object.lock()->sceneobject.lock()->_name.c_str());
+            auto obj = o ? o->object.lock() : nullptr;
+            auto so = obj ? obj->sceneobject.lock() : nullptr;
+            ImGui::TextUnformatted(so ? so->_name.c_str() : "<orphaned>");
           }
         }
       }

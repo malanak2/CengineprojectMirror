@@ -60,6 +60,9 @@ private:
   void FromData(std::string model_path, std::string material_path,
                 std::map<std::string, std::shared_ptr<IUniform>> uniforms,
                 std::vector<std::string> disabled_meshes = {});
+  void RegisterWithMaterial();
+  void UnregisterFromMaterial();
+  std::weak_ptr<Material> registeredMaterial;
 };
 } // namespace Graphics
 } // namespace Engine

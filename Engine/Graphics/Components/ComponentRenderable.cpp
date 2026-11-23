@@ -25,6 +25,8 @@ void ComponentRenderable::FromData(
     std::map<std::string, std::shared_ptr<IUniform>> uniforms,
     std::vector<std::string> disabled_meshes) {
   ZoneScoped;
+  const bool wasRegistered = !registeredMaterial.expired();
+  UnregisterFromMaterial();
   _model_path = model_path;
   _model_path.reserve(100);
   model = Model::Create(model_path);
@@ -73,6 +75,8 @@ void ComponentRenderable::FromData(
     }
   }
   this->_uniforms = uniforms;
+  if (wasRegistered)
+    RegisterWithMaterial();
 }
 
 std::vector<bool> ComponentRenderable::GetEnabledMeshes() const {
@@ -127,25 +131,26 @@ json ComponentRenderable::ToJson() {
   jb.data = j;
   return jb;
 }
-void Engine::Graphics::ComponentRenderable::OnEnable() {
-  if (!material)
+void ComponentRenderable::RegisterWithMaterial() {
+  if (!material || !material->usable)
+    return;
+  if (!registeredMaterial.expired())
     return;
   material->renderableObjects.push_back(shared_from_this());
+  registeredMaterial = material;
 }
 
-void Engine::Graphics::ComponentRenderable::OnDisable() {
-  if (!material)
+void ComponentRenderable::UnregisterFromMaterial() {
+  auto m = registeredMaterial.lock();
+  registeredMaterial.reset();
+  if (!m)
     return;
-  auto pos = std::ranges::find(material->renderableObjects, shared_from_this());
-  if (pos == material->renderableObjects.end())
-  {
-    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Tried to erase the {} object from a material, but it is not there.", object.lock()->sceneobject.lock()->_name);
-    
-    TracyLogString(tracy::MessageSeverity::Trace, 0xFF, 32, "Component Renderable");
-    return;
-  }
-  material->renderableObjects.erase(pos);
+  std::erase_if(m->renderableObjects,
+                [this](const auto &r) { return r.get() == this; });
 }
+
+void ComponentRenderable::OnEnable() { RegisterWithMaterial(); }
+void ComponentRenderable::OnDisable() { UnregisterFromMaterial(); }
 
 std::shared_ptr<ComponentRenderable>
 ComponentRenderable::Create(json &js, std::shared_ptr<Object> object) {

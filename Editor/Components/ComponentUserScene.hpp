@@ -1,6 +1,8 @@
 #pragma once
+#include "Engine.hpp"
 #include "Scene.hpp"
 #include "ScriptSystem.hpp"
+#include "Physics/PhysicsSystem.hpp"
 
 namespace Editor
 {
@@ -10,16 +12,11 @@ namespace Editor
   public:
     void EarlySetup() override
     {
+      Engine::Engine::isSimulationEnabled = false;
       Load();
-      if (isLoaded)
-        sceneHolder->EarlySetup();
     }
     void Setup() override
     {
-      
-      if (isLoaded) {
-        sceneHolder->Setup();
-      }
     }
 
     void OnEnable() override
@@ -32,12 +29,6 @@ namespace Editor
 
     void Update() override
     {
-      // TODO: Figure out a better way to do this
-      if (!hasDisabled)
-      {
-        hasDisabled = true;
-        sceneHolder->SetIsEnabled(false);
-      }
       if (isLoaded && isPlaying && !isPaused)
       {
         for (const auto& var : scenePlayHolder->Children) var->Update();
@@ -51,6 +42,11 @@ namespace Editor
         SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Tried to play when already in play mode");
         return;
       }
+      if (!isLoaded)
+      {
+        SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Cannot play when not loaded");
+        return;
+      }
       auto js = sceneHolder->ToJson();
       Engine::CameraList cams;
       scenePlayHolder = std::static_pointer_cast<Engine::Scene>(Engine::Scene::CreateFromJson(js, object.lock()->sceneobject.lock()->GetRootScene(),  object.lock()->sceneobject.lock(), cams));
@@ -58,21 +54,28 @@ namespace Editor
       scenePlayHolder->saveable = false;
       // We manage this from here, so it would kinda be not great if the engine did its thing
       scenePlayHolder->isEnabled = false;
+      scenePlayHolder->_name = "User scene play mode holder";
+      sceneHolder->OnDisable();
       scenePlayHolder->EarlySetup();
       scenePlayHolder->Setup();
       scenePlayHolder->OnEnable();
       isPlaying = true;
       isPaused = false;
+      Engine::Engine::isSimulationEnabled = true;
     }
 
     [[=Engine::Attr::Editor{}]] void Pause()
     {
       isPaused = true;
+      
+      Engine::Engine::isSimulationEnabled = false;
     }
 
     [[=Engine::Attr::Editor{}]] void Unpause()
     {
       isPaused = false;
+      
+      Engine::Engine::isSimulationEnabled = true;
     }
 
     [[=Engine::Attr::Editor{}]] void Stop()
@@ -83,7 +86,10 @@ namespace Editor
         return;
       }
       object.lock()->scene.lock()->RemoveObjectCascade(scenePlayHolder);
+      
       scenePlayHolder = nullptr;
+      Engine::Engine::isSimulationEnabled = false;     
+      sceneHolder->OnEnable();
       isPlaying = false;
     }
 
@@ -110,6 +116,8 @@ namespace Editor
       ptrpath = &sceneHolder->path;
       // We will manage the object here - no checking if it is enabled needed;
       sceneHolder->saveable = false;
+      sceneHolder->_name = "User scene holder";
+      sceneHolder->isEnabled = false;
       isLoaded = true;
     }
 
@@ -136,6 +144,8 @@ namespace Editor
       });
     
       sceneHolder->Children.clear();
+      root->RemoveObjectCascade(sceneHolder);
+      sceneHolder = nullptr;
       ptrpath = nullptr;
       isLoaded = false;
     }

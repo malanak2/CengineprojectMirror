@@ -329,7 +329,8 @@ namespace Engine
     auto s = Create();
     s->path = std::move(path);
     try {
-    auto cams = s->LoadFromFile();
+      auto cams = s->LoadFromFile();
+      s->ResolveName();
       s->FinalizeCameras(cams);
       return s;
     } catch (std::exception &e)
@@ -380,6 +381,7 @@ namespace Engine
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to parse json scene at {} ({})", path, e.what());
       throw std::logic_error("Failed to parse json scene at " + path + " " + e.what());
     }
+    fileName.clear();
     auto self = SelfScene();
     CameraList cams;
     try
@@ -398,6 +400,7 @@ namespace Engine
         if (base.object_type != ObjectType::Scene)
           throw std::logic_error("File is not a scene");
         SceneJson sj = base.data;
+        fileName = sj.name;
         this->default_camera = sj.default_camera;
         if (sj.data.object_type == ObjectType::Object)
         {
@@ -417,13 +420,12 @@ namespace Engine
       instance->UpdateWorldTransform();
     return cams;
   }
-
-  // Nested scene (a child entry with "scene_path")
   CameraList Scene::FromJson(const JsonFileBase& jsbase, const std::shared_ptr<Scene>&,
                              const std::shared_ptr<SceneObject>& parent)
   {
     CameraList cams;
     this->Parent = parent;
+    std::string instanceName;
     try
     {
       if (jsbase.object_type != ObjectType::Object)
@@ -431,27 +433,24 @@ namespace Engine
       rawReference = json(jsbase);
       SceneRefJson ref = jsbase.data;
       this->path = ref.scene_path;
-      this->_name = ref.name;
+      instanceName = ref.name;
       if (WouldCycle())
         throw std::logic_error("Scene " + path + " contains itself (or is nested too deeply)");
       cams = LoadFromFile();
       ApplyRootOverrides(json(ref.data));
+      ResolveName(instanceName);
     }
     catch (const std::exception& e)
     {
-      if (e.what() != "")
+      if (e.what()[0] != '\0')
         SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to load nested scene {}: ({}). Keeping a placeholder.", path,
                             e.what());
       loadFailed = true;
       Children.clear();
       cams.clear();
-      if (!path.empty())
-      {
-        _name = std::filesystem::path(path).stem().string();
-      } else
-      {
+      ResolveName(instanceName);
+      if (path.empty() && instanceName.empty())
         _name = "Empty path";
-      }
     }
     return cams;
   }
@@ -539,6 +538,8 @@ namespace Engine
       c->SetOwner(self);
     }
     default_camera = fresh->default_camera;
+    fileName = fresh->fileName;
+    ResolveName(IsRootScene() ? std::string{} : _name);
     loadFailed = false;
     if (!placement.is_null())
       ApplyRootOverrides(placement);
@@ -616,6 +617,8 @@ namespace Engine
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to nest scene {}: ({})", scenePath, e.what());
       return nullptr;
     }
+    
+    s->ResolveName();
     parentSo->Children.push_back(s);
     if (s->instance)
       s->instance->UpdateWorldTransform();
@@ -692,6 +695,7 @@ namespace Engine
       if (!child->saveable) continue;
       sj.children.push_back(child->ToJson());
     }
+    sj.name = IsRootScene() ? _name : fileName;
     sj.default_camera = default_camera;
     JsonFileBase out;
     out.object_type = ObjectType::Scene;
@@ -705,6 +709,7 @@ namespace Engine
       return rawReference.get<JsonFileBase>();
     SceneRefJson ref;
     ref.scene_path = path;
+    ref.name = _name;
     JsonFileBase ob = instance->ToJson().get<JsonFileBase>();
     ObjectJson oj = ob.data.get<ObjectJson>();
     oj.components.clear();
@@ -1009,8 +1014,7 @@ namespace Engine
     if (!so || so.get() == this) return;
     auto parent = so->Parent.lock();
     if (!parent) return;
-    if (so->isEnabled)
-      so->OnDisable();
+    so->OnDisable();
     so->End();
     so->LateEnd();
     std::erase(parent->Children, so);
@@ -1031,5 +1035,15 @@ namespace Engine
         return root->FindObject(name);
     }
     return nullptr;
+  }
+  
+  void Scene::ResolveName(const std::string& instanceName)
+  {
+    if (!instanceName.empty())
+      _name = instanceName;
+    else if (!path.empty())
+      _name = std::filesystem::path(path).stem().string();
+    else
+      _name = "New Scene";
   }
 } // namespace Engine
