@@ -19,6 +19,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)
 set(DEBUG true)
+set(UNIT_TESTING false)
 set(EDITOR true)
 set(PROFILE true)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -26,6 +27,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (DEBUG)
   add_compile_definitions(DEBUG=1)
+endif ()
+if (UNIT_TESTING)
+  add_compile_definitions(UNIT_TESTING=1)
 endif ()
 if (EDITOR)
   add_compile_definitions(EDITOR=1)
@@ -173,6 +177,8 @@ add_executable(cengineeditor
         ${IMGUI_TE_SOURCES}
         Editor/Testing/TestingComponent.cpp
         Editor/Testing/TestingComponent.hpp
+        Editor/Components/ComponentUserScene.hpp
+        Editor/Components/ComponentUserScene.cpp
 )
 
 if (DEBUG)

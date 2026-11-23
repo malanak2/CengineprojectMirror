@@ -123,6 +123,7 @@ protected:
         title += Engine::Main::ScriptSystem::instance->GetScript(comp->GetName())->name;
         if (ImGui::CollapsingHeader(title.c_str())) {
           ImGuiR::ImGuiComponentRenderer::instance->Render(comp);
+          ImGui::Separator();
           if (ImGui::Button(
                   ("Remove##" + (std::string)comp->GetName().data()).c_str())) {
             todel = comp->GetName().data();

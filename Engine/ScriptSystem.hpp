@@ -294,7 +294,9 @@ namespace Engine
       template <std::meta::info Scope = ^^::>
       void create_global_registry()
       {
+        scan_scope<Engine>();
         scan_scope<Scope>();
+        
       }
 
       static constexpr auto access_ctx = std::meta::access_context::unchecked();

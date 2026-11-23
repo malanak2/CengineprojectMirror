@@ -36,8 +36,8 @@ int main() {
   ZoneScopedNS("main", 64);
   {
     ZoneScopedN("Create script registry")
-    Engine::Main::ScriptSystem::instance->create_global_registry<^^::>();
-    ReflectionRegistrar::Get().RegisterReflectedScope<^^::>();
+    Engine::Main::ScriptSystem::instance->create_global_registry<^^Editor>();
+    ReflectionRegistrar::Get().RegisterReflectedScope<^^Editor>();
   }
   /// Inject functions
   {

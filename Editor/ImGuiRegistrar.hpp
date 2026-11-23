@@ -35,9 +35,11 @@ public:
     a->isOpen = false;
     windows.insert(windows.end(), std::make_shared<WindowPhysicsSystemDebug>());
     windows.insert(windows.end(), std::make_shared<WindowGraphicsDebug>());
+#ifdef DEBUG
     windows.insert(windows.end(),
                    std::make_shared<WindowReflectionDebug>(
                        std::static_pointer_cast<WindowScene>(windows[0])));
+#endif
     wtgles = std::make_shared<WindowToggles>();
     wtgles->windows = &windows;
     Engine::Graphics::Main::instance->init->insert(
@@ -85,13 +87,13 @@ public:
               w->Draw();
             }
             wtgles->Draw();
-#ifdef DEBUG
+#ifdef UNIT_TESTING
             static bool open = true;
             ImGuiTestEngine_ShowTestEngineWindows(Testing::engine, &open);
 #endif
           }
 
-#ifdef DEBUG
+#ifdef UNIT_TESTING
           ImGuiTestEngine_PreSwap(Testing::engine);
 #endif
         });
@@ -107,19 +109,24 @@ public:
             glEnable(GL_MULTISAMPLE);
           }
 
-#ifdef DEBUG
+#ifdef UNIT_TESTING
           ImGuiTestEngine_PostSwap(Testing::engine);
 #endif
         });
 
     Engine::Graphics::Main::instance->terminate->insert(
         Engine::Graphics::Main::instance->terminate->end(), []() {
+#ifdef UNIT_TESTING
           ImGuiTestEngine_Stop(Testing::engine);
+#endif
           ImGui_ImplOpenGL3_Shutdown();
           ImGui_ImplGlfw_Shutdown();
           ImPlot::DestroyContext();
           ImGui::DestroyContext();
+          
+#ifdef UNIT_TESTING
           ImGuiTestEngine_DestroyContext(Testing::engine);
+#endif
         });
     Engine::InputSystem::onCallback.insert(
         Engine::InputSystem::onCallback.end(),

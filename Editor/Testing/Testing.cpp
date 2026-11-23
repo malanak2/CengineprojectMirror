@@ -3,15 +3,16 @@
 #include "Engine.hpp"
 #include "TestingComponent.hpp"
 
-#ifdef DEBUG
+#ifdef UNIT_TESTING
 #include "External/imgui_test_engine/imgui_test_engine/imgui_te_engine.h"
 #include "External/imgui_test_engine/imgui_test_engine/imgui_te_utils.h"
 #endif
 #include "Util/LoggerUtil.hpp"
-
+#ifdef UNIT_TESTING
 ImGuiTestEngine *Editor::Testing::engine = nullptr;
+#endif
 void Editor::Testing::Setup() {
-#ifdef DEBUG
+#ifdef UNIT_TESTING
   ZoneScoped;
   SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Setting up testing...");
   engine = ImGuiTestEngine_CreateContext();
@@ -93,7 +94,7 @@ void Editor::Testing::Setup() {
 }
 
 void Editor::Testing::Shutdown() {
-#ifdef DEBUG
+#ifdef UNIT_TESTING
   ImGuiTestEngine_Stop(engine);
 
   // We shutdown the Dear ImGui context _before_ the test engine context, so

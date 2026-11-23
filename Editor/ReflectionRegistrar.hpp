@@ -1,7 +1,11 @@
 #pragma once
 #include <imgui.h>
 #include <meta>
-
+#ifdef WIN32
+#include "Generated/AllComponents.hpp"
+#else
+#include "Debug/Generated/AllComponents.hpp"
+#endif
 #include "ScriptSystem.hpp"
 
 class ReflectionRegistrar
@@ -102,6 +106,20 @@ class ReflectionRegistrar
       if (opts.readOnly) ImGui::EndDisabled();
       ImGui::PopID();
     }
+    template for (constexpr auto fn : std::define_static_array(GetMethods<T>()))
+    {
+      constexpr FieldOpts opts = OptsOf(fn);
+      const char* label = &opts.display_name.buf[0];
+
+      ImGui::PushID(label);
+      if (opts.readOnly) ImGui::BeginDisabled();
+      if (ImGui::Button(label))
+      {
+        (self->[:fn:])();
+      }
+      if (opts.readOnly) ImGui::EndDisabled();
+      ImGui::PopID();
+    }
   }
 
 public:
@@ -182,6 +200,25 @@ public:
     }
     meta.push_back(std::move(cm));
   }
+  template <class T>
+static consteval auto GetMethods()
+  {
+    constexpr auto ctx = std::meta::access_context::unchecked();
+    std::vector<std::meta::info> result;
+
+    for (auto m : std::meta::members_of(^^T, ctx))
+    {
+      if (std::meta::is_function(m) &&
+          !std::meta::is_static_member(m) &&
+          !std::meta::is_special_member_function(m) &&
+          std::meta::parameters_of(m).empty())
+      {
+        if (HasAnno(m, ^^Engine::Attr::Editor))
+        result.push_back(m);
+      }
+    }
+    return result;
+  }
 
   static void Init();
   void Register(std::string_view type,
@@ -202,6 +239,11 @@ public:
   template <std::meta::info Scope>
   void RegisterReflectedScope()
   {
+    scan_scope<Engine>();
+    scan_scope<Scope>();
+  } 
+  template <std::meta::info Scope>
+  void scan_scope() {
     constexpr auto ctx = std::meta::access_context::unchecked();
     template for (constexpr auto member :
       std::define_static_array(std::meta::members_of(Scope, ctx)))
