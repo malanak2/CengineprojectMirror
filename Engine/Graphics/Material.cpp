@@ -143,7 +143,7 @@ void Material::RenderObjects() {
                      : nullptr;
     if (scene && scene->camera) {
       if (auto obj = scene->FindObject("fakecam")) {
-        if (auto c = obj->GetComponent<CameraComponent>()) {
+        if (auto c = obj->instance->GetComponent<CameraComponent>()) {
           useFrustum = true;
           frustum = c->GetFrustum();
         }

@@ -26,11 +26,10 @@ struct ObjectJson {
   std::vector<float> rotation;
   std::vector<float> scale;
   std::vector<ComponentJson> components;
-  std::string name;
   bool inherit_parent_rotation = false;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-    ObjectJson, position, rotation, scale, components, name,
+    ObjectJson, position, rotation, scale, components,
     inherit_parent_rotation)
 //!
 //! @brief Scene object. Basic building block
@@ -91,7 +90,6 @@ public:
 
   Object();
   Object(const std::shared_ptr<Scene> &scene);
-  std::string _name;
   //!
   //! @brief Calls EarlySetup on components
   //!
@@ -143,7 +141,7 @@ public:
                                                       std::string path);
   std::weak_ptr<Scene> scene;
   std::weak_ptr<SceneObject> sceneobject;
-  void fromParams(std::string name,
+  void fromParams(
                   const std::vector<std::shared_ptr<IComponent>> &comps = {},
                   std::vector<float> position = {0, 0, 0},
                   std::vector<float> rotation = {1, 0, 0, 0},

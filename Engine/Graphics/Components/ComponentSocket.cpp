@@ -14,9 +14,10 @@ void Engine::Graphics::ComponentSocket::Update() {
   if (!sc)
     return;
 
-  auto targetObj = sc->FindObject(target_object);
-  if (!targetObj)
+  auto targetSObj = sc->FindObject(target_object);
+  if (!targetSObj)
     return;
+  auto targetObj = targetSObj->instance;
 
   auto animator = targetObj->GetComponent<ComponentAnimator>();
   if (!animator)

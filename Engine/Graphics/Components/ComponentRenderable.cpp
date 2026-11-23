@@ -7,6 +7,9 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
+#include "Scene.hpp"
+
+#include "Object.hpp"
 using namespace Engine::Graphics;
 
 ComponentRenderable::ComponentRenderable(std::string model_path,
@@ -133,8 +136,15 @@ void Engine::Graphics::ComponentRenderable::OnEnable() {
 void Engine::Graphics::ComponentRenderable::OnDisable() {
   if (!material)
     return;
-  material->renderableObjects.erase(
-      std::ranges::find(material->renderableObjects, shared_from_this()));
+  auto pos = std::ranges::find(material->renderableObjects, shared_from_this());
+  if (pos == material->renderableObjects.end())
+  {
+    SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Tried to erase the {} object from a material, but it is not there.", object.lock()->sceneobject.lock()->_name);
+    
+    TracyLogString(tracy::MessageSeverity::Trace, 0xFF, 32, "Component Renderable");
+    return;
+  }
+  material->renderableObjects.erase(pos);
 }
 
 std::shared_ptr<ComponentRenderable>

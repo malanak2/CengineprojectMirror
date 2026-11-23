@@ -3,6 +3,7 @@
 #include "Graphics/Graphics.hpp"
 #include "ImGui/Window.hpp"
 #include <imgui.h>
+#include "Scene.hpp"
 
 #include "Graphics/Components/ComponentAnimator.hpp"
 
@@ -25,7 +26,7 @@ protected:
                             m.second->renderableObjects.size())
                     .c_str())) {
           for (const auto &o : m.second->renderableObjects) {
-            ImGui::Text("%s", o->object.lock()->_name.c_str());
+            ImGui::Text("%s", o->object.lock()->sceneobject.lock()->_name.c_str());
           }
         }
       }

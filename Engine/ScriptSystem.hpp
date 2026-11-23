@@ -99,7 +99,7 @@ namespace Engine
       auto s = std::meta::extract<Attr::Serialize>(annos[0]);
       return s.name.empty() ? std::meta::identifier_of(m) : std::string_view(s.name);
     }
-
+    inline constexpr std::meta::info kEngineScope = ^^::Engine;
     struct ScriptInfo
     {
       std::string_view name;
@@ -291,14 +291,6 @@ namespace Engine
         }
       }
 
-      template <std::meta::info Scope = ^^::>
-      void create_global_registry()
-      {
-        scan_scope<Engine>();
-        scan_scope<Scope>();
-        
-      }
-
       static constexpr auto access_ctx = std::meta::access_context::unchecked();
 
     private:
@@ -314,5 +306,6 @@ namespace Engine
       std::unordered_map<std::string_view, const ScriptInfo*> by_name;
       std::vector<const ScriptInfo*> ordered;
     };
+    void RegisterEngineScripts();
   } // namespace Main
 } // namespace Engine

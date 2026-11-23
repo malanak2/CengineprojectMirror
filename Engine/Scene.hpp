@@ -17,9 +17,10 @@ class SceneObjectJson {
 public:
   std::vector<JsonFileBase> children;
   JsonFileBase data;
+  std::string name;
   bool isEnabled = true;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SceneObjectJson, children, data, isEnabled)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SceneObjectJson, children, name, data, isEnabled)
 //!
 //! @brief Wrapper for object - used in scenes
 //!
@@ -43,6 +44,7 @@ public:
   //!
   std::vector<std::shared_ptr<SceneObject>> Children;
   
+  std::string _name;
   
   //!
   //! @brief Whether the objet is enabled - its update mainly
@@ -117,16 +119,23 @@ public:
   //!
   //! @brief Called when object disabled
   //!
-  virtual void OnDisable();
+  //! @param ignoreState[in] If false, follows Enabled-ness of the object
+  //!
+  virtual void OnDisable(bool ignoreState = true);
 
   std::shared_ptr<Graphics::CameraComponent>
   BuildInstance(const json &objectJson, const std::shared_ptr<Scene> &owner);
   CameraList LoadChildren(const std::vector<JsonFileBase> &children,
                           const std::shared_ptr<Scene> &owner);
-protected: 
+  //!
+  //! @saveable If the object is saveable
+  //!
+  bool saveable = true;
+  
   //!
   //! @isEnabled Whether the objet is enabled - its update mainly
   //!
+  
   bool isEnabled = true;
 };
    //!
@@ -163,7 +172,7 @@ protected:
      PrefabSceneObject(std::shared_ptr<SceneObject> so) : SceneObject(so) {
        if (this->instance) {
          this->prefab_path =
-             "resources/prefabs/" + this->instance->_name + ".json";
+             "resources/prefabs/" + this->_name + ".json";
        }
      }
      PrefabSceneObject() {}
@@ -223,7 +232,7 @@ public:
                       const std::shared_ptr<Scene> &owner,
                       const std::shared_ptr<SceneObject> &parent) override;
   bool Save();
-  std::shared_ptr<Object> FindObject(const std::string &name);
+  std::shared_ptr<SceneObject> FindObject(const std::string &name);
   void FinalizeCameras(const CameraList &found);
 
   std::shared_ptr<Graphics::CameraComponent> camera = nullptr; // root scene only
@@ -237,7 +246,6 @@ public:
         return true;
     return false;
   }
-
 private:
   void Init();
   CameraList LoadFromFile();

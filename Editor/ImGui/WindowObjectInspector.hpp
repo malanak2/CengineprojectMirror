@@ -36,10 +36,10 @@ protected:
       return;
     }
     char buf[64] = {0};
-    strncpy(buf, sceneObject->instance->_name.c_str(), 63);
+    strncpy(buf, sceneObject->_name.c_str(), 63);
 
     if (ImGui::InputText("Name:", buf, 64)) {
-      sceneObject->instance->_name = buf;
+      sceneObject->_name = buf;
     }
     auto preso =
         std::dynamic_pointer_cast<Engine::PrefabSceneObject>(sceneObject);

@@ -1,11 +1,6 @@
 #pragma once
 #include <imgui.h>
 #include <meta>
-#ifdef WIN32
-#include "Generated/AllComponents.hpp"
-#else
-#include "Debug/Generated/AllComponents.hpp"
-#endif
 #include "ScriptSystem.hpp"
 
 class ReflectionRegistrar
@@ -83,6 +78,34 @@ class ReflectionRegistrar
       glm::vec3 deg = glm::degrees(glm::eulerAngles(v));
       if (ImGui::DragFloat3(label, &deg[0], 1.0f))
         v = glm::normalize(glm::quat(glm::radians(deg)));
+    }
+    else if constexpr (std::is_same_v<F, std::weak_ptr<std::string>>)
+    {
+      if (auto str = v.lock())
+      {
+        char buf[256];
+        std::strncpy(buf, str->c_str(), sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = '\0';
+
+        if (ImGui::InputText(label, buf, sizeof(buf)))
+          *str = buf;
+      }
+      else
+        ImGui::TextDisabled("%s: (expired)", label);
+    } else if constexpr (std::is_same_v<F, std::string*> )
+    {
+      if (v != nullptr)
+      {
+        char buf[256];
+        std::snprintf(buf, sizeof(buf), "%s", v->c_str());
+
+        if (ImGui::InputText(label, buf, sizeof(buf)))
+          *v = buf;
+      }
+      else
+      {
+        ImGui::TextDisabled("%s: (null)", label);
+      }
     }
     else
       ImGui::TextDisabled("%s: unsupported type", label);
@@ -239,7 +262,6 @@ static consteval auto GetMethods()
   template <std::meta::info Scope>
   void RegisterReflectedScope()
   {
-    scan_scope<Engine>();
     scan_scope<Scope>();
   } 
   template <std::meta::info Scope>
@@ -249,7 +271,7 @@ static consteval auto GetMethods()
       std::define_static_array(std::meta::members_of(Scope, ctx)))
     {
       if constexpr (std::meta::is_namespace(member))
-        RegisterReflectedScope<member>();
+        scan_scope<member>();
       else if constexpr (std::meta::is_type(member)
         && std::meta::is_class_type(member)
         && std::meta::is_complete_type(member)

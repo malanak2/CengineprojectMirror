@@ -34,7 +34,6 @@
                       }
                     ],
                     "inherit_parent_rotation": true,
-                    "name": "Wall right",
                     "position": [
                       10.0,
                       7.0,
@@ -53,7 +52,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Wall right"
               },
               "object_type": "object"
             },
@@ -87,7 +88,6 @@
                       }
                     ],
                     "inherit_parent_rotation": true,
-                    "name": "Wall left",
                     "position": [
                       -10.0,
                       7.0,
@@ -106,7 +106,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Wall left"
               },
               "object_type": "object"
             },
@@ -140,7 +142,6 @@
                       }
                     ],
                     "inherit_parent_rotation": true,
-                    "name": "Wall front",
                     "position": [
                       0.0,
                       7.0,
@@ -159,7 +160,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Wall front"
               },
               "object_type": "object"
             },
@@ -193,7 +196,6 @@
                       }
                     ],
                     "inherit_parent_rotation": true,
-                    "name": "Wall back",
                     "position": [
                       0.0,
                       7.0,
@@ -212,7 +214,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Wall back"
               },
               "object_type": "object"
             },
@@ -246,7 +250,6 @@
                       }
                     ],
                     "inherit_parent_rotation": true,
-                    "name": "Ceiling",
                     "position": [
                       0.0,
                       14.0,
@@ -265,7 +268,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Ceiling"
               },
               "object_type": "object"
             },
@@ -299,7 +304,6 @@
                       }
                     ],
                     "inherit_parent_rotation": true,
-                    "name": "Trigger",
                     "position": [
                       0.0,
                       7.0,
@@ -318,7 +322,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Trigger"
               },
               "object_type": "object"
             },
@@ -338,7 +344,6 @@
                       }
                     ],
                     "inherit_parent_rotation": false,
-                    "name": "fakecama",
                     "position": [
                       0.0,
                       0.0,
@@ -357,7 +362,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "fakecama"
               },
               "object_type": "object"
             }
@@ -414,7 +421,6 @@
                 }
               ],
               "inherit_parent_rotation": false,
-              "name": "Magician",
               "position": [
                 0.0,
                 -4.0,
@@ -433,7 +439,9 @@
               ]
             },
             "object_type": "object"
-          }
+          },
+          "isEnabled": true,
+          "name": "Magician"
         },
         "object_type": "object"
       },
@@ -447,6 +455,7 @@
                   "data": null,
                   "object_type": null
                 },
+                "isEnabled": true,
                 "overrides": [],
                 "prefab_path": "resources/prefabs/test.json"
               },
@@ -459,6 +468,7 @@
                   "data": null,
                   "object_type": null
                 },
+                "isEnabled": true,
                 "overrides": [],
                 "prefab_path": "resources/prefabs/Asdf.json"
               },
@@ -487,7 +497,6 @@
                       }
                     ],
                     "inherit_parent_rotation": false,
-                    "name": "Camera",
                     "position": [
                       -39.78729248046875,
                       15.472394943237305,
@@ -506,7 +515,9 @@
                     ]
                   },
                   "object_type": "object"
-                }
+                },
+                "isEnabled": true,
+                "name": "Camera"
               },
               "object_type": "object"
             }
@@ -541,7 +552,6 @@
                 }
               ],
               "inherit_parent_rotation": false,
-              "name": "Backpack",
               "position": [
                 0.0,
                 0.0,
@@ -560,7 +570,9 @@
               ]
             },
             "object_type": "object"
-          }
+          },
+          "isEnabled": true,
+          "name": "Backpack"
         },
         "object_type": "object"
       },
@@ -643,7 +655,6 @@
                 }
               ],
               "inherit_parent_rotation": false,
-              "name": "Animation test",
               "position": [
                 -2.545128107070923,
                 -1.1024203300476074,
@@ -662,7 +673,9 @@
               ]
             },
             "object_type": "object"
-          }
+          },
+          "isEnabled": true,
+          "name": "Animation test"
         },
         "object_type": "object"
       }
@@ -691,7 +704,9 @@
       },
       "object_type": "object"
     },
-    "default_camera": "Camera"
+    "default_camera": "Camera",
+    "isEnabled": true,
+    "name": "scena"
   },
   "object_type": "scene"
 }

@@ -8,11 +8,6 @@
 #include "Editor/ImGuiRegistrar.hpp"
 #include "Editor/ImGuiRenderers.hpp"
 #include "Engine/Engine.hpp"
-#ifdef WIN32
-#include "out/Generated/AllComponents.hpp"
-#else
-#include "out/Debug/Generated/AllComponents.hpp"
-#endif
 
 
 // No need to make allocations synchronous without Tracy enabled
@@ -30,14 +25,14 @@ void operator delete(void *ptr) noexcept {
   free(ptr);
 }
 #endif
-
+namespace Editor { void RegisterEditorScripts(); }
 int main() {
   Editor::ImGuiR::ImGuiRegistrar rg;
   ZoneScopedNS("main", 64);
   {
     ZoneScopedN("Create script registry")
-    Engine::Main::ScriptSystem::instance->create_global_registry<^^Editor>();
-    ReflectionRegistrar::Get().RegisterReflectedScope<^^Editor>();
+    Engine::Main::RegisterEngineScripts();
+    Editor::RegisterEditorScripts();
   }
   /// Inject functions
   {

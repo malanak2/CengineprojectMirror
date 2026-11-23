@@ -62,12 +62,12 @@ protected:
                       &Engine::Engine::isSimulationEnabled);
       auto activeCam = scene->camera;
       auto activeCamObj = activeCam ? activeCam->object.lock() : nullptr;
-      if (ImGui::BeginCombo("Scene camera", activeCamObj ? activeCamObj->_name.c_str() : "nullptr")) {
+      if (ImGui::BeginCombo("Scene camera", activeCamObj ? activeCamObj->sceneobject.lock()->_name.c_str() : "nullptr")) {
         for (auto &cam : Engine::Engine::instance->current_scene->cameras) {
           bool is_selected =
               (Engine::Engine::instance->current_scene->camera == cam);
           if (ImGui::Selectable(cam->object.lock()
-                                    ? cam->object.lock()->_name.c_str()
+                                    ? cam->object.lock()->sceneobject.lock()->_name.c_str()
                                     : "nullptr",
                                 is_selected)) {
             Engine::Engine::instance->current_scene->camera = cam;
@@ -84,11 +84,11 @@ protected:
           bool is_selected =
               (Engine::Engine::instance->current_scene->camera == cam);
           if (ImGui::Selectable(cam->object.lock()
-                                    ? cam->object.lock()->_name.c_str()
+                                    ? cam->object.lock()->sceneobject.lock()->_name.c_str()
                                     : "nullptr",
                                 is_selected)) {
             Engine::Engine::instance->current_scene->default_camera =
-                cam->object.lock() ? cam->object.lock()->_name : "nullptr";
+                cam->object.lock() ? cam->object.lock()->sceneobject.lock()->_name : "nullptr";
           }
           if (is_selected)
             ImGui::SetItemDefaultFocus();
@@ -112,12 +112,12 @@ protected:
       ShowSceneObjectMenu(&scene->Children);
     }
     if (sceneObject != nullptr) {
-      ImGui::Text("Scene object %s", sceneObject->instance->_name.c_str());
+      ImGui::Text("Scene object %s", sceneObject->_name.c_str());
       if (ImGui::Button("Deselect"))
         sceneObject = nullptr;
       else {
         auto parentSo = sceneObject->Parent.lock();
-        ImGui::Text("Parent: %s", parentSo && parentSo->instance ? parentSo->instance->_name.c_str() : "none");
+        ImGui::Text("Parent: %s", parentSo && parentSo->instance ? parentSo->_name.c_str() : "none");
         if (ImGui::Button("Move to owning scene")) {
           sceneObject->SetParent(nullptr);
         }
@@ -160,7 +160,7 @@ protected:
                                ImGuiWindowFlags_AlwaysAutoResize)) {
       ImGui::Text("Reload \"%s\" from %s?\nUnsaved changes to it will be lost.",
                   pendingReload && pendingReload->instance
-                      ? pendingReload->instance->_name.c_str()
+                      ? pendingReload->_name.c_str()
                       : "?",
                   pendingReload ? pendingReload->path.c_str() : "?");
       if (ImGui::Button("Reload")) {
@@ -200,7 +200,7 @@ protected:
         flags |= ImGuiTreeNodeFlags_Leaf;
       }
 
-      std::string label = obj->instance->_name;
+      std::string label = obj->_name;
       if (auto nested = std::dynamic_pointer_cast<Engine::Scene>(obj))
         label += nested->loadFailed ? " [scene: MISSING]" : " [scene]";
       bool open = ImGui::TreeNodeEx(label.c_str(), flags);
@@ -210,14 +210,14 @@ protected:
         Engine::SceneObject *ptr = obj.get();
         ImGui::SetDragDropPayload("OBJ_PARENT", &ptr,
                                   sizeof(Engine::SceneObject *));
-        ImGui::Text("%s%s", obj->instance->_name.c_str(),
+        ImGui::Text("%s%s", obj->_name.c_str(),
                     obj->instance->IsValid() ? "" : " ERROR");
         ImGui::EndDragDropSource();
       }
 
       if (sceneObject != obj) {
         ImGui::SameLine(ImGui::GetContentRegionAvail().x - 50);
-        if (ImGui::Button(("Select##" + obj->instance->_name).c_str())) {
+        if (ImGui::Button(("Select##" + obj->_name).c_str())) {
           sceneObject = obj;
         }
       }
@@ -234,7 +234,7 @@ protected:
   void ContextMenu(const std::shared_ptr<Engine::Object> &obj) {
     if (!obj)
       return;
-    std::string objName = obj->_name;
+    std::string objName = obj->sceneobject.lock()->_name;
     if (ImGui::BeginPopupContextItem(("ContextMenu##" + objName).c_str())) {
       auto so = obj->sceneobject.lock();
       auto preso = std::dynamic_pointer_cast<Engine::PrefabSceneObject>(so);

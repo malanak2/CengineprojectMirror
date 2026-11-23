@@ -92,10 +92,15 @@ namespace Engine
       child->SetOwner(owner);
   }
 
-  void SceneObject::OnDisable()
+  void SceneObject::OnDisable(bool ignoreState)
   {
+    if (!ignoreState)
+    {
+      if (!isEnabled)
+        return;
+    }
     if (instance) instance->OnDisable();
-    for (const auto& var : this->Children) var->OnDisable();
+    for (const auto& var : this->Children) var->OnDisable(ignoreState);
   }
 
   std::shared_ptr<Graphics::CameraComponent>
@@ -156,6 +161,7 @@ namespace Engine
     SceneObjectJson js = jsbase.data;
     this->Parent = parent;
     this->scene = owner;
+    this->_name = js.name;
     if (auto cc = BuildInstance(json(js.data), owner))
       camcomps.push_back(cc);
     auto c = LoadChildren(js.children, owner);
@@ -210,8 +216,8 @@ namespace Engine
     if (isEnabled)
     {
       if (instance) instance->Update();
+      for (const auto& var : this->Children) var->Update();
     }
-    for (const auto& var : this->Children) var->Update();
   }
 
   void SceneObject::End()
@@ -259,6 +265,7 @@ namespace Engine
     }
     ret->children = child;
     ret->isEnabled = isEnabled;
+    ret->name = _name;
     JsonFileBase retbase;
     retbase.object_type = ObjectType::Object;
     retbase.data = *ret;
@@ -266,12 +273,12 @@ namespace Engine
   }
 
 
-  static std::shared_ptr<Object>
+  static std::shared_ptr<SceneObject>
   FindObjectRecursive(const std::shared_ptr<SceneObject>& so,
                       const std::string& name)
   {
-    if (so && so->instance && so->instance->_name == name)
-      return so->instance;
+    if (so && so->instance && so->_name == name)
+      return so;
     if (so)
     {
       for (const auto& child : so->Children)
@@ -294,7 +301,8 @@ namespace Engine
   void Scene::Unload()
   {
     ZoneScoped;
-    OnDisable();
+    if (isEnabled)
+      OnDisable();
     End();
     LateEnd();
     auto root = GetRootScene();
@@ -312,7 +320,7 @@ namespace Engine
     auto self = SelfScene();
     this->scene = self;
     this->instance = std::make_shared<Object>(self);
-    this->instance->_name = "Scene";
+    this->_name = "New Scene";
     this->instance->sceneobject = self;
   }
 
@@ -320,9 +328,15 @@ namespace Engine
   {
     auto s = Create();
     s->path = std::move(path);
+    try {
     auto cams = s->LoadFromFile();
-    s->FinalizeCameras(cams);
-    return s;
+      s->FinalizeCameras(cams);
+      return s;
+    } catch (std::exception &e)
+    {
+      return nullptr;
+    }
+      return nullptr;
   }
 
   bool Scene::WouldCycle() const
@@ -346,6 +360,11 @@ namespace Engine
   {
     ZoneScoped;
     std::string res;
+    if (path == "")
+    {
+      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Tried to load scene with no path");
+      throw std::logic_error("");
+    }
     if (FileUtil::ReadFile(path, &res) != 0)
     {
       SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER, "Failed to open scene at {}", path);
@@ -358,7 +377,7 @@ namespace Engine
     }
     catch (const std::exception& e)
     {
-      SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER, "Failed to parse json scene at {} ({})", path, e.what());
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to parse json scene at {} ({})", path, e.what());
       throw std::logic_error("Failed to parse json scene at " + path + " " + e.what());
     }
     auto self = SelfScene();
@@ -412,6 +431,7 @@ namespace Engine
       rawReference = json(jsbase);
       SceneRefJson ref = jsbase.data;
       this->path = ref.scene_path;
+      this->_name = ref.name;
       if (WouldCycle())
         throw std::logic_error("Scene " + path + " contains itself (or is nested too deeply)");
       cams = LoadFromFile();
@@ -419,13 +439,19 @@ namespace Engine
     }
     catch (const std::exception& e)
     {
-      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to load nested scene {}: ({}). Keeping a placeholder.", path,
-                          e.what());
+      if (e.what() != "")
+        SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to load nested scene {}: ({}). Keeping a placeholder.", path,
+                            e.what());
       loadFailed = true;
       Children.clear();
       cams.clear();
-      if (instance && !path.empty())
-        instance->_name = std::filesystem::path(path).stem().string();
+      if (!path.empty())
+      {
+        _name = std::filesystem::path(path).stem().string();
+      } else
+      {
+        _name = "Empty path";
+      }
     }
     return cams;
   }
@@ -439,8 +465,6 @@ namespace Engine
     if (base.object_type != ObjectType::Object)
       return;
     ObjectJson oj = base.data.get<ObjectJson>();
-    if (!oj.name.empty())
-      instance->_name = oj.name;
     if (oj.scale.size() == 3)
       instance->scale = glm::vec3(oj.scale[0], oj.scale[1], oj.scale[2]);
     instance->inheritParentRotation = oj.inherit_parent_rotation;
@@ -539,7 +563,7 @@ namespace Engine
           for (const auto& cam : root->cameras)
           {
             auto o = cam->object.lock();
-            if (o && o->_name == name)
+            if (o && _name == name)
               return cam;
           }
           return nullptr;
@@ -613,8 +637,8 @@ namespace Engine
     {
       SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Scene {} has no cameras, creating default camera", this->path);
       auto camobj = std::make_shared<Object>(self);
-      camobj->_name = "Default Camera";
       auto so = std::make_shared<SceneObject>();
+      so->_name = "Default Camera";
       so->Parent = self;
       so->scene = self;
       so->instance = camobj;
@@ -635,13 +659,20 @@ namespace Engine
     for (const auto& cam : cameras)
     {
       auto o = cam->object.lock();
-      if (o && o->_name == default_camera)
+      if (!o) return;
+      auto so = o->sceneobject.lock(); 
+      if (so && so->_name == default_camera)
       {
         this->camera = cam;
         return;
       }
     }
-    SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Scene {} is missing its default camera, using first camera", this->path);
+    SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Scene {} is missing its default camera, using first camera", this->path);
+    if (cameras.size() == 0)
+    {
+      SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Scene {} is missing cameras", this->path);
+      return;
+    }
     this->camera = cameras[0];
   }
 
@@ -657,7 +688,10 @@ namespace Engine
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Could not convert scene root to json: {}", e.what());
     }
     for (const auto& child : Children)
+    {
+      if (!child->saveable) continue;
       sj.children.push_back(child->ToJson());
+    }
     sj.default_camera = default_camera;
     JsonFileBase out;
     out.object_type = ObjectType::Scene;
@@ -701,6 +735,7 @@ namespace Engine
       PrefabJson js = jsbase.data;
       this->Parent = parent;
       this->scene = owner;
+      this->_name = js.name;
       this->prefab_path = js.prefab_path;
       this->overrides = js.overrides;
       std::string res;
@@ -894,7 +929,7 @@ namespace Engine
 
   bool Scene::Save()
   {
-    if (loadFailed)
+    if (loadFailed || !saveable)
       return true;
     if (path.empty())
     {
@@ -974,14 +1009,15 @@ namespace Engine
     if (!so || so.get() == this) return;
     auto parent = so->Parent.lock();
     if (!parent) return;
-    so->OnDisable();
+    if (so->isEnabled)
+      so->OnDisable();
     so->End();
     so->LateEnd();
     std::erase(parent->Children, so);
     so->Parent.reset();
   }
 
-  std::shared_ptr<Object> Scene::FindObject(const std::string& name)
+  std::shared_ptr<SceneObject> Scene::FindObject(const std::string& name)
   {
     for (const auto& child : Children)
     {

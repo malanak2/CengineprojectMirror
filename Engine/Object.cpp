@@ -41,7 +41,6 @@ Object::Object() {
   this->_worldPosition = {0, 0, 0};
   this->_localRotation = glm::identity<glm::quat>();
   this->_worldRotation = glm::identity<glm::quat>();
-  this->_name = "New Object";
   this->scale = {1, 1, 1};
   this->inheritParentRotation = false;
 }
@@ -64,7 +63,6 @@ json Object::ToJson() {
   js.position = {_localPosition[0], _localPosition[1], _localPosition[2]};
   js.rotation = {_localRotation.w, _localRotation.x, _localRotation.y,
                  _localRotation.z};
-  js.name = _name;
   js.scale = std::vector<float>{scale.x, scale.y, scale.z};
   js.inherit_parent_rotation = inheritParentRotation;
   ret.data = js;
@@ -126,20 +124,18 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
     scale = glm::vec3(jsobj.scale[0], jsobj.scale[1], jsobj.scale[2]);
   } else {
     SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER,
-                       "Object {} in {} has a bad scale (size {}), using 1",
-                       jsobj.name, path, jsobj.scale.size());
+                       "Object in {} has a bad scale (size {}), using 1",
+                        path, jsobj.scale.size());
   }
-  fromParams(jsobj.name, cmps, jsobj.position, jsobj.rotation, scale);
+  fromParams(cmps, jsobj.position, jsobj.rotation, scale);
   this->inheritParentRotation = jsobj.inherit_parent_rotation;
   return cc;
 }
 
-void Object::fromParams(std::string name,
+void Object::fromParams(
                         const std::vector<std::shared_ptr<IComponent>> &comps,
                         std::vector<float> position,
                         std::vector<float> rotation, glm::vec3 scale) {
-  _name = std::move(name);
-  _name.reserve(50);
   for (const auto &cmp : comps) {
     _components[std::string(cmp->GetName())] = cmp;
   }
@@ -213,6 +209,11 @@ void Object::OnEnable()
 void Object::OnDisable()
 {
   for (auto &[key, comp] : this->_components) {
+    if (comp == nullptr)
+    {
+      SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "A component on {} is nullptr. (How?)", sceneobject.lock()->_name);
+      continue;
+    }
     comp->OnDisable();
   }
 }

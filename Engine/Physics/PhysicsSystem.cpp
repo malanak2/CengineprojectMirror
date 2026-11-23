@@ -117,7 +117,7 @@ void Engine::Physics::PhysicsSystem::UnregisterCPhysics(
   auto pos = std::ranges::find(cphysics, c);
   if (pos == cphysics.end()) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                        "Tried to unregister nonexistent CPhysics");
+                        "Tried to unregister nonexistent CPhysics({})", c->object.lock()->sceneobject.lock()->_name);
     return;
   }
   cphysics.erase(pos);
@@ -133,7 +133,8 @@ void Engine::Physics::PhysicsSystem::UnregisterBBox(
   auto pos = std::find(boundingBoxes.begin(), boundingBoxes.end(), c);
   if (pos == boundingBoxes.end()) {
     SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER,
-                        "Tried to unregister nonexistent bounding box");
+                        "Tried to unregister nonexistent bounding box ({})", c->object.lock()->sceneobject.lock()->_name);
+    TracyLogString(tracy::MessageSeverity::Trace, 0xFF, 32, "Bounding box");
     return;
   }
   boundingBoxes.erase(pos);

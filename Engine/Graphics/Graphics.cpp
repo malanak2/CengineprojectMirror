@@ -207,7 +207,7 @@ int Main::Tick(
 
 void Main::Terminate() {
   if (auto engine = Engine::Engine::instance; engine && engine->current_scene) {
-    engine->current_scene->OnDisable();
+    engine->current_scene->OnDisable(false);
     engine->current_scene->End();
     engine->current_scene->LateEnd();
     engine->current_scene.reset(); 
@@ -242,7 +242,7 @@ void Main::RenderBBOS() {
     bool useFrustum = false;
     Frustum frustum;
     if (auto obj = Engine::instance->current_scene->FindObject("fakecam")) {
-      if (auto c = obj->GetComponent<CameraComponent>()) {
+      if (auto c = obj->instance->GetComponent<CameraComponent>()) {
         useFrustum = true;
         frustum = c->GetFrustum();
       }

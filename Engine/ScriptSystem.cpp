@@ -5,4 +5,5 @@
 namespace Engine::Main {
 std::shared_ptr<ScriptSystem> ScriptSystem::instance =
     std::make_shared<ScriptSystem>();
+  
 } // namespace Engine::Main

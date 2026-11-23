@@ -23,6 +23,10 @@ find_package(assimp REQUIRED)
 FetchContent_Declare(inipp GIT_REPOSITORY https://github.com/Rookfighter/inifile-cpp.git)
 FetchContent_MakeAvailable(inipp)
 
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/ScriptHeaders.cmake)
+generate_script_header(${CMAKE_CURRENT_BINARY_DIR}/Generated/EngineScripts.hpp
+        DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_library(cengine SHARED Engine.hpp Engine.cpp
         Object.cpp
         Object.hpp
@@ -82,10 +86,12 @@ add_library(cengine SHARED Engine.hpp Engine.cpp
         Physics/PhysicsSystem.hpp
         Physics/Plane.hpp
         Physics/Ray.hpp
+        ScriptRegistry.cpp
 )
 
 target_include_directories(cengine PUBLIC External/glad/include)
 target_include_directories(cengine PUBLIC .)
+target_include_directories(cengine PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/Generated)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(cengine PUBLIC -freflection)
     target_link_libraries(cengine PUBLIC stdc++exp)

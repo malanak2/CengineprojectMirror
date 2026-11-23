@@ -2,6 +2,7 @@
 #include "Object.hpp"
 #include "Physics/Components/ComponentBoundingBox.hpp"
 #include "Util/LoggerUtil.hpp"
+#include "Scene.hpp"
 #include <functional>
 void Editor::ComponentTestTrigger::Setup() {
   auto o = object.lock();
@@ -11,15 +12,15 @@ void Editor::ComponentTestTrigger::Setup() {
           const std::shared_ptr<Engine::Physics::ComponentBoundingBox> &other) {
         if (auto o = other->object.lock()) {
           SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "Trigger {} hit by {}",
-                             object.lock()->_name, o->_name);
+                             object.lock()->sceneobject.lock()->_name, o->sceneobject.lock()->_name);
         }
       };
   bb->OnTriggerLeave =
       [this](
           const std::shared_ptr<Engine::Physics::ComponentBoundingBox> &other) {
         if (auto o = other->object.lock()) {
-          SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "{} Left trigger {}", o->_name,
-                             object.lock()->_name);
+          SPDLOG_LOGGER_INFO(ENGINE_UTIL_LOGGER, "{} Left trigger {}", o->sceneobject.lock()->_name,
+                             object.lock()->sceneobject.lock()->_name);
         }
       };
 }

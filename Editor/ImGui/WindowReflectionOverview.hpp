@@ -278,7 +278,7 @@ protected:
       return;
     }
     auto *scripts = Engine::Main::ScriptSystem::instance.get();
-    ImGui::Text("Object: %s", obj->instance->_name.c_str());
+    ImGui::Text("Object: %s", obj->_name.c_str());
     ImGui::Separator();
 
     ImGui::BeginChild("live");

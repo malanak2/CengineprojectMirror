@@ -107,35 +107,9 @@ add_library(implot::implot ALIAS implot)
 target_include_directories(implot PUBLIC ${implot_SOURCE_DIR})
 target_link_libraries(implot PUBLIC imgui::imgui)
 
-## Reload by gemini
-# 1. Glob all headers in your source directories (avoids scanning build/out folders)
-file(GLOB_RECURSE ALL_HEADERS
-        "${CMAKE_CURRENT_SOURCE_DIR}/Engine/*.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/Editor/*.hpp"
-)
-
-set(UMBRELLA_INCLUDES "// AUTO-GENERATED FILE\n#pragma once\n")
-
-# 2. Scan each file for the annotation
-foreach (HEADER ${ALL_HEADERS})
-  file(READ "${HEADER}" FILE_CONTENT)
-
-  # Fast string search for the different variations
-  string(FIND "${FILE_CONTENT}" "[[=Attr::Script" HAS_NORM)
-  string(FIND "${FILE_CONTENT}" "[[=Engine::Attr::Script" HAS_LONG)
-  string(FIND "${FILE_CONTENT}" "[[=Script" HAS_SHORT)
-
-  # If ANY of the variations are found (meaning the result is NOT -1)
-  if (NOT HAS_SHORT EQUAL -1 OR NOT HAS_LONG EQUAL -1 OR NOT HAS_NORM EQUAL -1)
-    string(APPEND UMBRELLA_INCLUDES "#include \"${HEADER}\"\n")
-  endif ()
-endforeach ()
-# 3. Write to a temporary file first
-set(TEMP_HEADER "${CMAKE_CURRENT_BINARY_DIR}/Generated/AllComponents.tmp.hpp")
-set(UMBRELLA_HEADER "${CMAKE_CURRENT_BINARY_DIR}/Generated/AllComponents.hpp")
-file(WRITE "${TEMP_HEADER}" "${UMBRELLA_INCLUDES}")
-
-configure_file("${TEMP_HEADER}" "${UMBRELLA_HEADER}" COPYONLY)
+include(cmake/ScriptHeaders.cmake)
+generate_script_header(${CMAKE_BINARY_DIR}/Generated/EditorScripts.hpp
+        DIRS ${CMAKE_SOURCE_DIR}/Editor)
 
 if (WIN32)
   add_compile_options(-freflection)
@@ -179,6 +153,7 @@ add_executable(cengineeditor
         Editor/Testing/TestingComponent.hpp
         Editor/Components/ComponentUserScene.hpp
         Editor/Components/ComponentUserScene.cpp
+        Editor/EditorScripts.cpp
 )
 
 if (DEBUG)
@@ -196,6 +171,7 @@ if (WIN32)
 endif ()
 
 target_include_directories(cengineeditor PUBLIC Editor)
+target_include_directories(cengineeditor PRIVATE ${CMAKE_BINARY_DIR}/Generated)
 add_subdirectory(Engine)
 target_compile_options(cengineeditor PUBLIC -freflection)
 target_link_libraries(cengineeditor PRIVATE cengine spdlog::spdlog imgui::imgui implot::implot)
