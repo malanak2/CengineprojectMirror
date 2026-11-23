@@ -10,6 +10,7 @@ class ReflectionRegistrar
     bool readOnly = false;
     bool hasRange = false;
     float min = 0, max = 0, speed = 0.1f;
+    bool enableInEditor = false;
     Engine::Attr::FixedString<64> display_name = {};
   };
 
@@ -39,6 +40,12 @@ class ReflectionRegistrar
       o.min = v.min;
       o.max = v.max;
       o.speed = v.speed;
+    }
+    // TODO: Add EditorOnly
+    auto eie= std::meta::annotations_of_with_type(m, ^^Engine::Attr::EnableInEditor);
+    if (!eie.empty())
+    {
+      o.enableInEditor = true;
     }
     return o;
   }
@@ -135,12 +142,12 @@ class ReflectionRegistrar
       const char* label = &opts.display_name.buf[0];
 
       ImGui::PushID(label);
-      if (opts.readOnly) ImGui::BeginDisabled();
+      if (opts.readOnly || (!Engine::Engine::isSimulationEnabled && !opts.enableInEditor)) ImGui::BeginDisabled();
       if (ImGui::Button(label))
       {
         (self->[:fn:])();
       }
-      if (opts.readOnly) ImGui::EndDisabled();
+      if (opts.readOnly|| (!Engine::Engine::isSimulationEnabled && !opts.enableInEditor)) ImGui::EndDisabled();
       ImGui::PopID();
     }
   }

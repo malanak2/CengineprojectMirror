@@ -69,6 +69,9 @@ namespace Engine
     {
       FixedString<64> displayname = {};
     };
+    //!
+    //! @brief If this is specified, buttons wil work in edit mode
+    struct EnableInEditor{};
   }
 
   namespace Main
