@@ -260,6 +260,7 @@ namespace Engine
     std::vector<JsonFileBase> child = {};
     for (const auto& scene_object_json : this->Children)
     {
+      if (!scene_object_json->saveable) continue;
       child.insert(child.end(), (scene_object_json->ToJson()));
     }
     ret->children = child;
@@ -594,13 +595,14 @@ namespace Engine
   }
 
   std::shared_ptr<Scene> Scene::InstantiateScene(const std::string& scenePath,
-                                                 const std::shared_ptr<SceneObject>& parent)
+                                                 const std::shared_ptr<SceneObject>& parent, bool saveable)
   {
     auto self = SelfScene();
     std::shared_ptr<SceneObject> parentSo = parent ? parent : std::static_pointer_cast<SceneObject>(self);
     auto s = Create();
     s->path = scenePath;
     s->Parent = parentSo;
+    s->saveable = saveable;
     if (s->WouldCycle())
     {
       SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Can't nest scene {}: it would contain itself", scenePath);
@@ -915,7 +917,10 @@ namespace Engine
     SceneObjectJson save;
     save.data = instance->ToJson().get<JsonFileBase>();
     for (const auto& c : Children)
+    {
+      if (!c->saveable) continue;
       save.children.push_back(c->ToJson());
+    }
     save.isEnabled = isEnabled;
     JsonFileBase savebase;
     savebase.object_type = ObjectType::Object;
@@ -968,7 +973,7 @@ namespace Engine
   }
 
   void Scene::Instantiate(const std::shared_ptr<Object>& object,
-                          const std::shared_ptr<SceneObject>& parent, bool asPrefab)
+                          const std::shared_ptr<SceneObject>& parent, bool asPrefab, bool saveable)
   {
     std::shared_ptr<SceneObject> so;
     if (asPrefab) so = std::make_shared<PrefabSceneObject>();
@@ -977,6 +982,7 @@ namespace Engine
     auto owner = OwnerOf(p);
     so->Parent = p;
     so->scene = owner;
+    so->saveable = saveable;
     p->Children.push_back(so);
     object->scene = owner;
     object->sceneobject = so;

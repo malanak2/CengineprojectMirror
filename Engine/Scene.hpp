@@ -208,7 +208,15 @@ NLOHMANN_DEFINE_DERIVED_TYPE_NON_INTRUSIVE_WITH_DEFAULT(SceneJson, SceneObjectJs
 
 class Scene : public SceneObject {
 public:
+  //! 
+  //! @brief Creates an empty scene
+  //!
+  //! @return Ptr to the new scene
   static std::shared_ptr<Scene> Create();
+  //! 
+  //! @brief Loads a scene from disk
+  //! @param path Filepath in resources to the scene (scenes/default.json)
+  //! @return Ptr to the scene if succesfull, nullptr otherwise
   static std::shared_ptr<Scene> Load(std::string path);
   Scene() {}
   void EarlySetup() override
@@ -220,31 +228,83 @@ public:
   std::string path;
   bool loadFailed = false;
   bool Reload();
+
+  //! 
+  //! @brief Helper to get shared from this quickly
+  //!
+  //! @return shared_from_this
   std::shared_ptr<Scene> SelfScene() {
     return std::static_pointer_cast<Scene>(shared_from_this());
   }
+
+  //! 
+  //! @return Whether the scene is root
   bool IsRootScene() const { return Parent.expired(); }
 
+  //! 
+  //! @brief Instantiates scenes
+  //!
+  //! @param path From where to load the scene
+  //! @param parent Its parent (root by default)
+  //! @param saveable Whether it is saveable (false by default)
+  //! @return Returns the ptr to the instantiated scene
   std::shared_ptr<Scene> InstantiateScene(const std::string &path,
-                                          const std::shared_ptr<SceneObject> &parent = {});
+                                          const std::shared_ptr<SceneObject> &parent = {}, bool saveable = false);
+  //! 
+  //! @brief Instantiates the object in the scene hierarchy
+  //! 
+  //! @param object[in,out] The object. The ptr provided is used and modified, so keep it!
+  //! @param Parent Its parent (root by default)
+  //! @param asPrefab Whether it is a prefab (false by default)
+  //! @param saveable Whether it is saveable (false by default)
   void Instantiate(const std::shared_ptr<Object> &object,
                    const std::shared_ptr<SceneObject> &Parent = {},
-                   bool asPrefab = false);
+                   bool asPrefab = false, bool saveable = false);
+
+  //! 
+  //! @brief Removes the object from the scene hierarchy, but keeps its children (their parent is set to this objects parent
+  //!
+  //! @param so Pointer to the object
   void RemoveObject(const std::shared_ptr<SceneObject> &so);
+  //! 
+  //! @brief Rmoves the object from the scene hierarchy, including its children
+  //!
+  //! @param so Pointer to the object
   void RemoveObjectCascade(const std::shared_ptr<SceneObject> &so);
 
   JsonFileBase ToJson() override;
   CameraList FromJson(const JsonFileBase &jsbase,
                       const std::shared_ptr<Scene> &owner,
                       const std::shared_ptr<SceneObject> &parent) override;
+  //!
+  //! @brief Saves the scene to the disk
+  //!
+  //! @return OK
   bool Save();
+
+  //! 
+  //! @brief Finds an object based on name
+  //!
+  //! @param name The exact name of the object - Case sensitive
+  //! @return Ptr to the object if found, if not, returns nullptr
   std::shared_ptr<SceneObject> FindObject(const std::string &name);
+  
   void FinalizeCameras(const CameraList &found);
 
   std::shared_ptr<Graphics::CameraComponent> camera = nullptr; // root scene only
   std::string default_camera;                                  // root scene only
   CameraList cameras;                                          // root scene only
+  
+  //!
+  //! @brief Unloads the scene - calls relevant functions and removes from memory
+  //!
   void Unload();
+
+  //! 
+  //! @brief Check if an object is in this scene
+  //!
+  //! @param o Ptr to the object
+  //! @return Is Inside?
   bool isInside(std::shared_ptr<SceneObject> o)
   {
     for (auto p = o; p; p = p->Parent.lock())
@@ -252,6 +312,7 @@ public:
         return true;
     return false;
   }
+  
 private:
   void Init();
   CameraList LoadFromFile();

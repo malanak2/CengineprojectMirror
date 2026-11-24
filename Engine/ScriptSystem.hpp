@@ -67,8 +67,11 @@ namespace Engine
 
     struct Editor
     {
+      //! @displayname The name to be displayed, defaults to member name
       FixedString<64> displayname = {};
+      //! @isDisabled Reflection of the object, that is either a bool or a bool(). If evaluates to true, the rendered ref is disabled
       std::meta::info isDisabled = {};
+      //! @invertDisabled Inverts the behaviour of @isDisabled
       bool invertDisabled = false;
     };
   }

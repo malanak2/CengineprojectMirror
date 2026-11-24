@@ -3,41 +3,7 @@
     "children": [
       {
         "data": {
-          "children": [
-            {
-              "data": {
-                "children": [],
-                "data": {
-                  "data": {
-                    "components": [],
-                    "follows_paused_execution": false,
-                    "inherit_parent_rotation": false,
-                    "position": [
-                      0.0,
-                      5.0,
-                      0.0
-                    ],
-                    "rotation": [
-                      0.9862856268882751,
-                      0.0,
-                      0.16504760086536407,
-                      0.0
-                    ],
-                    "scale": [
-                      1.0,
-                      1.0,
-                      1.0
-                    ]
-                  },
-                  "object_type": "object"
-                },
-                "isEnabled": true,
-                "name": "User scene holder",
-                "scene_path": "scenes/default_nest.json"
-              },
-              "object_type": "object"
-            }
-          ],
+          "children": [],
           "data": {
             "data": {
               "components": [
