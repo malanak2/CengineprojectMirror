@@ -32,7 +32,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TextureJson, filterType, wrapS, wrapT, path,
 //!
 class Texture : public IJson {
 public:
-  json ToJson() override;
+  json ToJson() const override;
   void FromJson(json &js) override;
 
   Texture(std::string json_path);

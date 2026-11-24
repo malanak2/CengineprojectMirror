@@ -48,7 +48,7 @@
                   "name": "ComponentUserScene"
                 }
               ],
-              "follows_paused_execution": true,
+              "follows_paused_execution": false,
               "inherit_parent_rotation": false,
               "position": [
                 0.0,
@@ -96,7 +96,7 @@
                   "name": "ComponentControllable"
                 }
               ],
-              "follows_paused_execution": true,
+              "follows_paused_execution": false,
               "inherit_parent_rotation": false,
               "position": [
                 -34.36135482788086,

@@ -8,7 +8,7 @@ class [[=Engine::Attr::Script{.intendedNoRenderers = true}]] TestInputComponent 
   REGISTER_CLASS(TestInputComponent);
 
 public:
-  json ToJson() override { return {}; }
+  json ToJson() const override { return {}; }
 
   void FromJson(json &js) override {}
 

@@ -7,7 +7,7 @@ namespace Engine {
 class IJson {
 public:
   virtual ~IJson() = default;
-  virtual json ToJson() = 0;
+  virtual json ToJson() const = 0;
   virtual void FromJson(json &js) = 0;
 };
 } // namespace Engine

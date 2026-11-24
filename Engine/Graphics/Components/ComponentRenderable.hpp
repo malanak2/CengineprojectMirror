@@ -38,7 +38,7 @@ public:
   void SetObject(std::shared_ptr<Object> object);
   void FromJson(json &js) override;
 
-  json ToJson() override;
+  json ToJson() const override;
   void OnEnable() override;
   void OnDisable() override;
 

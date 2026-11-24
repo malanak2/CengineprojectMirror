@@ -12,10 +12,17 @@ class ReflectionRegistrar
     bool readOnly = false;
     bool hasRange = false;
     float min = 0, max = 0, speed = 0.1f;
-    bool enableInEditor = false;
-    bool disableInPlay = false;
+    bool invertDisable = false;
     Engine::Attr::FixedString<64> display_name = {};
   };
+  
+  static consteval std::meta::info DisabledMemberOf(std::meta::info m)
+  {
+    auto e = std::meta::annotations_of_with_type(m, ^^Engine::Attr::Editor);
+    if (!e.empty())
+      return std::meta::extract<Engine::Attr::Editor>(e[0]).isDisabled;
+    return {};
+  }
 
   static consteval FieldOpts OptsOf(std::meta::info m)
   {
@@ -34,6 +41,7 @@ class ReflectionRegistrar
       {
         o.display_name = v.displayname;
       }
+      o.invertDisable = v.invertDisabled;
     }
     auto r = std::meta::annotations_of_with_type(m, ^^Engine::Attr::Range);
     if (!r.empty())
@@ -43,16 +51,6 @@ class ReflectionRegistrar
       o.min = v.min;
       o.max = v.max;
       o.speed = v.speed;
-    }
-    auto eie = std::meta::annotations_of_with_type(m, ^^Engine::Attr::EnableInEditor);
-    if (!eie.empty())
-    {
-      o.enableInEditor = true;
-    }
-    auto dip = std::meta::annotations_of_with_type(m, ^^Engine::Attr::DisableInPlay);
-    if (!dip.empty())
-    {
-      o.disableInPlay = true;
     }
     return o;
   }
@@ -150,9 +148,25 @@ class ReflectionRegistrar
       const char* label = &opts.display_name.buf[0];
 
       ImGui::PushID(label);
-      bool disabled = (opts.readOnly ||
-        (!Engine::Engine::isSimulationEnabled && !opts.enableInEditor) ||
-        (Engine::Engine::isSimulationEnabled && opts.disableInPlay));
+      bool disabled = (opts.readOnly);
+      constexpr std::meta::info disabled_member = DisabledMemberOf(fn);
+      if constexpr (disabled_member != std::meta::info{})
+      {
+        bool val;
+        if constexpr (std::meta::is_function(disabled_member))
+        {
+          val = (self->[:disabled_member:])();
+        } else
+        {
+          val = self->[:disabled_member:];
+        }
+        if (opts.invertDisable)
+        {
+          disabled = disabled || !val;
+        } else {
+          disabled = disabled || val;
+        }
+      }
       if (disabled) ImGui::BeginDisabled();
       if (ImGui::Button(label))
       {

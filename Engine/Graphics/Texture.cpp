@@ -8,7 +8,7 @@
 #include <tracy/Tracy.hpp>
 #include <tracy/TracyOpenGL.hpp>
 using namespace Engine::Graphics;
-json Engine::Graphics::Texture::ToJson() {
+json Engine::Graphics::Texture::ToJson() const {
   JsonFileBase ret = JsonFileBase();
   ret.object_type = ObjectType::Texture;
   TextureJson js = TextureJson();

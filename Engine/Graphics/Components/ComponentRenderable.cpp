@@ -120,7 +120,7 @@ void Engine::Graphics::ComponentRenderable::SetObject(
   this->object = object;
 };
 
-json ComponentRenderable::ToJson() {
+json ComponentRenderable::ToJson() const {
   JsonFileBase jb;
   RenderableDataJson j;
   j.model_path = _model_path;

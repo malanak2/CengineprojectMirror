@@ -7,7 +7,7 @@
 
 
 std::map<std::string, Engine::Graphics::ComponentAnimator> Engine::Graphics::ComponentAnimator::cache = {};
-json Engine::Graphics::ComponentAnimator::ToJson() {
+json Engine::Graphics::ComponentAnimator::ToJson() const {
   json js;
   json socketsJson = json::array();
   for (const auto &s : sockets) {

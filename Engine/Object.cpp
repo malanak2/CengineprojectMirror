@@ -45,7 +45,7 @@ Object::Object() {
   this->inheritParentRotation = false;
 }
 
-json Object::ToJson() {
+json Object::ToJson() const {
   JsonFileBase ret;
   ret.object_type = ObjectType::Object;
   ObjectJson js;

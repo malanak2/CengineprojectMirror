@@ -691,7 +691,11 @@ namespace Engine
     }
     for (const auto& child : Children)
     {
-      if (!child->saveable) continue;
+      if (!child->saveable)
+      {
+        SPDLOG_LOGGER_DEBUG(ENGINE_UTIL_LOGGER, "Skipping object {} - is not saveable", child->_name);
+        continue;
+      }
       sj.children.push_back(child->ToJson());
     }
     sj.name = IsRootScene() ? _name : fileName;

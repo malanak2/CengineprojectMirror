@@ -143,7 +143,7 @@ public:
   
   void Save();
   void Load();
-  json ToJson() override;
+  json ToJson() const override;
   void FromJson(json &js) override;
   std::shared_ptr<Graphics::CameraComponent> FromJson(json &js, void *nullpt);
   std::shared_ptr<Graphics::CameraComponent> FromJson(json &js,

@@ -500,7 +500,7 @@ void Keybind::Trigger() {
   }
 }
 
-json Keybind::ToJson() {
+json Keybind::ToJson() const {
   KeybindJson js = {};
   js.default_key = this->default_key;
   js.scancode = glfwGetKeyScancode(this->key);
@@ -687,7 +687,7 @@ KeybindMouseMove::KeybindMouseMove(std::string name, MOVE_TYPE mtype,
   this->followsPausedExecution = followsPausedExecution;
 }
 
-json KeybindMouseMove::ToJson() {
+json KeybindMouseMove::ToJson() const {
   KeybindMouseMoveJson js = {name, (int)mtype, default_button, button, mods};
   return js;
 }
@@ -743,7 +743,7 @@ void KeybindMouseClick::Trigger() {
   }
 }
 
-json KeybindMouseClick::ToJson() {
+json KeybindMouseClick::ToJson() const {
   KeybindMouseClickJson js = {name, (int)ctype, default_button, button, mods};
   return js;
 }
@@ -795,7 +795,7 @@ KeybindMouseScroll::KeybindMouseScroll(std::string name, SCROLL_TYPE scrolltype,
   this->followsPausedExecution = followsPausedExecution;
 }
 
-json KeybindMouseScroll::ToJson() {
+json KeybindMouseScroll::ToJson() const {
   KeybindMouseScrollJson js = {name, (int)scrolltype, mods};
   return js;
 }

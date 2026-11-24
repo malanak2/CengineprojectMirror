@@ -71,7 +71,7 @@ public:
           KeypressType type, std::function<void()> func,
           bool followsPausedExecution);
   void Trigger();
-  json ToJson() override;
+  json ToJson() const override;
 
   void FromJson(json &js) override;
 
@@ -187,7 +187,7 @@ public:
     return KeybindMouseEventType::MOVE;
   }
 
-  json ToJson() override;
+  json ToJson() const override;
   void FromJson(json &js) override;
 
   MOVE_TYPE mtype = NORMAL;
@@ -213,7 +213,7 @@ public:
   }
 
   void Trigger();
-  json ToJson() override;
+  json ToJson() const override;
   void FromJson(json &js) override;
 
   void ResetFunc() override { func = nullptr; }
@@ -245,7 +245,7 @@ public:
     return KeybindMouseEventType::SCROLL;
   }
 
-  json ToJson() override;
+  json ToJson() const override;
   void FromJson(json &js) override;
 
   //!

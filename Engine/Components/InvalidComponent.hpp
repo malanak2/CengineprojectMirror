@@ -11,7 +11,7 @@ namespace Engine
     std::string_view GetName() override {
       return originalName.empty() ? GetNameS() : std::string_view(originalName);
     }
-    json ToJson() override { return raw; }
+    json ToJson() const override { return raw; }
     void FromJson(json &js) override { raw = js; }
     bool IsValid() override { return false; }
 

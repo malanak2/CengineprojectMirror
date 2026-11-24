@@ -10,6 +10,19 @@ namespace Editor
   {
     REGISTER_CLASS(ComponentUserScene)
   public:
+    
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    bool isPlaying = false;
+    
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    bool isPaused = false;
+    
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    bool isLoaded = false;
+    
     void EarlySetup() override
     {
       Engine::Engine::isSimulationEnabled = false;
@@ -36,9 +49,7 @@ namespace Editor
       }
     }
 
-    [[=Engine::Attr::Editor{}]]
-    [[=Engine::Attr::EnableInEditor{}]]
-    [[=Engine::Attr::DisableInPlay{}]]
+    [[=Engine::Attr::Editor{.isDisabled = ^^isPlaying}]]
     void Play()
     {
       if (isPlaying)
@@ -69,15 +80,22 @@ namespace Editor
       Engine::Engine::isSimulationEnabled = true;
     }
 
-    [[=Engine::Attr::Editor{}]]
+    bool CanPause() const
+    {
+      return !isPaused && isPlaying;
+    }
+    [[=Engine::Attr::Editor{.isDisabled = ^^CanPause, .invertDisabled = true}]]
     void Pause()
     {
       isPaused = true;
 
       Engine::Engine::isSimulationEnabled = false;
     }
-
-    [[=Engine::Attr::Editor{}]]
+    bool CanUnpause() const
+    {
+      return isPaused && isPlaying;
+    }
+    [[=Engine::Attr::Editor{.isDisabled = ^^CanUnpause, .invertDisabled = true}]]
     void Unpause()
     {
       isPaused = false;
@@ -85,7 +103,7 @@ namespace Editor
       Engine::Engine::isSimulationEnabled = true;
     }
 
-    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::Editor{.isDisabled = ^^isPlaying, .invertDisabled = true}]]
     void Stop()
     {
       if (!isPlaying)
@@ -100,10 +118,11 @@ namespace Editor
       sceneHolder->OnEnable();
       isPlaying = false;
     }
-
-    [[=Engine::Attr::Editor{}]]
-    [[=Engine::Attr::EnableInEditor{}]]
-    [[=Engine::Attr::DisableInPlay{}]]
+    bool CanLoad() const
+    {
+      return !isPlaying && !isLoaded;
+    }
+    [[=Engine::Attr::Editor{.isDisabled = ^^CanLoad, .invertDisabled = true}]]
     void Load()
     {
       if (isPlaying)
@@ -131,10 +150,11 @@ namespace Editor
       sceneHolder->isEnabled = false;
       isLoaded = true;
     }
-
-    [[=Engine::Attr::Editor{}]]
-    [[=Engine::Attr::EnableInEditor{}]]
-    [[=Engine::Attr::DisableInPlay{}]]
+    bool CanUnload() const
+    {
+      return !isPlaying && isLoaded;
+    }
+    [[=Engine::Attr::Editor{.isDisabled = ^^CanUnload, .invertDisabled = true}]]
     void Unload()
     {
       if (isPlaying)
@@ -163,17 +183,7 @@ namespace Editor
       isLoaded = false;
     }
 
-    [[=Engine::Attr::Editor{}]]
-    [[=Engine::Attr::ReadOnly{}]]
-    bool isPlaying = false;
     
-    [[=Engine::Attr::Editor{}]]
-    [[=Engine::Attr::ReadOnly{}]]
-    bool isPaused = false;
-    
-    [[=Engine::Attr::Editor{}]]
-    [[=Engine::Attr::ReadOnly{}]]
-    bool isLoaded = false;
 
     [[=Engine::Attr::Editor{}]]
     [[=Engine::Attr::ReadOnly{}]]

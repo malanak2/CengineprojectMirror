@@ -78,7 +78,7 @@ public:
   //! @return .
   //!
   virtual bool IsValid() { return true; }
-  json ToJson() override {return {};}
+  json ToJson() const override {return {};}
   void FromJson(json& js) override {}
   
 };

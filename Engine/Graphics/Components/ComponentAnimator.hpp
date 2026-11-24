@@ -12,7 +12,7 @@ class [[=Attr::Script{}]] ComponentAnimator : public IComponent {
   REGISTER_CLASS(ComponentAnimator);
 
 public:
-  json ToJson() override;
+  json ToJson() const override;
 
   void FromJson(json &js) override;
   void Update() override;
