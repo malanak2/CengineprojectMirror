@@ -10,48 +10,17 @@
                 "data": {
                   "data": {
                     "components": [],
+                    "follows_paused_execution": false,
                     "inherit_parent_rotation": false,
                     "position": [
                       0.0,
-                      0.0,
+                      5.0,
                       0.0
                     ],
                     "rotation": [
-                      1.0,
+                      0.9862856268882751,
                       0.0,
-                      0.0,
-                      0.0
-                    ],
-                    "scale": [
-                      1.0,
-                      1.0,
-                      1.0
-                    ]
-                  },
-                  "name": "Scene",
-                  "object_type": "object"
-                },
-                "isEnabled": true,
-                "scene_path": ""
-              },
-              "object_type": "object"
-            },
-            {
-              "data": {
-                "children": [],
-                "data": {
-                  "data": {
-                    "components": [],
-                    "inherit_parent_rotation": false,
-                    "position": [
-                      0.0,
-                      0.0,
-                      0.0
-                    ],
-                    "rotation": [
-                      1.0,
-                      0.0,
-                      0.0,
+                      0.16504760086536407,
                       0.0
                     ],
                     "scale": [
@@ -63,8 +32,8 @@
                   "object_type": "object"
                 },
                 "isEnabled": true,
-                "name": "",
-                "scene_path": ""
+                "name": "User scene holder",
+                "scene_path": "scenes/default_nest.json"
               },
               "object_type": "object"
             }
@@ -74,11 +43,12 @@
               "components": [
                 {
                   "data": {
-                    "path": ""
+                    "path": "scenes/default_nest.json"
                   },
                   "name": "ComponentUserScene"
                 }
               ],
+              "follows_paused_execution": true,
               "inherit_parent_rotation": false,
               "position": [
                 0.0,
@@ -126,11 +96,12 @@
                   "name": "ComponentControllable"
                 }
               ],
+              "follows_paused_execution": true,
               "inherit_parent_rotation": false,
               "position": [
-                -30.68255615234375,
-                7.4056291580200195,
-                -5.163937568664551
+                -34.36135482788086,
+                8.448101997375488,
+                -5.113900184631348
               ],
               "rotation": [
                 0.6915057301521301,
@@ -155,6 +126,7 @@
     "data": {
       "data": {
         "components": [],
+        "follows_paused_execution": false,
         "inherit_parent_rotation": false,
         "position": [
           0.0,
@@ -177,7 +149,7 @@
     },
     "default_camera": "Camera",
     "isEnabled": true,
-    "name": ""
+    "name": "default"
   },
   "object_type": "scene"
 }

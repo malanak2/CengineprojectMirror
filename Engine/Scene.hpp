@@ -211,6 +211,11 @@ public:
   static std::shared_ptr<Scene> Create();
   static std::shared_ptr<Scene> Load(std::string path);
   Scene() {}
+  void EarlySetup() override
+  {
+    instance->followsPausedExecution = false;
+    SceneObject::EarlySetup();
+  }
 
   std::string path;
   bool loadFailed = false;

@@ -64,6 +64,7 @@ json Object::ToJson() {
   js.rotation = {_localRotation.w, _localRotation.x, _localRotation.y,
                  _localRotation.z};
   js.scale = std::vector<float>{scale.x, scale.y, scale.z};
+  js.follows_paused_execution = followsPausedExecution;
   js.inherit_parent_rotation = inheritParentRotation;
   ret.data = js;
   json r = ret;
@@ -129,6 +130,13 @@ std::shared_ptr<Graphics::CameraComponent> Object::FromJson(json &js,
   }
   fromParams(cmps, jsobj.position, jsobj.rotation, scale);
   this->inheritParentRotation = jsobj.inherit_parent_rotation;
+  if (jsbase.data.contains("follows_paused_execution"))
+  {
+    this->followsPausedExecution = jsobj.follows_paused_execution;
+  } else
+  {
+    this->followsPausedExecution = true;
+  }
   return cc;
 }
 
@@ -173,23 +181,25 @@ void Object::EarlySetup() {
   }
 }
 void Object::Setup() {
+  if (followsPausedExecution && !Engine::isSimulationEnabled)
+    return;
   for (auto &[key, comp] : this->_components) {
-    if (comp->FollowsPausedExecution() && !Engine::Engine::isSimulationEnabled)
-      continue;
     comp->Setup();
   }
 }
 void Object::Update() {
+  
+  if (followsPausedExecution && !Engine::isSimulationEnabled)
+    return;
   for (auto &[key, comp] : this->_components) {
-    if (comp->FollowsPausedExecution() && !Engine::instance->isSimulationEnabled && !sceneobject.lock()->IsEnabled())
-      continue;
     comp->Update();
   }
 }
 void Object::End() {
+  
+  if (followsPausedExecution && !Engine::isSimulationEnabled)
+    return;
   for (auto &[id, comp] : _components) {
-    if (comp->FollowsPausedExecution() && !Engine::Engine::isSimulationEnabled)
-      continue;
     comp->End();
   }
 }

@@ -70,13 +70,6 @@ public:
   //! @object Pointer to the object this is assigned to
   //!
   std::weak_ptr<Object> object;
-  //!
-  //! @brief Returns if follows paused execution. This is intended to only
-  //! really be used in Editor stuff - camera etc.
-  //!
-  //! @return wheter follows
-  //!
-  virtual bool FollowsPausedExecution() { return true; }
 
   //!
   //! @brief Returns whether a component is valid (whether any errors were

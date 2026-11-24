@@ -99,10 +99,6 @@ public:
   void Update() override;
 
 
-  // We do not need our camera to pause during execution paused - it only
-  // updates its vectors
-  bool FollowsPausedExecution() override { return false; }
-
   glm::mat4 GetProjMatrix();
   glm::mat4 GetViewMatrix();
 

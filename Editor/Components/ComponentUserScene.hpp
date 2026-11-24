@@ -15,6 +15,7 @@ namespace Editor
       Engine::Engine::isSimulationEnabled = false;
       Load();
     }
+
     void Setup() override
     {
     }
@@ -35,7 +36,10 @@ namespace Editor
       }
     }
 
-    [[=Engine::Attr::Editor{}]] void Play()
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::EnableInEditor{}]]
+    [[=Engine::Attr::DisableInPlay{}]]
+    void Play()
     {
       if (isPlaying)
       {
@@ -49,7 +53,8 @@ namespace Editor
       }
       auto js = sceneHolder->ToJson();
       Engine::CameraList cams;
-      scenePlayHolder = std::static_pointer_cast<Engine::Scene>(Engine::Scene::CreateFromJson(js, object.lock()->sceneobject.lock()->GetRootScene(),  object.lock()->sceneobject.lock(), cams));
+      scenePlayHolder = std::static_pointer_cast<Engine::Scene>(Engine::Scene::CreateFromJson(
+        js, object.lock()->sceneobject.lock()->GetRootScene(), object.lock()->sceneobject.lock(), cams));
       object.lock()->sceneobject.lock()->Children.push_back(scenePlayHolder);
       scenePlayHolder->saveable = false;
       // We manage this from here, so it would kinda be not great if the engine did its thing
@@ -64,21 +69,24 @@ namespace Editor
       Engine::Engine::isSimulationEnabled = true;
     }
 
-    [[=Engine::Attr::Editor{}]] void Pause()
+    [[=Engine::Attr::Editor{}]]
+    void Pause()
     {
       isPaused = true;
-      
+
       Engine::Engine::isSimulationEnabled = false;
     }
 
-    [[=Engine::Attr::Editor{}]] void Unpause()
+    [[=Engine::Attr::Editor{}]]
+    void Unpause()
     {
       isPaused = false;
-      
+
       Engine::Engine::isSimulationEnabled = true;
     }
 
-    [[=Engine::Attr::Editor{}]] void Stop()
+    [[=Engine::Attr::Editor{}]]
+    void Stop()
     {
       if (!isPlaying)
       {
@@ -86,21 +94,24 @@ namespace Editor
         return;
       }
       object.lock()->scene.lock()->RemoveObjectCascade(scenePlayHolder);
-      
+
       scenePlayHolder = nullptr;
-      Engine::Engine::isSimulationEnabled = false;     
+      Engine::Engine::isSimulationEnabled = false;
       sceneHolder->OnEnable();
       isPlaying = false;
     }
 
-    [[=Engine::Attr::Editor{}]] void Load()
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::EnableInEditor{}]]
+    [[=Engine::Attr::DisableInPlay{}]]
+    void Load()
     {
       if (isPlaying)
       {
-          SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Cannot load scene while playing");
+        SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Cannot load scene while playing");
         return;
       }
-      
+
       if (isLoaded)
       {
         SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Cannot load when loaded");
@@ -121,9 +132,11 @@ namespace Editor
       isLoaded = true;
     }
 
-    [[=Engine::Attr::Editor{}]] void Unload()
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::EnableInEditor{}]]
+    [[=Engine::Attr::DisableInPlay{}]]
+    void Unload()
     {
-      
       if (isPlaying)
       {
         SPDLOG_LOGGER_WARN(ENGINE_UTIL_LOGGER, "Cannot unload scene while playing");
@@ -142,7 +155,7 @@ namespace Editor
         auto o = cam->object.lock();
         return !o || sceneHolder->isInside(o->sceneobject.lock());
       });
-    
+
       sceneHolder->Children.clear();
       root->RemoveObjectCascade(sceneHolder);
       sceneHolder = nullptr;
@@ -150,13 +163,25 @@ namespace Editor
       isLoaded = false;
     }
 
-    [[=Engine::Attr::Editor{}]] [[=Engine::Attr::ReadOnly{}]] bool isPlaying = false;
-    [[=Engine::Attr::Editor{}]] [[=Engine::Attr::ReadOnly{}]] bool isPaused = false;
-    [[=Engine::Attr::Editor{}]] [[=Engine::Attr::ReadOnly{}]] bool isLoaded = false;
-
-    [[=Engine::Attr::Editor{}]] [[=Engine::Attr::ReadOnly{}]] std::string *ptrpath;
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    bool isPlaying = false;
     
-    [[=Engine::Attr::Editor{}]][[=Engine::Attr::Serialize{}]] std::string path;
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    bool isPaused = false;
+    
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    bool isLoaded = false;
+
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::ReadOnly{}]]
+    std::string* ptrpath;
+
+    [[=Engine::Attr::Editor{}]]
+    [[=Engine::Attr::Serialize{}]]
+    std::string path;
 
   private:
     std::shared_ptr<Engine::Scene> sceneHolder;

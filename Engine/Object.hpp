@@ -25,11 +25,12 @@ struct ObjectJson {
   std::vector<float> position;
   std::vector<float> rotation;
   std::vector<float> scale;
+  bool follows_paused_execution;
   std::vector<ComponentJson> components;
   bool inherit_parent_rotation = false;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-    ObjectJson, position, rotation, scale, components,
+    ObjectJson, position, rotation, scale,follows_paused_execution, components,
     inherit_parent_rotation)
 //!
 //! @brief Scene object. Basic building block
@@ -132,6 +133,14 @@ public:
   //! @brief Called when object disabled
   //!
   virtual void OnDisable();
+  
+  
+  //!
+  //! @followsPausedExecution Returns if follows paused execution. This is intended to only
+  //! really be used in Editor stuff - camera etc.
+  //!
+  bool followsPausedExecution = true;
+  
   void Save();
   void Load();
   json ToJson() override;

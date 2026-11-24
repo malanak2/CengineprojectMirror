@@ -33,6 +33,7 @@
                         "name": "ComponentBoundingBox"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": true,
                     "position": [
                       10.0,
@@ -87,6 +88,7 @@
                         "name": "ComponentBoundingBox"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": true,
                     "position": [
                       -10.0,
@@ -141,6 +143,7 @@
                         "name": "ComponentBoundingBox"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": true,
                     "position": [
                       0.0,
@@ -195,6 +198,7 @@
                         "name": "ComponentBoundingBox"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": true,
                     "position": [
                       0.0,
@@ -249,6 +253,7 @@
                         "name": "ComponentBoundingBox"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": true,
                     "position": [
                       0.0,
@@ -303,6 +308,7 @@
                         "name": "ComponentBoundingBox"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": true,
                     "position": [
                       0.0,
@@ -343,6 +349,7 @@
                         "name": "CameraComponent"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": false,
                     "position": [
                       0.0,
@@ -420,6 +427,7 @@
                   "name": "ComponentRenderable"
                 }
               ],
+              "follows_paused_execution": true,
               "inherit_parent_rotation": false,
               "position": [
                 0.0,
@@ -456,6 +464,7 @@
                   "object_type": null
                 },
                 "isEnabled": true,
+                "name": "",
                 "overrides": [],
                 "prefab_path": "resources/prefabs/test.json"
               },
@@ -469,6 +478,7 @@
                   "object_type": null
                 },
                 "isEnabled": true,
+                "name": "",
                 "overrides": [],
                 "prefab_path": "resources/prefabs/Asdf.json"
               },
@@ -496,6 +506,7 @@
                         "name": "ComponentControllable"
                       }
                     ],
+                    "follows_paused_execution": true,
                     "inherit_parent_rotation": false,
                     "position": [
                       -39.78729248046875,
@@ -551,6 +562,7 @@
                   "name": "ComponentRenderable"
                 }
               ],
+              "follows_paused_execution": true,
               "inherit_parent_rotation": false,
               "position": [
                 0.0,
@@ -654,6 +666,7 @@
                   "name": "ComponentRenderable"
                 }
               ],
+              "follows_paused_execution": true,
               "inherit_parent_rotation": false,
               "position": [
                 -2.545128107070923,
@@ -683,8 +696,8 @@
     "data": {
       "data": {
         "components": [],
+        "follows_paused_execution": true,
         "inherit_parent_rotation": false,
-        "name": "Scene",
         "position": [
           0.0,
           5.0,

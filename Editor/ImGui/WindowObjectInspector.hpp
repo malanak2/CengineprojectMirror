@@ -106,6 +106,11 @@ protected:
           obj->UpdateWorldTransform();
         }
       }
+      ImGui::Checkbox("Follows paused execution", &obj->followsPausedExecution);
+      ImGui::BeginDisabled();
+      ImGui::Checkbox("Is Saveable", &obj->sceneobject.lock()->saveable);
+      ImGui::EndDisabled();
+      
     }
     std::vector<std::string> names = std::vector<std::string>();
     std::string todel;

@@ -14,7 +14,6 @@ public:
   ~ComponentControllable() override;
   [[=Engine::Attr::Serialize{}]][[=Engine::Attr::Editor{}]]float movespeed = 1;
   [[=Engine::Attr::Serialize{}]][[=Engine::Attr::Editor{}]]float sensitivity = 1;
-  bool FollowsPausedExecution() override { return false; }
 
 private:
   std::shared_ptr<Engine::Keybind> keybindMoveForward;

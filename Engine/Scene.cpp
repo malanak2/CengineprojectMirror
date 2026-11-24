@@ -213,11 +213,10 @@ namespace Engine
 
   void SceneObject::Update()
   {
-    if (isEnabled)
-    {
-      if (instance) instance->Update();
-      for (const auto& var : this->Children) var->Update();
-    }
+    if (instance->followsPausedExecution && !isEnabled)
+      return;
+    if (instance) instance->Update();
+    for (const auto& var : this->Children) var->Update();
   }
 
   void SceneObject::End()

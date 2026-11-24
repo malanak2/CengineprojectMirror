@@ -70,8 +70,13 @@ namespace Engine
       FixedString<64> displayname = {};
     };
     //!
-    //! @brief If this is specified, buttons wil work in edit mode
+    //! @brief If this is specified, buttons will work in edit mode
+    //!
     struct EnableInEditor{};
+    //!
+    //! @brief If this is specified, buttons will not work in play mode
+    //!
+    struct DisableInPlay{};
   }
 
   namespace Main
