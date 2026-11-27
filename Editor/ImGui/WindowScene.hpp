@@ -148,6 +148,7 @@ protected:
     } else {
       wasSavePressedThisFrame = false;
     }
+    
     if (ImGui::Button("Reload scene")) {
       pendingReload = scene;
       openReloadPopup = true;

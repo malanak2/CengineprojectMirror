@@ -208,7 +208,7 @@ public:
     std::is_same_v<F, double> || std::is_same_v<F, int> ||
     std::is_same_v<F, std::string> || std::is_same_v<F, glm::vec2> ||
     std::is_same_v<F, glm::vec3> || std::is_same_v<F, glm::vec4> ||
-    std::is_same_v<F, glm::quat>;
+    std::is_same_v<F, glm::quat> || std::is_same_v<F, std::string*> || std::is_same_v<F, std::weak_ptr<std::string>>;
 
   static consteval bool HasAnno(std::meta::info m, std::meta::info a)
   {

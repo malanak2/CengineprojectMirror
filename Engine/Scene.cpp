@@ -368,7 +368,7 @@ namespace Engine
     }
     if (FileUtil::ReadFile(path, &res) != 0)
     {
-      SPDLOG_LOGGER_CRITICAL(ENGINE_UTIL_LOGGER, "Failed to open scene at {}", path);
+      SPDLOG_LOGGER_ERROR(ENGINE_UTIL_LOGGER, "Failed to open scene at {}", path);
       throw std::logic_error("Failed to open scene at " + path);
     }
     json js;

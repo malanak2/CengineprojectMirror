@@ -26,7 +26,6 @@ namespace Editor
     void EarlySetup() override
     {
       Engine::Engine::isSimulationEnabled = false;
-      Load();
     }
 
     void Setup() override
@@ -35,6 +34,7 @@ namespace Editor
 
     void OnEnable() override
     {
+      Load();
     }
 
     void OnDisable() override
@@ -68,7 +68,7 @@ namespace Editor
         js, object.lock()->sceneobject.lock()->GetRootScene(), object.lock()->sceneobject.lock(), cams));
       object.lock()->sceneobject.lock()->Children.push_back(scenePlayHolder);
       scenePlayHolder->saveable = false;
-      // We manage this from here, so it would kinda be not great if the engine did its thing
+      // We manage this from here, so it would kinda be not great if the engine did that it is supposed to do
       scenePlayHolder->isEnabled = false;
       scenePlayHolder->_name = "User scene play mode holder";
       sceneHolder->OnDisable();
@@ -148,6 +148,9 @@ namespace Editor
       sceneHolder->saveable = false;
       sceneHolder->_name = "User scene holder";
       sceneHolder->isEnabled = false;
+      sceneHolder->EarlySetup();
+      sceneHolder->Setup();
+      sceneHolder->OnEnable();
       isLoaded = true;
     }
     bool CanUnload() const
